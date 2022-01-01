@@ -16,7 +16,13 @@
       gap: 8vh;
     }
 
-    label span {
+    form label {
+      display: block;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    form label span {
       display: block;
       text-align: center;
       margin-bottom: 8px;
@@ -29,22 +35,28 @@
 </head>
 
 <body>
-  <label>
-    <span>Zvuk</span>
-    <select name="sound">
-      <option>vyložení karty.wav</option>
-      <option>míchání karet.wav</option>
-      <option>míchání karet 2.wav</option>
-      <option>balíček karet na stůl.wav</option>
-      <option>sebrání karet ze stolu.wav</option>
-      <option>prohrabování kartama.wav</option>
-      <option>prohrabování kartama 2.wav</option>
-      <option>líznutí karty.wav</option>
-      <option>plop.m4a</option>
-    </select>
-  </label>
+  <form>
+    <label>
+      <span>Zvuk</span>
+      <select name="sound">
+        <option>vyložení karty.wav</option>
+        <option>míchání karet.wav</option>
+        <option>míchání karet 2.wav</option>
+        <option>balíček karet na stůl.wav</option>
+        <option>sebrání karet ze stolu.wav</option>
+        <option>prohrabování kartama.wav</option>
+        <option>prohrabování kartama 2.wav</option>
+        <option>líznutí karty.wav</option>
+        <option>plop.m4a</option>
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" name="rain" checked>
+      déšť v pozadí
+    </label>
+  </form>
   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 564 574">
-  <title>Klikací kolečka ve směru hodinových ručiček</title>
+    <title>Klikací kolečka ve směru hodinových ručiček</title>
     <!-- <rect x="0" y="0" width="563.2602141737938" height="573.2435452228469" fill="#ffffff"></rect> -->
     <g stroke-linecap="round">
       <g stroke-opacity="0.9" fill-opacity="0.9"
@@ -232,13 +244,28 @@
 
       document.querySelector('svg').getElementById('center').addEventListener('click', handlePlay([0, 0, 0]));
 
-      setTimeout(playRain);
+
+      setTimeout(playRain, 0);
+
 
       async function playRain() {
         const rainSource = new SoundSource(audioContext.destination, { gain: .4 });
         const rainBuffer = await loadAudioBuffer(audioContext, "./assets/light-rain-sound.mp3");
-        rainSource.play(rainBuffer, { loop: true });
         // source.setOrientation(0, -1, 0);
+
+
+        const rainCheckbox = document.querySelector('input[name="rain"]');
+        if (rainCheckbox.checked) {
+          rainSource.play(rainBuffer, { loop: true });
+        }
+        rainCheckbox.addEventListener('change', event => {
+          if (event.target.checked) {
+            rainSource.play(rainBuffer, { loop: true });
+          } else {
+            rainSource.stopAll();
+          }
+        });
+
       }
     }
   </script>
