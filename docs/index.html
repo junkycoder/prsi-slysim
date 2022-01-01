@@ -236,7 +236,7 @@
 
       async function playRain() {
         const rainSource = new SoundSource(audioContext.destination, { gain: 1 });
-        const rainBuffer = await loadAudioBuffer(audioContext, "/assets/light-rain-sound.mp3");
+        const rainBuffer = await loadAudioBuffer(audioContext, "./assets/light-rain-sound.mp3");
         rainSource.play(rainBuffer, { loop: true });
         // source.setOrientation(0, -1, 0);
       }
