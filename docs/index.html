@@ -198,15 +198,15 @@
       // listener.setOrientation(0, 0, -1, 0, 1, 0);
 
       const soundBuffers = {
-        "vyložení karty.wav": loadAudioBuffer(audioContext, "/assets/vyložení karty.wav"),
-        "míchání karet.wav": loadAudioBuffer(audioContext, "/assets/míchání karet.wav"),
-        "míchání karet 2.wav": loadAudioBuffer(audioContext, "/assets/míchání karet 2.wav"),
-        "balíček karet na stůl.wav": loadAudioBuffer(audioContext, "/assets/balíček karet na stůl.wav"),
-        "sebrání karet ze stolu.wav": loadAudioBuffer(audioContext, "/assets/sebrání karet ze stolu.wav"),
-        "prohrabování kartama.wav": loadAudioBuffer(audioContext, "/assets/prohrabování kartama.wav"),
-        "prohrabování kartama 2.wav": loadAudioBuffer(audioContext, "/assets/prohrabování kartama 2.wav"),
-        "líznutí karty.wav": loadAudioBuffer(audioContext, "/assets/líznutí karty.wav"),
-        "plop.m4a": loadAudioBuffer(audioContext, "/assets/plop.m4a"),
+        "vyložení karty.wav": loadAudioBuffer(audioContext, "./assets/vyložení karty.wav"),
+        "míchání karet.wav": loadAudioBuffer(audioContext, "./assets/míchání karet.wav"),
+        "míchání karet 2.wav": loadAudioBuffer(audioContext, "./assets/míchání karet 2.wav"),
+        "balíček karet na stůl.wav": loadAudioBuffer(audioContext, "./assets/balíček karet na stůl.wav"),
+        "sebrání karet ze stolu.wav": loadAudioBuffer(audioContext, "./assets/sebrání karet ze stolu.wav"),
+        "prohrabování kartama.wav": loadAudioBuffer(audioContext, "./assets/prohrabování kartama.wav"),
+        "prohrabování kartama 2.wav": loadAudioBuffer(audioContext, "./assets/prohrabování kartama 2.wav"),
+        "líznutí karty.wav": loadAudioBuffer(audioContext, "./assets/líznutí karty.wav"),
+        "plop.m4a": loadAudioBuffer(audioContext, "./assets/plop.m4a"),
       }
 
       Promise.allSettled(Object.values(soundBuffers));
