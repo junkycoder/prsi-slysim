@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layout - fullscreen, grid, no scroll</title>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .layout {
+      --total-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(8, 12.5vw);
+      grid-template-rows: repeat(10, calc(var(--total-height) / 10));
+      height: var(--total-height);
+      overflow: hidden;
+    }
+
+
+    .layout__table {
+      background-color: brown;
+      grid-row: 2 / 9;
+      grid-column: 2 / 8;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      border-radius: 50%;
+    }
+
+
+    .layout__spot {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: darkred;
+    }
+
+    .layout__spot.layout__spot--player-one {
+      grid-row: 9 ;
+      grid-column: 3 / 7;
+    }
+
+    .layout__spot.layout__spot--player-two {
+      grid-row: 1;
+      grid-column: 4 / 6;
+    }
+
+    .layout__spot.layout__spot--player-three {
+      grid-row: 5;
+      grid-column: 1;
+    }
+
+
+    .layout__spot.layout__spot--player-four {
+      grid-row: 5;
+      grid-column: 8;
+    }
+
+    .layout__spot.layout__spot--player-five {
+      grid-row: 3;
+      grid-column: 1;
+    }
+
+    .layout__spot.layout__spot--player-six {
+      grid-row: 3;
+      grid-column: 8;
+    }
+
+    .layout__spot.layout__spot--player-seven {
+      grid-row: 7;
+      grid-column: 1;
+    }
+
+    .layout__spot.layout__spot--player-eight {
+      grid-row: 7;
+      grid-column: 8;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <div class="layout__table" id="table">
+      <div>deck</div>
+      <div>cards</div>
+    </div>
+    <div class="layout__spot layout__spot--player-one">
+      <div class="">Moje karty</div>
+    </div>
+    <div class="layout__spot layout__spot--player-two">
+      <div class="">2</div>
+    </div>
+    <div class="layout__spot layout__spot--player-three">
+      <div class="">3</div>
+    </div>
+    <div class="layout__spot layout__spot--player-four">
+      <div class="">4</div>
+    </div>
+    <div class="layout__spot layout__spot--player-five">
+      <div class="">5</div>
+    </div>
+    <div class="layout__spot layout__spot--player-six">
+      <div class="">6</div>
+    </div>
+    <div class="layout__spot layout__spot--player-seven">
+      <div class="">7</div>
+    </div>
+    <div class="layout__spot layout__spot--player-eight">
+      <div class="">8</div>
+    </div>
+
+    <!-- <div class="layout__spot layout__spot--player" id="spot1">
+      <div class="chair">1</div>
+    </div>
+    <div class="layout__spot" id="spot2">
+      <div class="chair">2</div>
+    </div>
+    <div class="layout__table" id="table">
+      <div>deck</div>
+      <div>cards</div>
+    </div>
+    <div class="layout__spot" id="spot3">
+      <div class="chair">3</div>
+    </div>
+    <div class="layout__spot" id="spot4">
+      <div class="chair">4</div>
+    </div>
+    <div class="layout__spot" id="spot5">
+      <div class="chair">5</div>
+    </div>
+    <div class="layout__spot" id="spot6">
+      <div class="chair">6</div>
+    </div>
+    <div class="layout__spot" id="spot7">
+      <div class="chair">7</div>
+    </div>
+    <div class="layout__spot" id="spot8">
+      <div class="chair">8</div>
+    </div> -->
+  </div>
+</body>
+
+</html>

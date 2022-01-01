@@ -29,6 +29,10 @@ for (let color of cardColors) {
   }
 }
 
+export const penalties = {
+
+};
+
 export const suffleCards = (_cards = cards) =>
   [..._cards.values()].sort(() => Math.random() - 0.5);
 
@@ -45,6 +49,7 @@ export function createNewGame({ maxPlayers = 4, dealCardsCount = 4 } = {}) {
     currentColor: null,
     deck: suffleCards(),
     playedCards: [],
+    penalty: null,
     outcome: null,
   };
 }
@@ -72,6 +77,10 @@ export function getPlayer(game, id) {
   };
 }
 
+export function getLastPlayedCard(game) {
+  return game.playedCards[game.playedCards.length - 1];
+}
+
 export function makePlayerMoves(game, player) {
   const { settings, currentPlayer, players, playedCards } = game;
   const isCurrentPlayer = (p) => currentPlayer.id === p.id;
@@ -85,7 +94,6 @@ export function makePlayerMoves(game, player) {
   const currentPlayerIndex = players.findIndex(({ id }) => id === player.id);
   const currentPlayerCards = players[currentPlayerIndex].cards;
 
-  const lastPlayedCard = game.playedCards[game.playedCards.length - 1];
   const nextPlayer = players[(currentPlayerIndex + 1) % players.length];
 
   // All possible player moves:
@@ -149,6 +157,8 @@ export function makePlayerMoves(game, player) {
       );
     }
 
+    const lastPlayedCard = getLastPlayedCard(game);
+
     if (
       card.value !== "svršek" &&
       card.value !== lastPlayedCard.value &&
@@ -190,6 +200,7 @@ export function makePlayerMoves(game, player) {
   }
 
   function stay() {
+    // const lastPlayedCard = getLastPlayedCard(game);
     // if (lastPlayedCard.value !== "eso" || game.previousPlayer?.stood) {
     //   throw new Error("Player cannot stay");
     // }
@@ -221,6 +232,9 @@ export function makePlayerMoves(game, player) {
     }
 
     game.turn++;
+
+    const lastPlayedCard = getLastPlayedCard(game);
+
 
     if (isWinner(player)) {
       game.outcome = { winner: player };
