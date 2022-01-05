@@ -233,14 +233,15 @@
         console.timeEnd('play')
       };
 
-      document.querySelector('svg').getElementById('clock-3').addEventListener('click', handlePlay([1, 0, .5]));
-      document.querySelector('svg').getElementById('clock-9').addEventListener('click', handlePlay([-1, 0, -.5]));
+
+      document.querySelector('svg').getElementById('clock-3').addEventListener('click', handlePlay([1, 0, 0]));
+      document.querySelector('svg').getElementById('clock-9').addEventListener('click', handlePlay([-1, 0, 0]));
       document.querySelector('svg').getElementById('clock-1030').addEventListener('click', handlePlay([-.5, .5, .5]));
       document.querySelector('svg').getElementById('clock-130').addEventListener('click', handlePlay([.5, .5, .5]));
-      document.querySelector('svg').getElementById('clock-12').addEventListener('click', handlePlay([0, 1, .5]));
+      document.querySelector('svg').getElementById('clock-12').addEventListener('click', handlePlay([0, 1, 1]));
       document.querySelector('svg').getElementById('clock-730').addEventListener('click', handlePlay([-.5, -.5, -.5]));
       document.querySelector('svg').getElementById('clock-430').addEventListener('click', handlePlay([.5, -.5, -.5]));
-      document.querySelector('svg').getElementById('clock-6').addEventListener('click', handlePlay([0, -1, 0]));
+      document.querySelector('svg').getElementById('clock-6').addEventListener('click', handlePlay([0, -1, -1]));
 
       document.querySelector('svg').getElementById('center').addEventListener('click', handlePlay([0, 0, 0]));
 
