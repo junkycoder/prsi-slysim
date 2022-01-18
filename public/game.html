@@ -21,10 +21,10 @@
     import tDocumentBody from "/templates/DocumentBody.js";
     import { parseUrlParam } from "/library.js"
     import { db } from "/application.js";
-    // import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-    document.addEventListener('render', () => {
-      render(tDocumentBody({ game: { state: "created" } }), document.body);
+    document.addEventListener('render', ({ detail: payload }) => {
+      render(tDocumentBody(payload), document.body);
     });
 
     const emit = (payload) => {
@@ -37,16 +37,14 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       const gameId = parseUrlParam("gameId");
+      if (!gameId) throw new Error("gameId is required");
 
-      emit({
-        game: {
-          id: gameId
-        }
+      onSnapshot(doc(db, "games", gameId), (doc) => {
+        emit({
+          game: doc.data(),
+          // ...
+        });
       });
-
-      // onSnapshot(doc(db, "games", gameId), (doc) => {
-      //   console.log("Current data: ", doc.data());
-      // });
 
     });
 

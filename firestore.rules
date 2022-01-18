@@ -2,9 +2,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    match /users/{userId}/games/{gameId} {
-      // allow create if do cument not exists already
-      allow create: if exists(document) == false;
+    function verified(request) {
+      return request.auth != null && request.auth.uid != null && request.auth.email != null;
+    }
+
+    match /games/{game} {
+      // Everybody can read the game if knowns the gameId
+      allow read: if true;
+
+      // Only game owner can list all his games
+      allow list: if resource.data.ownerId == request.auth.uid;
+
+      // Only authorized users can create new game but only until gameId is not already used
+      allow create: if verified(request) && exists(game) == false;
+
+      // Nobody can update or delete a game
+      allow update: if false;
+      allow delete: if false;
     }
 
   }

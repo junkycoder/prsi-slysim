@@ -1,9 +1,16 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import {
+  getAuth,
+  connectAuthEmulator,
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-
+const isEmulation = location.hostname === "localhost";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -15,13 +22,17 @@ const firebaseConfig = {
   storageBucket: "prsi-slysim.appspot.com",
   messagingSenderId: "203292680960",
   appId: "1:203292680960:web:272ab3ed3068e1748c09e5",
-  measurementId: "G-6C0THMKVYV"
+  measurementId: "G-6C0THMKVYV",
 };
-
 
 // Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 export const app = initializeApp(firebaseConfig);
 export const anal = getAnalytics(app);
+
+export const auth = getAuth(app);
+if (isEmulation) connectAuthEmulator(auth, "http://localhost:9099");
+
 export const db = getFirestore(app);
+if (isEmulation) connectFirestoreEmulator(db, "localhost", 8080);
