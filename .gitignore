@@ -4,3 +4,4 @@ tmp
 *.cache
 .DS_Store
 *.log
+dump
