@@ -5,10 +5,13 @@
   },
   "hosting": {
     "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "trailingSlash": true,
+    "rewrites": [
+      {
+        "source": "/game/**",
+        "destination": "/game.html"
+      }
     ]
   },
   "emulators": {
