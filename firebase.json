@@ -6,7 +6,7 @@
   "hosting": {
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "trailingSlash": true,
+    "trailingSlash": false,
     "rewrites": [
       {
         "source": "/game",
@@ -15,6 +15,10 @@
       {
         "source": "/game/**",
         "destination": "/game.html"
+      },
+      {
+        "source": "/create-game",
+        "destination": "/create-game.html"
       }
     ]
   },

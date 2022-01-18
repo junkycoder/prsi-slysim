@@ -9,6 +9,10 @@ import {
   getFirestore,
   connectFirestoreEmulator,
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
 
 const isEmulation = location.hostname === "localhost";
 
@@ -36,3 +40,6 @@ if (isEmulation) connectAuthEmulator(auth, "http://localhost:9099");
 
 export const db = getFirestore(app);
 if (isEmulation) connectFirestoreEmulator(db, "localhost", 8080);
+
+export const fn = getFunctions(app, "europe-west1");
+if (isEmulation) connectFunctionsEmulator(fn, "localhost", 5001);
