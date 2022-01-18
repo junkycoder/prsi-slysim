@@ -37,7 +37,14 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       const gameId = parseUrlParam("gameId");
-      if (!gameId) throw new Error("gameId is required");
+      if (!gameId) {
+        emit({
+          game: {
+            state: "not-found"
+          },
+        });
+        return;
+      }
 
       onSnapshot(doc(db, "games", gameId), (doc) => {
         emit({
@@ -51,6 +58,7 @@
   </script>
 </head>
 
-<body></body>
+<body>
+</body>
 
 </html>

@@ -4,6 +4,8 @@ import tTodoList from "./TodoList.js";
 
 function gameStateToTitle(gameState) {
   switch (gameState) {
+    case "not-found":
+      return "Hra neexistuje";
     case "created":
       return "Hra ještě nezačala";
     case "waiting":
