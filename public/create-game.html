@@ -30,8 +30,14 @@
           maxPlayers: Number(formData.get("max-players")),
           dealedCardCount: Number(formData.get("dealed-cards-count")),
           gameId: formData.get("game-id") || null,
-        }).then(console.log).catch(({ message }) => {
-          alert(message)
+        }).then(console.log).catch(({ message, code, }) => {
+          if (code === "functions/permission-denied") {
+            if (confirm(`${message} Chcete se nechat ověřit?`)) {
+              location.href = `/verifikace.html`;
+            }
+          } else {
+            alert(`Nastala chyba při vytváření hry.\n${message}`);
+          }
         })
       });
 
