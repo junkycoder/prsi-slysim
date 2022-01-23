@@ -17,4 +17,7 @@ export const create = functions
     // TODO: create game with given preferences
 
     // return game;
+    return {
+      id: 'fiha'
+    }
   });

@@ -18,15 +18,41 @@
     <h2>Příhlásit se přes email</h2>
     <p>Do hry se mohou zapojit pouze ověření uživatelé.</p>
     <form method="post">
-      <!-- email input -->
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" placeholder="Email">
+      <input type="email" id="email" name="email" placeholder="Email" required>
       <p>Na uvedenou adresu bude odeslán email s přihlašovacím odkazem.</p>
-      <!-- submit  -->
       <input type="submit" value="Odeslat">
     </form>
   </main>
-  <script type="module" src="/application.js"></script>
+  <script type="module">
+    import { auth } from "/application.js";
+    import { sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { authCompleteEmailStoredLocally } from "/storage.js";
+
+    document.querySelector('form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const { origin, search } = window.location;
+
+      try {
+        const backPath = new URLSearchParams(search).get('back');
+        const formData = new FormData(event.target);
+
+        const email = formData.get("email");
+        const settings = {
+          url: `${origin}${backPath || ''}`,
+          handleCodeInApp: true,
+        };
+
+        await sendSignInLinkToEmail(auth, email, settings);
+        authCompleteEmailStoredLocally.write(email);
+
+        alert(`Odkaz pro přihlášení byl odeslán na adresu ${email}.\n\nToto okno můžete zavřít.`);
+      } catch (fok) {
+        console.log(fok)
+        alert(fok);
+      }
+    });
+  </script>
 </body>
 
 </html>
