@@ -21,12 +21,17 @@
     import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
     import { formDataToPayload, searchParamsToFormValues } from "/library.js";
     import { restrictedLocation } from "/application.js";
+    import { playerNameStoredLocally } from "/storage.js";
 
     const redirectToVerification = (altloc) => {
       const location = altloc || window.location;
       const { pathname } = location
       location.replace(`/verifikace.html?back=${pathname}`);
     };
+
+    const redirectToTheGame = gameId => {
+      window.location.href = `/game/${gameId}`;
+    }
 
     restrictedLocation(window.location.href).then(user => {
       if (!user) {
@@ -51,6 +56,12 @@
       const form = document.querySelector("form");
       searchParamsToFormValues(form);
 
+      const playerNameInput = document.querySelector('form input[name="player-name"]');
+      playerNameInput.value = playerNameStoredLocally.read();
+      playerNameInput.addEventListener("change", ({ target: { value } }) => {
+        playerNameStoredLocally.write(value);
+      });
+
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -62,7 +73,7 @@
           if (!gameId) {
             alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
           } else {
-            window.location.pathname += `/${gameId}`;
+            redirectToTheGame(gameId);
           }
         } catch ({ message, code }) {
           if (code === "functions/permission-denied") {
@@ -72,6 +83,7 @@
           }
         }
       });
+
     }
 
     document.addEventListener("DOMContentLoaded", controller);
@@ -88,15 +100,18 @@
   <main>
     <form method="post">
       <label>
+        <span>Vaše jméno hráče</span>
+        <input type="text" name="player-name" required />
+      </label>
+      <label>
         <span>Max. počet hráčů</span>
-        <input type="number" name="max-players" min="2" max="6" value="6" />
+        <input type="number" name="max-players" min="2" max="8" value="4" />
       </label>
       <label>
         <span>Počet rozdaných karet</span>
-        <input type="number" name="dealed-cards" min="1" max="7" value="7" />
+        <input type="number" name="dealed-cards" min="1" max="6" value="4" />
       </label>
       <input type="hidden" name="id" />
-      <br />
       <button type="submit">Vytvořit hru</button>
       <h2>Co bude dál?</h2>
       <p>Po založení budete automaticky připojeni ke hře.</p>

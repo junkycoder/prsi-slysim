@@ -29,20 +29,19 @@ for (let color of cardColors) {
   }
 }
 
-export const penalties = {
-
-};
+export const penalties = {};
 
 export const suffleCards = (_cards = cards) =>
   [..._cards.values()].sort(() => Math.random() - 0.5);
 
-export function createNewGame({ maxPlayers = 4, dealCardsCount = 4 } = {}) {
+export function createNewGame(id, { maxPlayers = 4, dealedCards = 4 } = {}) {
   return {
+    id,
     turn: 0,
     started: false,
     settings: {
       maxPlayers,
-      dealCardsCount,
+      dealedCards,
     },
     players: [],
     currentPlayer: null,
@@ -118,7 +117,7 @@ export function makePlayerMoves(game, player) {
   }
 
   function dealCards() {
-    for (let i = 0; i < settings.dealCardsCount; i++) {
+    for (let i = 0; i < settings.dealedCards; i++) {
       for (let j = 0; j < players.length; j++) {
         players[j].cards.push(game.deck.shift());
       }
@@ -234,7 +233,6 @@ export function makePlayerMoves(game, player) {
     game.turn++;
 
     const lastPlayedCard = getLastPlayedCard(game);
-
 
     if (isWinner(player)) {
       game.outcome = { winner: player };

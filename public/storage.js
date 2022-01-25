@@ -1,11 +1,9 @@
-const factory = (fn) => fn();
-
 /**
- *
- * @returns
+ * @internal
+ * @param {string} key
+ * @returns simple storage api
  */
-export const authCompleteEmailStoredLocally = factory(() => {
-  const key = "authcompletemail";
+const local = (key) => {
   let value;
 
   return {
@@ -24,4 +22,9 @@ export const authCompleteEmailStoredLocally = factory(() => {
       value = undefined;
     },
   };
-});
+};
+
+//
+
+export const authCompleteEmailStoredLocally = local("authcompletemail");
+export const playerNameStoredLocally = local("playername");

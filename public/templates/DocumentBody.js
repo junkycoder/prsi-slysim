@@ -4,8 +4,6 @@ import tTodoList from "./TodoList.js";
 
 function gameStateToTitle(gameState) {
   switch (gameState) {
-    case "not-found":
-      return "Hra neexistuje";
     case "created":
       return "Hra ještě nezačala";
     case "waiting":
@@ -51,7 +49,7 @@ export default function DocumentBody({ game = {} } = {}) {
         <button disabled name="stay">Stát</button>
         <button name="leave">Vzdát se a opustit hru</button>
       </section>
-      ${tTodoList()}
+      <!-- ${tTodoList()} -->
     </main>
   `;
 }

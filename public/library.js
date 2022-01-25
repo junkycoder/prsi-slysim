@@ -34,7 +34,10 @@ export const toCapitalized = (str) =>
  * @returns
  */
 export const toCamelCase = (str, sep = "-") =>
-  str.split(sep).map(toCapitalized).join();
+  str
+    .split(sep)
+    .map((s, i) => (!i ? s : toCapitalized(s)))
+    .join("");
 
 /**
  * Serialize form data to basic payload object.
