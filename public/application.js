@@ -91,6 +91,7 @@ export const restrictedLocation = async (currentHref) => {
   if (!user?.emailVerified) {
     if (isSignInWithEmailLink(auth, currentHref)) {
       user = await handleSignInWithEmailLink(currentHref);
+      // TODO: is it new user for real?
       user.newbie = true;
     }
   }
