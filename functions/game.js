@@ -1,10 +1,10 @@
 import functions from "firebase-functions";
 import admin from "firebase-admin";
-import { createNewGame, addPlayer } from "prsi";
-/**
- * New game can be created by verified users
- */
+import { createNewGame, addPlayer, removeSecrets } from "prsi";
 
+/**
+ * Callable function to create a new game.
+ */
 export const create = functions
   .region("europe-west1")
   .https.onCall(
@@ -38,21 +38,64 @@ export const create = functions
       }
 
       const db = admin.firestore();
-      const ref = db.collection("games").doc();
 
       return db.runTransaction(async (batch) => {
-        const doc = await batch.get(ref);
-        const game = createNewGame(doc.id, {
+        // Private game accessible only to the server.
+        const privRef = db.collection("games").doc();
+        const privDoc = await batch.get(privRef);
+        // User's game copy excluding secret data like deck and played cards
+        const copyRef = db.doc(
+          `/users/${context.auth.uid}/games/${privDoc.id}`
+        );
+        const copyDoc = await batch.get(copyRef);
+
+        const game = createNewGame({
           maxPlayers: Number(maxPlayers),
           dealedCards: Number(dealedCards),
         });
 
-        addPlayer(game, { id: context.auth.uid, name: playerName });
+        addPlayer(game, { id: context.auth.token.email, name: playerName });
 
-        batch.set(ref, game);
+        const copy = removeSecrets(game);
+        const meta = {
+          id: privDoc.id,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdBy: context.auth.token.email,
+        };
+
+        batch.set(privRef, {
+          ...game,
+          ...meta,
+        });
+        batch.set(copyRef, {
+          ...copy,
+          ...meta,
+        });
+
         await batch.commit();
 
-        return game;
+        return { ...copy, ...meta };
       });
     }
   );
+
+/**
+ * Callable function to add a player to an existing game.
+ */
+export const join = functions
+  .region("europe-west1")
+  .https.onCall(async ({ playerName }, context) => {
+    if (!playerName) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Zadejte jméno hráče."
+      );
+    }
+  });
+
+/**
+ * Callable function to leave a game.
+ */
+export const leave = functions
+  .region("europe-west1")
+  .https.onCall(async (data, context) => {});

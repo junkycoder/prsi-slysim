@@ -2,8 +2,8 @@ import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
 import tBodyHeader from "./BodyHeader.js";
 import tTodoList from "./TodoList.js";
 
-function gameStateToTitle(gameState) {
-  switch (gameState) {
+function gameStatusToTitle(status) {
+  switch (status) {
     case "created":
       return "Hra ještě nezačala";
     case "waiting":
@@ -13,14 +13,14 @@ function gameStateToTitle(gameState) {
     case "finished":
       return "Konec hry";
     default:
-      return gameState;
+      return status;
   }
 }
 
 export default function DocumentBody({ game = {} } = {}) {
   return html`
     ${tBodyHeader({
-      title: gameStateToTitle(game.state),
+      title: gameStatusToTitle(game.status),
     })}
     <main>
       <section>

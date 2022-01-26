@@ -7,17 +7,26 @@ service cloud.firestore {
     }
 
     match /games/{game} {
-      // Everybody can read the game if knowns the gameId
-      allow read: if true;
-
-      // Only game owner can list all his games
-      allow list: if resource.data.ownerId == request.auth.uid;
-
-      // Only authorized users can create new game but only until gameId is not already used
-      allow create: if verified(request) && exists(game) == false;
-
-      // Nobody can update or delete a game
+      // Only server can access all game fata
+      allow read: if false;
+      allow list: if false;
+      allow create: if false
       allow update: if false;
+      allow delete: if false;
+    }
+
+    match /users/{user}/games/{game} {
+      // User can list and read his game copies
+      allow read: if user == request.auth.uid;
+      allow list: if user == request.auth.uid;
+
+      // Only backends can create new game
+      allow create: if false;
+
+      // This is how user can make his game moves
+      allow update: if user == request.auth.uid;
+
+      // Only backend can delete the game
       allow delete: if false;
     }
 

@@ -31,14 +31,17 @@ for (let color of cardColors) {
 
 export const penalties = {};
 
+export const GAME_STATUS = {
+  NOT_STARTED: 0,
+};
+
 export const suffleCards = (_cards = cards) =>
   [..._cards.values()].sort(() => Math.random() - 0.5);
 
-export function createNewGame(id, { maxPlayers = 4, dealedCards = 4 } = {}) {
+export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
   return {
-    id,
     turn: 0,
-    started: false,
+    status: GAME_STATUS.NOT_STARTED,
     settings: {
       maxPlayers,
       dealedCards,
@@ -53,9 +56,42 @@ export function createNewGame(id, { maxPlayers = 4, dealedCards = 4 } = {}) {
   };
 }
 
-export function addPlayer(game, { id, name } = {}) {
+export function removeSecrets({
+  turn,
+  status,
+  settings,
+  currentPlayer,
+  penalty,
+  outcome,
+  players,
+  deck,
+  playedCards,
+}) {
+  return {
+    turn,
+    status,
+    settings,
+    currentPlayer: {
+      ...currentPlayer,
+      cards: currentPlayer.cards.map((card) => reversedCard),
+    },
+    penalty,
+    outcome,
+    players: players.map(({ cards, ...player }) => ({
+      ...player,
+      cards: cards.map(() => reversedCard),
+    })),
+    deck: deck.map(() => reversedCard),
+    playedCards: [
+      ...playedCards.slice(-1),
+      ...playedCards.slice(0, -1).map(() => reversedCard),
+    ],
+  };
+}
+
+export function addPlayer(game, { id, name, cards = [] } = {}) {
   const currentPlayersCount = game.players.length;
-  const newPlayer = { id, name, cards: [] };
+  const newPlayer = { id, name, cards };
 
   if (!currentPlayersCount) {
     game.currentPlayer = newPlayer;
