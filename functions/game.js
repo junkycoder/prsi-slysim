@@ -1,6 +1,6 @@
 import functions from "firebase-functions";
 import admin from "firebase-admin";
-import { createNewGame, addPlayer, removeSecrets } from "prsi";
+import { createNewGame, addPlayer, playerGameCopy } from "prsi";
 
 /**
  * Callable function to create a new game.
@@ -44,10 +44,9 @@ export const create = functions
         const privRef = db.collection("games").doc();
         const privDoc = await batch.get(privRef);
         // User's game copy excluding secret data like deck and played cards
-        const copyRef = db.doc(
-          `/users/${context.auth.uid}/games/${privDoc.id}`
-        );
-        const copyDoc = await batch.get(copyRef);
+        const copyRef = db
+          .collection(`/users/${context.auth.uid}/games`)
+          .doc(privDoc.id);
 
         const game = createNewGame({
           maxPlayers: Number(maxPlayers),
@@ -56,7 +55,7 @@ export const create = functions
 
         addPlayer(game, { id: context.auth.token.email, name: playerName });
 
-        const copy = removeSecrets(game);
+        const copy = playerGameCopy(context.auth.token.email, game);
         const meta = {
           id: privDoc.id,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),

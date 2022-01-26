@@ -1,4 +1,4 @@
-import * as Game from "./Game.js";
+import * as Game from "./index.js";
 import { inspect } from "util";
 
 const logObj = (obj) =>
@@ -86,10 +86,9 @@ console.assert(
   g.currentPlayer.id
 );
 
-const player1Moves = Game.makePlayerMoves(g, p);
 
-player1Moves.suffleDeck();
-player1Moves.dealCards();
+Game.moves.suffleDeck(g, p);
+Game.moves.dealCards(g, p);
 
 console.assert(
   g.deck.length === 32 - 4 * 3 - 1,
@@ -107,7 +106,7 @@ console.assert(
 );
 
 try {
-  Game.makePlayerMoves(g, p2).suffleDeck();
+  Game.moves.suffleDeck(g, p2);
 } catch (e) {
   console.assert(
     e.message === "Game has already started",
@@ -117,7 +116,7 @@ try {
 }
 
 while (g.outcome === null) {
-  Game.autoplay(g);
+  Game.autopilot.autoplay(g);
   // logObj(g);
 }
 
