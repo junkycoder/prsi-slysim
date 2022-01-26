@@ -25,7 +25,7 @@
       Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
     </p>
     <!--  -->
-    <button  onclick="location.pathname = '/create-game';">Založit novou hru</button>
+    <button name="create-game">Založit novou hru</button>
     <!--  -->
     <h2>Jak to funguje?</h2>
     <p>Někdo založí novou hru.</p>
@@ -33,6 +33,27 @@
     <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
     <p>Podmínka: Účastníci hry se verifikují pomocí emailu.</p>
   </main>
+  <script type="module">
+    import { currentUser, redirectToVerification } from "/user.js";
+
+    document.addEventListener("DOMContentLoaded", controller);
+
+    async function controller() {
+      const button = document.querySelector('button[name="create-game"]');
+      const listener = () => {
+        window.location.href = "/create-game";
+      };
+      button.addEventListener("click", listener);
+      const user = await currentUser();
+
+      if (!user?.emailVerified) {
+        button.removeEventListener('click', listener);
+        button.addEventListener('click', () => {
+          redirectToVerification({ pathname: "/create-game" });
+        })
+      }
+    }
+  </script>
 </body>
 
 </html>

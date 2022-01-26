@@ -20,39 +20,38 @@
     import { fns } from "/application.js";
     import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
     import { formDataToPayload, searchParamsToFormValues } from "/library.js";
-    import { restrictedLocation } from "/application.js";
     import { playerNameStoredLocally } from "/storage.js";
-
-    const redirectToVerification = (altloc) => {
-      const location = altloc || window.location;
-      const { pathname } = location
-      location.replace(`/verifikace.html?back=${pathname}`);
-    };
+    import { redirectToVerification, restrictedLocation } from "/user.js";
 
     const redirectToTheGame = gameId => {
       window.location.href = `/game/${gameId}`;
     }
 
-    restrictedLocation(window.location.href).then(user => {
-      if (!user) {
+    const handleUserError = ({ message, code }) => {
+      if (message === "unverified") {
         redirectToVerification();
-      } else if (user.newbie) {
-        window.location.search = "?newbie";
-        console.info("Newbie detected, url cleaned.");
-      } else {
-        console.info("User verified.");
-      }
-    }).catch(({ message, code }) => {
-      if (code === "auth/invalid-action-code") {
+      } else if (code === "auth/invalid-action-code") {
         console.warn("Tento odkaz je již neplatný.");
         window.location.search = "";
       } else {
         console.error(`Unknown error ${code}: ${message}`);
         alert("Neočekávaná chyba: " + message);
       }
-    });
+    }
 
     async function controller() {
+      const user = await restrictedLocation(window.location.href).catch(handleUserError);
+
+      if (!user) {
+        console.info("User not verified!");
+        return;
+      } else if (user.newbie) {
+        window.location.search = "?newbie";
+        console.info("Newbie detected, url cleaned.");
+      } else {
+        console.info("User verified.");
+      }
+
       const form = document.querySelector("form");
       searchParamsToFormValues(form);
 

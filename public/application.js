@@ -4,9 +4,6 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-
 import {
   getAuth,
   connectAuthEmulator,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
-  onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 import {
@@ -18,8 +15,6 @@ import {
   getFunctions,
   connectFunctionsEmulator,
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
-
-import { authCompleteEmailStoredLocally } from "/storage.js";
 
 const isEmulation = location.hostname === "localhost";
 
@@ -50,51 +45,3 @@ if (isEmulation) connectFirestoreEmulator(db, "localhost", 8080);
 
 export const fns = getFunctions(app, "europe-west1");
 if (isEmulation) connectFunctionsEmulator(fns, "localhost", 5001);
-
-async function handleSignInWithEmailLink(link) {
-  let email = authCompleteEmailStoredLocally.read();
-
-  if (!email) {
-    alert(
-      "Vypadá to, že chcete dokončit ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
-    );
-    email = window.prompt(
-      `Pokud chcete pokračovat v tompto prohlžeči, vyplně pro kontrolu svojí email adresu:`
-    );
-  }
-
-  const { user } = await signInWithEmailLink(auth, email, link);
-  authCompleteEmailStoredLocally.remove();
-
-  if (!user?.emailVerified) {
-    throw new Error("Sign in failed");
-  }
-
-  return user;
-}
-
-/**
- *
- * @param {string} href Complete URL of protected page
- */
-export const restrictedLocation = async (currentHref) => {
-  let user = auth.currentUser;
-
-  if (!user) {
-    user = await new Promise((resolve) => {
-      onAuthStateChanged(auth, (user) => {
-        resolve(user);
-      });
-    });
-  }
-
-  if (!user?.emailVerified) {
-    if (isSignInWithEmailLink(auth, currentHref)) {
-      user = await handleSignInWithEmailLink(currentHref);
-      // TODO: is it new user for real?
-      user.newbie = true;
-    }
-  }
-
-  return user;
-};
