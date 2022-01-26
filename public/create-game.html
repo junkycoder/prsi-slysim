@@ -61,8 +61,11 @@
         playerNameStoredLocally.write(value);
       });
 
+      const submitButton = form.querySelector("button[type=submit]");
+
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        submitButton.setAttribute("disabled", "disabled");
 
         try {
           const formData = new FormData(event.target);
@@ -80,6 +83,8 @@
           } else {
             alert(`Nastala chyba při vytváření hry.\n${message}`);
           }
+        } finally {
+          submitButton.removeAttribute("disabled");
         }
       });
 
