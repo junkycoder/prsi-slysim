@@ -65,23 +65,17 @@
       const gameId = parseUrlParam("gameId");
 
       if (!gameId) {
-        emit({
-          game: {
-            status: "not-found"
-          },
-        });
+        emit({ game: { status: 0 } });
         return;
       }
 
-
-      // TODO: deep merge state with /games/{gameId}
       onSnapshot(doc(db, "users", user.uid, "games", gameId), (doc) => {
         const game = doc.data();
         console.log({ game });
         emit({ game });
       });
 
-  }
+    }
 
 
   </script>

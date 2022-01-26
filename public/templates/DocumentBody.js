@@ -4,14 +4,8 @@ import tTodoList from "./TodoList.js";
 
 function gameStatusToTitle(status) {
   switch (status) {
-    case "created":
+    case 0:
       return "Hra ještě nezačala";
-    case "waiting":
-      return "Vyberte si hráče";
-    case "playing":
-      return "Hraje";
-    case "finished":
-      return "Konec hry";
     default:
       return status;
   }
