@@ -21,7 +21,7 @@ export default function DocumentBody({ user, game = {} } = {}) {
     })}
     <main>
       <section>
-        <h2>Hráči</h2>
+        <h2>Hráči (${game.players?.length || 0})</h2>
         ${tPlayerList({ players: game.players, userId: user?.id })}
         <!--  -->
         <h2>Stůl</h2>
