@@ -3,27 +3,21 @@ import tBodyHeader from "./BodyHeader.js";
 import tTodoList from "./TodoList.js";
 import tPlayerList from "./PlayerList.js";
 
-const gameStatusToTitle = (status) => {
-  switch (status) {
-    case 0:
-      return "Hra ještě nezačala";
-    default:
-      return status;
-  }
-};
-
 const getUserPlayer = (userId, players = []) =>
   players.find((player) => userId && player.id === userId);
 
 const getLastPlayedCard = ({ playedCards = [] }) => playedCards.slice(-1)[0];
 
 export default function DocumentBody({ user, game = {} } = {}) {
-  const userPlayer = getUserPlayer(user.id, game.players);
+  const userPlayer = getUserPlayer(user.uid, game.players);
   const lastCard = getLastPlayedCard(game);
 
   return html`
     ${tBodyHeader({
-      title: gameStatusToTitle(game.status),
+      gameStatus: game.status,
+      playerName: userPlayer?.name,
+      maxPlayers: game.settings?.maxPlayers,
+      playersCount: game.players?.length,
     })}
     <main>
       <section>
