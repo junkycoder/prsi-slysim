@@ -35,6 +35,12 @@ button:active {
   text-decoration: none;
 }
 
+button[disabled], select[disabled], textarea[disabled] {
+  color: gray;
+  border-color: gray;
+  text-decoration: none;
+}
+
 select {
   height: 50px;
   margin-bottom: 8px;
