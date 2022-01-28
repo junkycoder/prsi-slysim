@@ -1,4 +1,13 @@
 
+
+
+body {
+  background-color: white;
+  max-width: 380px;
+  margin: 10px auto;
+  padding: 0 10px;
+}
+
 body, input, button, textarea, select, option {
   font-size: 18px;
   font-family: monospace;
@@ -42,17 +51,4 @@ figure {
 
 .firebase-emulator-warning {
   display: none;
-}
-
-body.mobile-viewport {
-  max-width: 360px;
-  margin: 24px auto;
-  border: 1px solid silver;
-  padding: 0 12px;
-}
-@media print {
-  body.mobile-viewport {
-    border: none;
-    padding: 0;
-  }
 }
