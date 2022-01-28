@@ -19,6 +19,7 @@ select, input, button, textarea {
 button {
   text-decoration: underline;
   cursor: pointer;
+  color: black;
 }
 button:active {
   color: blue;
