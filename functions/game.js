@@ -38,35 +38,31 @@ export const create = functions
       }
 
       const db = admin.firestore();
+      const ref = db.collection("games").doc();
+      const batch = db.batch();
 
-      return db.runTransaction(async (batch) => {
-        // Private game accessible only to the server.
-        const ref = db.collection("games").doc();
-        const doc = await batch.get(ref);
-
-        const game = createNewGame({
-          maxPlayers: Number(maxPlayers),
-          dealedCards: Number(dealedCards),
-        });
-
-        addPlayer(game, { id: context.auth.uid, name: playerName });
-
-        const meta = {
-          id: doc.id,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          createdBy: context.auth.uid,
-        };
-
-        batch.set(ref, {
-          ...game,
-          ...meta,
-        });
-
-        const copy = playerGameCopy(context.auth.uid, game);
-        await batch.commit();
-
-        return { ...copy, ...meta };
+      const game = createNewGame({
+        maxPlayers: Number(maxPlayers),
+        dealedCards: Number(dealedCards),
       });
+
+      addPlayer(game, { id: context.auth.uid, name: playerName });
+
+      const meta = {
+        id: ref.id,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdBy: context.auth.uid,
+      };
+
+      batch.set(ref, {
+        ...game,
+        ...meta,
+      });
+
+      const copy = playerGameCopy(context.auth.uid, game);
+      await batch.commit();
+
+      return { ...copy, ...meta };
     }
   );
 
@@ -76,19 +72,18 @@ export const copyPlayerGame = functions
   .onWrite(async (change, context) => {
     const db = admin.firestore();
     const game = change.after.data();
+    const batch = db.batch();
 
-    return db.runTransaction(async (batch) => {
-      for (let i = 0; i < game.players.length; i++) {
-        const player = game.players[i];
+    for (let i = 0; i < game.players.length; i++) {
+      const player = game.players[i];
 
-        batch.set(
-          db.collection(`users/${player.id}/games`).doc(game.id),
-          playerGameCopy(player.id, game)
-        );
-      }
+      batch.set(
+        db.collection(`users/${player.id}/games`).doc(game.id),
+        playerGameCopy(player.id, game)
+      );
+    }
 
-      await batch.commit();
-    });
+    await batch.commit();
   });
 
 /**
