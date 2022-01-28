@@ -6,17 +6,9 @@
  */
 export const parseUrlParam = (paramName, url) => {
   if (!url) url = window.location.href;
-
-  const u = new URL(url);
-  const p = new URLPattern({
-    pathname: "/game/:gameId",
-    protocol: u.protocol,
-    hostname: u.hostname,
-  });
-
-  if (p.test(url)) {
-    return p.exec(url).pathname.groups[paramName];
-  }
+  const pattern = new RegExp(`[?&]${paramName}=([^&]*)`);
+  const match = pattern.exec(url);
+  return match && match[1];
 };
 
 /**
