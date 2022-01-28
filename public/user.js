@@ -52,6 +52,10 @@ export const currentUser = async (async) => {
   return user;
 };
 
+export const onCurrentUserChanged = (callback) => {
+  onAuthStateChanged(auth, callback);
+};
+
 /**
  *
  * @param {string} href Complete URL of protected page

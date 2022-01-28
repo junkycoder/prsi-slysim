@@ -100,6 +100,7 @@ export function playerGameCopy(
       ...playedCards.slice(-2),
       ...playedCards.slice(0, -2).map(() => reversedCard),
     ],
+    you: true,
   };
 }
 

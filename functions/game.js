@@ -41,42 +41,55 @@ export const create = functions
 
       return db.runTransaction(async (batch) => {
         // Private game accessible only to the server.
-        const privRef = db.collection("games").doc();
-        const privDoc = await batch.get(privRef);
-        // User's game copy excluding secret data like deck and played cards
-        const copyRef = db
-          .collection(`/users/${context.auth.uid}/games`)
-          .doc(privDoc.id);
+        const ref = db.collection("games").doc();
+        const doc = await batch.get(ref);
 
         const game = createNewGame({
           maxPlayers: Number(maxPlayers),
           dealedCards: Number(dealedCards),
         });
 
-        addPlayer(game, { id: context.auth.token.email, name: playerName });
+        addPlayer(game, { id: context.auth.uid, name: playerName });
 
-        const copy = playerGameCopy(context.auth.token.email, game);
         const meta = {
-          id: privDoc.id,
+          id: doc.id,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          createdBy: context.auth.token.email,
+          createdBy: context.auth.uid,
         };
 
-        batch.set(privRef, {
+        batch.set(ref, {
           ...game,
           ...meta,
         });
-        batch.set(copyRef, {
-          ...copy,
-          ...meta,
-        });
 
+        const copy = playerGameCopy(context.auth.uid, game);
         await batch.commit();
 
         return { ...copy, ...meta };
       });
     }
   );
+
+export const copyPlayerGame = functions
+  .region("europe-west1")
+  .firestore.document("games/{gameId}")
+  .onWrite(async (change, context) => {
+    const db = admin.firestore();
+    const game = change.after.data();
+
+    return db.runTransaction(async (batch) => {
+      for (let i = 0; i < game.players.length; i++) {
+        const player = game.players[i];
+
+        batch.set(
+          db.collection(`users/${player.id}/games`).doc(game.id),
+          playerGameCopy(player.id, game)
+        );
+      }
+
+      await batch.commit();
+    });
+  });
 
 /**
  * Callable function to add a player to an existing game.

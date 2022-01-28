@@ -19,30 +19,22 @@
   <script type="module">
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
     import tDocumentBody from "/templates/DocumentBody.js";
-    import { parseUrlParam } from "/library.js"
+    import { parseUrlParam, deepMerge } from "/library.js"
     import { db } from "/application.js";
     import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-    import { redirectToVerification, restrictedLocation } from "/user.js";
+    import { redirectToVerification, restrictedLocation, onCurrentUserChanged } from "/user.js";
 
     document.addEventListener("DOMContentLoaded", controller);
     document.addEventListener('render', ({ detail: payload }) => {
       render(tDocumentBody(payload), document.body);
     });
 
-
-    function emit(payload) {
-      const event = new CustomEvent('render', {
-        detail: payload
-      });
-      document.dispatchEvent(event);
-    };
-
-    const handleUserError = ({ message, code, }) => {
+    const handleUserError = ({ message, code }) => {
       if (message === "unverified") {
         redirectToVerification();
       } else if (code === "auth/invalid-action-code") {
         console.warn("Tento odkaz je již neplatný.");
-        window.location.search = "";
+        redirectToVerification();
       } else {
         console.error(`Unknown error ${code}: ${message}`);
         alert("Neočekávaná chyba: " + message);
@@ -50,14 +42,20 @@
     }
 
     async function controller() {
-      const user = await restrictedLocation(window.location.href).catch(handleUserError);
+      let user = await restrictedLocation(window.location.href).catch(handleUserError);
+      let state = { game: undefined, user: user?.toJSON() };
+
+      const emit = (payload = {}) => {
+        state = deepMerge(state, payload);
+        const event = new CustomEvent('render', {
+          detail: state
+        });
+        document.dispatchEvent(event);
+      }
 
       if (!user) {
         console.info("User not verified!");
         return;
-      } else if (user.newbie) {
-        window.location.search = "?newbie";
-        console.info("Newbie detected, url cleaned.");
       } else {
         console.info("User verified.");
       }
@@ -70,13 +68,13 @@
       }
 
       onSnapshot(doc(db, "users", user.uid, "games", gameId), (doc) => {
-        const game = doc.data();
-        console.log({ game });
-        emit({ game });
+        emit({ game: doc.data() });
       });
 
+      onCurrentUserChanged((user) => {
+        emit({ user: user.toJSON() });
+      });
     }
-
 
   </script>
 </head>

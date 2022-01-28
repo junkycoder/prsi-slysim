@@ -76,3 +76,24 @@ export const searchParamsToFormValues = (formElement, { search } = {}) => {
     }
   }
 };
+
+/**
+ * Deep merge objects.
+ * @param {Object} target Target object
+ * @param {Object} source Source object
+ * @returns {Object}
+ */
+export const deepMerge = (target, source) => {
+  Object.keys(source).forEach((key) => {
+    const targetValue = target[key];
+    const sourceValue = source[key];
+
+    if (typeof deepMerge === "object" && typeof sourceValue === "object") {
+      target[key] = merge(targetValue, sourceValue);
+    } else {
+      target[key] = sourceValue;
+    }
+  });
+
+  return target;
+};
