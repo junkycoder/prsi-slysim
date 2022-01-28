@@ -14,7 +14,7 @@
       },
       {
         "source": "/game/**",
-        "destination": "/game.html"
+        "destination": "/game/index.html"
       },
       {
         "source": "/create-game",
