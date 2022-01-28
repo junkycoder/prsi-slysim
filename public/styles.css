@@ -2,7 +2,6 @@
 
 
 body {
-  background-color: white;
   max-width: 380px;
   margin: 10px auto;
   padding: 0 10px;
@@ -13,6 +12,8 @@ body, input, button, textarea, select, option {
   font-family: monospace;
   line-height: 2;
   box-sizing: border-box;
+  background-color: white;
+  color: black;
 }
 
 select, input, button, textarea {
