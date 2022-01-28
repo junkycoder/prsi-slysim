@@ -33,15 +33,16 @@ export default function DocumentBody({ user, game = {} } = {}) {
         <h2>Stůl</h2>
         ${lastCard &&
         html`<figure>${lastCard.value} ${lastCard.color}</figure>`}
-        <figure>Balíček karet</figure>
+        <figure>Balíček karet (${game.deck?.length})</figure>
       </section>
       <section>
         <h2>Tvoje možnosti</h2>
-        <select name="card" onchange="handleSelectedHandCardChanged(event)">
+        <select name="card" onchange="handleSelectedHandCardChanged(event)" disabled>
           ${userPlayer?.cards.map(
             ({ id, value, color }) =>
               html`<option value="${id}">${value} ${color}</option>`
           )}
+          ${!userPlayer?.cards.length && html`<option disabled selected>žádné karty v ruce</option>`}
         </select>
         <button name="suffle">Zamíchat karty</button>
         <button disabled name="deal">Rozdat karty</button>
