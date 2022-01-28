@@ -19,11 +19,10 @@
     import { db } from "/application.js";
     import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { redirectToVerification, restrictedLocation, onCurrentUserChanged } from "/user.js";
+    import { createAudioContext, SoundPlayer, createSoundListener, SoundSource } from "/library/sounts/index.js";
+
 
     document.addEventListener("DOMContentLoaded", controller);
-    document.addEventListener('render', ({ detail: payload }) => {
-      render(tDocumentBody(payload), document.body);
-    });
 
     const handleUserError = ({ message, code }) => {
       if (message === "unverified") {
@@ -37,9 +36,21 @@
       }
     }
 
+
+    /**
+     * @param {AudioContext} audioContext
+     * @param {string} path
+     */
+    async function loadAudioBuffer(audioContext, path) {
+      const response = await fetch(path);
+      const data = await response.arrayBuffer();
+      return audioContext.decodeAudioData(data);
+    }
+
+
     async function controller() {
       let user = await restrictedLocation(window.location.href).catch(handleUserError);
-      let state = { game: undefined, user: user?.toJSON() };
+      let state = { game: undefined, user: user?.toJSON(), sounds: true, music: true };
 
       const emit = (payload = {}) => {
         state = deepMerge(state, payload);
@@ -56,6 +67,50 @@
         console.info("User verified.");
       }
 
+      const audioContext = createAudioContext();
+      const listener = createSoundListener(audioContext);
+      listener.setPosition(0, -1, 0);
+
+      const rainSource = new SoundSource(audioContext.destination, { gain: .4 });
+      const rainBuffer = await loadAudioBuffer(audioContext, "/assets/light-rain-sound.mp3");
+
+      if (state.music) {
+        // source.setOrientation(0, -1, 0);
+        rainSource.play(rainBuffer, { loop: true });
+      }
+
+
+      const handleMusicClick = (event) => {
+        event.preventDefault();
+        emit({ music: !state.music });
+        if (state.music) {
+          rainSource.play(rainBuffer, { loop: true });
+        } else {
+          rainSource.stopAll();
+        }
+      }
+      const handleSoundsClick = (event) => {
+        event.preventDefault();
+        emit({ sounds: !state.sounds });
+      }
+
+      const handleGameMove = event => {
+        event.preventDefault();
+        const { name } = event.target;
+        console.warn("Not yet implemented", name);
+      }
+
+
+      document.addEventListener('render', ({ detail: payload }) => {
+        render(tDocumentBody({
+          ...payload,
+          handleSoundsClick,
+          handleMusicClick,
+          handleGameMove,
+        }), document.body);
+      });
+
+
       const gameId = parseUrlParam("game");
 
       if (!gameId) {
@@ -70,8 +125,9 @@
       onCurrentUserChanged((user) => {
         emit({ user: user.toJSON() });
       });
-    }
 
+
+    }
   </script>
 </head>
 

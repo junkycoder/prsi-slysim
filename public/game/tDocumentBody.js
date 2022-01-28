@@ -8,7 +8,15 @@ const getUserPlayer = (userId, players = []) =>
 
 const getLastPlayedCard = ({ playedCards = [] }) => playedCards.slice(-1)[0];
 
-export default function DocumentBody({ user, game = {} } = {}) {
+export default function DocumentBody({
+  user,
+  game = {},
+  sounds,
+  music,
+  handleSoundsClick,
+  handleMusicClick,
+  handleGameMove,
+} = {}) {
   const userPlayer = getUserPlayer(user.uid, game.players);
   const lastCard = getLastPlayedCard(game);
 
@@ -19,6 +27,18 @@ export default function DocumentBody({ user, game = {} } = {}) {
       maxPlayers: game.settings?.maxPlayers,
       playersCount: game.players?.length,
     })}
+    <p>
+      Zvukové efekty jsou <strong>${sounds ? "zapnuté" : "vypnuté"}</strong> (<a
+        href="#"
+        @click=${handleSoundsClick}
+        >${!sounds ? "zapnout" : "vypnout"}</a
+      >), déšť na pozadí je
+      <strong>${music ? "zapnutý" : "vypnutý"}</strong> (<a
+        href="#"
+        @click=${handleMusicClick}
+        >${!music ? "zapnout" : "vypnout"}</a
+      >).
+    </p>
     <main>
       <section>
         <h2>Hráči (${game.players?.length || 0})</h2>
@@ -27,15 +47,19 @@ export default function DocumentBody({ user, game = {} } = {}) {
         <h2>Stůl</h2>
         <figure>
           Karta na stole:
-          <strong>${lastCard ? `${lastCard.value} ${lastCard.color}` : "žádná"}</strong>
+          <strong
+            >${lastCard
+              ? `${lastCard.value} ${lastCard.color}`
+              : "žádná"}</strong
+          >
         </figure>
         <figure>Balíček karet (${game.deck?.length})</figure>
       </section>
       <section>
         <h2>Tvoje možnosti</h2>
-        <button name="suffle">Zamíchat karty na stole</button>
-        <button disabled name="deal">Rozdat karty</button>
-        <button disabled name="draw">Líznout si</button>
+        <button @click=${handleGameMove} name="suffle">Zamíchat karty na stole</button>
+        <button @click=${handleGameMove} disabled name="deal">Rozdat karty</button>
+        <button @click=${handleGameMove} disabled name="draw">Líznout si</button>
         <select
           name="card"
           onchange="handleSelectedHandCardChanged(event)"
@@ -48,9 +72,9 @@ export default function DocumentBody({ user, game = {} } = {}) {
           ${!userPlayer?.cards.length &&
           html`<option disabled selected>žádné karty v ruce</option>`}
         </select>
-        <button disabled name="move">Táhnout kartu</button>
-        <button disabled name="stay">Stát</button>
-        <button name="leave">Opustit hru</button>
+        <button @click=${handleGameMove} disabled name="move">Táhnout kartu</button>
+        <button @click=${handleGameMove} disabled name="stay">Stát</button>
+        <button @click=${handleGameMove} name="leave">Opustit hru</button>
       </section>
       <!-- ${tTodoList()} -->
     </main>
