@@ -6,9 +6,10 @@
  */
 export const parseUrlParam = (paramName, url) => {
   if (!url) url = window.location.href;
-  const pattern = new RegExp(`[?&]${paramName}=([^&]*)`);
-  const match = pattern.exec(url);
-  return match && match[1];
+  const u = new URL(url);
+  const s = u.pathname.split("/");
+  const i = s.findIndex((slug, index, list) => slug === paramName);
+  return i > -1 ? s[i + 1] : null;
 };
 
 /**

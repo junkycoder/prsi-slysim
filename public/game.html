@@ -60,7 +60,7 @@
         console.info("User verified.");
       }
 
-      const gameId = parseUrlParam("gameId");
+      const gameId = parseUrlParam("game");
 
       if (!gameId) {
         emit({ game: { status: 0 } });
