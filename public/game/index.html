@@ -15,7 +15,7 @@
   <script type="module">
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
     import tDocumentBody from "./tDocumentBody.js";
-    import { parseUrlParam, deepMerge } from "/library.js"
+    import { parseUrlParam, deepMerge, loadAudioBuffer } from "/library.js"
     import { db } from "/application.js";
     import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { redirectToVerification, restrictedLocation, onCurrentUserChanged } from "/user.js";
@@ -23,6 +23,7 @@
 
 
     document.addEventListener("DOMContentLoaded", controller);
+
 
     const handleUserError = ({ message, code }) => {
       if (message === "unverified") {
@@ -36,21 +37,9 @@
       }
     }
 
-
-    /**
-     * @param {AudioContext} audioContext
-     * @param {string} path
-     */
-    async function loadAudioBuffer(audioContext, path) {
-      const response = await fetch(path);
-      const data = await response.arrayBuffer();
-      return audioContext.decodeAudioData(data);
-    }
-
-
     async function controller() {
       let user = await restrictedLocation(window.location.href).catch(handleUserError);
-      let state = { game: undefined, user: user?.toJSON(), sounds: true, music: true };
+      let state = { game: undefined, user: user?.toJSON(), sounds: false, music: false };
 
       const emit = (payload = {}) => {
         state = deepMerge(state, payload);
@@ -74,15 +63,10 @@
       const rainSource = new SoundSource(audioContext.destination, { gain: .4 });
       const rainBuffer = await loadAudioBuffer(audioContext, "/assets/light-rain-sound.mp3");
 
-      if (state.music) {
-        // source.setOrientation(0, -1, 0);
-        rainSource.play(rainBuffer, { loop: true });
-      }
-
-
       const handleMusicClick = (event) => {
         event.preventDefault();
         emit({ music: !state.music });
+
         if (state.music) {
           rainSource.play(rainBuffer, { loop: true });
         } else {

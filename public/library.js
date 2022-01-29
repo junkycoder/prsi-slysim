@@ -90,3 +90,13 @@ export const deepMerge = (target, source) => {
 
   return target;
 };
+
+/**
+ * @param {AudioContext} audioContext
+ * @param {string} path
+ */
+export const loadAudioBuffer = async (audioContext, path) => {
+  const response = await fetch(path);
+  const data = await response.arrayBuffer();
+  return audioContext.decodeAudioData(data);
+};
