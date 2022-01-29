@@ -21,10 +21,12 @@ export default function DocumentBody({
   game = {},
   sounds,
   music,
+  selectedCard,
   handleSoundsClick,
   handleMusicClick,
   handleGameMove,
   handleShareGame,
+  handlePlayerCardSelect,
 } = {}) {
   const userPlayer = getUserPlayer(user.uid, game.players);
   const lastCard = getLastPlayedCard(game);
@@ -80,17 +82,17 @@ export default function DocumentBody({
         </button>
         <select
           name="card"
-          onchange="handleSelectedHandCardChanged(event)"
+          @change=${handlePlayerCardSelect}
           disabled
         >
           ${userPlayer?.cards.map(
             ({ id, value, color }) =>
-              html`<option value="${id}">${value} ${color}</option>`
+              html`<option ?selected=${selectedCard?.id} value="${id}">${value} ${color}</option>`
           )}
           ${!userPlayer?.cards.length &&
           html`<option disabled selected>žádné karty v ruce</option>`}
         </select>
-        <button @click=${handleGameMove} disabled name="move">
+        <button @click=${handleGameMove} disabled name="card">
           Táhnout kartu
         </button>
         <button @click=${handleGameMove} disabled name="stay">Stát</button>

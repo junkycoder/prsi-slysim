@@ -17,13 +17,11 @@
     import tDocumentBody from "./tDocumentBody.js";
     import { parseUrlParam, deepMerge, loadAudioBuffer } from "/library.js"
     import { db } from "/application.js";
-    import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { doc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { redirectToVerification, restrictedLocation, onCurrentUserChanged } from "/user.js";
     import { createAudioContext, SoundPlayer, createSoundListener, SoundSource } from "/library/sounts/index.js";
 
-
     document.addEventListener("DOMContentLoaded", controller);
-
 
     const handleUserError = ({ message, code }) => {
       if (message === "unverified") {
@@ -38,8 +36,17 @@
     }
 
     async function controller() {
+      const gameId = parseUrlParam("game");
       let user = await restrictedLocation(window.location.href).catch(handleUserError);
-      let state = { game: undefined, user: user?.toJSON(), sounds: false, music: false };
+      let state = {
+        sounds: false,
+        music: false,
+        game: undefined,
+        user: user?.toJSON(),
+        selectedCard: undefined,
+        selectedColor: undefined,
+      };
+
 
       const emit = (payload = {}) => {
         state = deepMerge(state, payload);
@@ -97,10 +104,30 @@
         }
       }
 
+      const handlePlayerCardSelect = (event) => {
+        event.preventDefault();
+        emit({ selectedCard: event.target.value });
+      }
+
       const handleGameMove = event => {
         event.preventDefault();
-        const { name } = event.target;
-        console.warn("Not yet implemented", name);
+
+        const data = {
+          name: event.target.name,
+        };
+
+        if (state.selectedCard) {
+          data.card = state.selectedCard;
+        }
+
+        if (state.selectedColor) {
+          data.color = state.selectedColor;
+        }
+
+        addDoc(collection(db, "users", user.uid, "games", gameId, "moves"), data)
+          .catch(({ message }) => {
+            alert(message);
+          });
       }
 
 
@@ -111,11 +138,10 @@
           handleMusicClick,
           handleShareGame,
           handleGameMove,
+          handlePlayerCardSelect,
         }), document.body);
       });
 
-
-      const gameId = parseUrlParam("game");
 
       if (!gameId) {
         emit({ game: { status: 0 } });
