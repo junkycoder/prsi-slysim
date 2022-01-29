@@ -80,18 +80,18 @@
 
       const handleShareGame = (event) => {
         event.preventDefault();
-        const link = `${window.location.origin}${window.location.pathname}?sharer=${user.uid}`;
+        const shateLink = window.location.origin + window.location.pathname + "?sharer=" + user.uid;
+        const shareText = `Zahrajem si prší? Hra je založená, stačí se připojit..`;
 
         if (navigator.share) {
           navigator.share({
-            title: "Zahrajem si prší?",
-            text: "Hra je založená, stačí se jen přihlásit a hrát!",
-            url: link
+            text: shareText,
+            url: shateLink
           })
             .then(() => console.info("Successful share"))
             .catch((error) => console.error("Error sharing", error));
         } else {
-          navigator.clipboard.writeText(link)
+          navigator.clipboard.writeText(`${shareText} ${shateLink}`)
             .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
             .catch((error) => console.error("Error copying", error));
         }
