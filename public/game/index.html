@@ -78,6 +78,25 @@
         emit({ sounds: !state.sounds });
       }
 
+      const handleShareGame = (event) => {
+        event.preventDefault();
+        const link = `${window.location.origin}${window.location.pathname}?sharer=${user.uid}`;
+
+        if (navigator.share) {
+          navigator.share({
+            title: "Zahrajem si prší?",
+            text: "Hra je založená, stačí se jen přihlásit a hrát!",
+            url: link
+          })
+            .then(() => console.info("Successful share"))
+            .catch((error) => console.error("Error sharing", error));
+        } else {
+          navigator.clipboard.writeText(link)
+            .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
+            .catch((error) => console.error("Error copying", error));
+        }
+      }
+
       const handleGameMove = event => {
         event.preventDefault();
         const { name } = event.target;
@@ -90,6 +109,7 @@
           ...payload,
           handleSoundsClick,
           handleMusicClick,
+          handleShareGame,
           handleGameMove,
         }), document.body);
       });
@@ -109,7 +129,6 @@
       onCurrentUserChanged((user) => {
         emit({ user: user.toJSON() });
       });
-
 
     }
   </script>

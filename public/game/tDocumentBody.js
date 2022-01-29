@@ -1,7 +1,15 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
-import tBodyHeader from "./tBodyHeader.js";
 import tTodoList from "./tTodoList.js";
 import tPlayerList from "./tPlayerList.js";
+
+const gameStatusToTitle = (status) => {
+  switch (status) {
+    case 0:
+      return "Hra ještě nezačala";
+    default:
+      return "Zatím nejsou data";
+  }
+};
 
 const getUserPlayer = (userId, players = []) =>
   players.find((player) => userId && player.id === userId);
@@ -16,17 +24,23 @@ export default function DocumentBody({
   handleSoundsClick,
   handleMusicClick,
   handleGameMove,
+  handleShareGame,
 } = {}) {
   const userPlayer = getUserPlayer(user.uid, game.players);
   const lastCard = getLastPlayedCard(game);
 
   return html`
-    ${tBodyHeader({
-      gameStatus: game.status,
-      playerName: userPlayer?.name,
-      maxPlayers: game.settings?.maxPlayers,
-      playersCount: game.players?.length,
-    })}
+    <header>
+      <h1>${gameStatusToTitle(game.status)}</h1>
+      <p>
+        ${userPlayer?.name
+          ? html` U stolu sedí ${userPlayer?.name} <br />
+              a ${game.players?.length - 1 || "nikdo"} další. Maximalní počet
+              hráčů je ${game.settings?.maxPlayers}.`
+          : "Zde by se zobrazí základní informace vytvořené hře."}
+      </p>
+      <p><a href="#" @click=${handleShareGame}>Sdílet odkaz na hru</a></p>
+    </header>
     <p>
       Zvukové efekty jsou <strong>${sounds ? "zapnuté" : "vypnuté"}</strong> (<a
         href="#"
@@ -47,19 +61,23 @@ export default function DocumentBody({
         <h2>Stůl</h2>
         <figure>
           Karta na stole:
-          <strong
-            >${lastCard
-              ? `${lastCard.value} ${lastCard.color}`
-              : "žádná"}</strong
-          >
+          <strong>
+            ${lastCard ? `${lastCard.value} ${lastCard.color}` : "žádná"}
+          </strong>
         </figure>
         <figure>Balíček karet (${game.deck?.length})</figure>
       </section>
       <section>
         <h2>Tvoje možnosti</h2>
-        <button @click=${handleGameMove} name="suffle">Zamíchat karty na stole</button>
-        <button @click=${handleGameMove} disabled name="deal">Rozdat karty</button>
-        <button @click=${handleGameMove} disabled name="draw">Líznout si</button>
+        <button @click=${handleGameMove} name="suffle">
+          Zamíchat karty na stole
+        </button>
+        <button @click=${handleGameMove} disabled name="deal">
+          Rozdat karty
+        </button>
+        <button @click=${handleGameMove} disabled name="draw">
+          Líznout si
+        </button>
         <select
           name="card"
           onchange="handleSelectedHandCardChanged(event)"
@@ -72,7 +90,9 @@ export default function DocumentBody({
           ${!userPlayer?.cards.length &&
           html`<option disabled selected>žádné karty v ruce</option>`}
         </select>
-        <button @click=${handleGameMove} disabled name="move">Táhnout kartu</button>
+        <button @click=${handleGameMove} disabled name="move">
+          Táhnout kartu
+        </button>
         <button @click=${handleGameMove} disabled name="stay">Stát</button>
         <button @click=${handleGameMove} name="leave">Opustit hru</button>
       </section>
