@@ -37,7 +37,15 @@
 
     async function controller() {
       const gameId = parseUrlParam("game");
-      let user = await restrictedLocation(window.location.href).catch(handleUserError);
+      const user = await restrictedLocation(window.location.href).catch(handleUserError);
+
+      if (!user) {
+        console.info("User not verified!");
+        return;
+      } else {
+        console.info("User verified.");
+      }
+
       let state = {
         sounds: false,
         music: false,
@@ -47,20 +55,12 @@
         selectedColor: undefined,
       };
 
-
       const emit = (payload = {}) => {
         state = deepMerge(state, payload);
         const event = new CustomEvent('render', {
           detail: state
         });
         document.dispatchEvent(event);
-      }
-
-      if (!user) {
-        console.info("User not verified!");
-        return;
-      } else {
-        console.info("User verified.");
       }
 
       const audioContext = createAudioContext();
