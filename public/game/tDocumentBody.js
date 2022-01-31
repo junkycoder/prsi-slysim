@@ -27,6 +27,7 @@ export default function DocumentBody({
   handleGameMove,
   handleShareGame,
   handlePlayerCardSelect,
+  handleReloadPage,
 } = {}) {
   const userPlayer = getUserPlayer(user.uid, game.players);
   const lastCard = getLastPlayedCard(game);
@@ -39,9 +40,15 @@ export default function DocumentBody({
           ? html` U stolu sedí ${userPlayer?.name} <br />
               a ${game.players?.length - 1 || "nikdo"} další. Maximalní počet
               hráčů je ${game.settings?.maxPlayers}.`
-          : "Zde by se zobrazí základní informace vytvořené hře."}
+          : "Zde by se zobrazí základní informace vytvořené hře. Pokud tomu tak nebude, zkuste načíst stránku znovu."}
       </p>
-      <p><a href="#" @click=${handleShareGame}>Sdílet odkaz na hru</a></p>
+      <p>
+        ${isNaN(game.status)
+          ? html`<a href="#" @click=${handleReloadPage}
+              >Znovu načíst stránku</a
+            >`
+          : html`<a href="#" @click=${handleShareGame}>Sdílet odkaz na hru</a>`}
+      </p>
     </header>
     <p>
       Zvukové efekty jsou <strong>${sounds ? "zapnuté" : "vypnuté"}</strong> (<a
@@ -80,14 +87,13 @@ export default function DocumentBody({
         <button @click=${handleGameMove} disabled name="draw">
           Líznout si
         </button>
-        <select
-          name="card"
-          @change=${handlePlayerCardSelect}
-          disabled
-        >
+        <select name="card" @change=${handlePlayerCardSelect} disabled>
           ${userPlayer?.cards.map(
-            ({ id, value, color }) =>
-              html`<option ?selected=${selectedCard?.id} value="${id}">${value} ${color}</option>`
+            ({ id, value, color }) => html`
+              <option ?selected=${selectedCard?.id} value="${id}">
+                ${value} ${color}
+              </option>
+            `
           )}
           ${!userPlayer?.cards.length &&
           html`<option disabled selected>žádné karty v ruce</option>`}
