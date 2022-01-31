@@ -1,6 +1,12 @@
 import functions from "firebase-functions";
 import admin from "firebase-admin";
-import { createNewGame, addPlayer, playerGameCopy } from "prsi";
+import {
+  createNewGame,
+  addPlayer,
+  playerGameCopy,
+  addSpectator,
+  spectactorGameCopy,
+} from "prsi";
 
 /**
  * Callable function to create a new game.
@@ -83,6 +89,15 @@ export const copyPlayerGame = functions
       );
     }
 
+    for (let i = 0; i < game.spectators.length; i++) {
+      const spectactor = game.spectators[i];
+
+      batch.set(
+        db.collection(`users/${spectactor.id}/games`).doc(game.id),
+        spectactorGameCopy(spectactor.id, game)
+      );
+    }
+
     await batch.commit();
   });
 
@@ -91,13 +106,47 @@ export const copyPlayerGame = functions
  */
 export const join = functions
   .region("europe-west1")
-  .https.onCall(async ({ playerName }, context) => {
+  .https.onCall(async ({ playerName, gameId }, context) => {
+    if (!context.auth || !context.auth.token || !context.auth.token.email) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Zapojit se do hry může pouze ověřený uživatel."
+      );
+    }
+
+    if (!gameId) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Chybí game ID!"
+      );
+    }
+
     if (!playerName) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Zadejte jméno hráče."
       );
     }
+
+    const db = admin.firestore();
+    const ref = db.collection("games").doc(gameId);
+
+    return db.runTransaction(async (batch) => {
+      try {
+        const game = (await batch.get(ref)).data();
+        const player = { id: context.auth.uid, name: playerName };
+        if (game.players.length >= game.maxPlayers) {
+          addPlayer(game, player);
+        } else {
+          addSpectator(game, player);
+        }
+        batch.update(ref, game);
+        await batch.commit();
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, error: error.message };
+      }
+    });
   });
 
 /**

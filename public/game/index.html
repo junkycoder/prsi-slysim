@@ -13,11 +13,14 @@
     }
   </style>
   <script type="module">
+    import { fns } from "/application.js";
+    import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
-    import tDocumentBody from "./tDocumentBody.js";
+    import tGameBoard from "/game/tGameBoard.js";
+    import tJoinGame from "/game/tJoinGame.js";
     import { parseUrlParam, deepMerge, createSound } from "/library.js"
     import { db } from "/application.js";
-    import { doc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { doc, onSnapshot, addDoc, collection, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { redirectToVerification, restrictedLocation, onCurrentUserChanged } from "/user.js";
 
     document.addEventListener("DOMContentLoaded", controller);
@@ -62,6 +65,30 @@
         document.dispatchEvent(event);
       }
 
+      const handleJoinGame = async (event) => {
+        event.preventDefault();
+        emit({ joining: true });
+
+        try {
+          const formData = new FormData(event.target);
+          const playerName = formData.get("player-name");
+          const { data: { ok = false, error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
+
+          if (ok) {
+            emit({ spectator: false });
+          } else {
+            alert(`Nepodařilo se. Zkuste to prosím znovu. \n${error}`);
+          }
+        } catch ({ message, code }) {
+          if (code === "functions/permission-denied") {
+            redirectToVerification();
+          } else {
+            alert(`Nastala chyba:\n${message}`);
+          }
+        } finally {
+          emit({ joining: false })
+        }
+      }
 
       let rainSound; // lazy loaded (onclick)
 
@@ -131,17 +158,27 @@
           });
       }
 
+      const handleReloadPage = () => {
+        window.location.reload();
+      }
 
       document.addEventListener('render', ({ detail: payload }) => {
-        render(tDocumentBody({
-          ...payload,
-          handleSoundsClick,
-          handleMusicClick,
-          handleShareGame,
-          handleGameMove,
-          handlePlayerCardSelect,
-          handleReloadPage: () => window.location.reload(),
-        }), document.body);
+        if (payload.spectator) {
+          render(tJoinGame({
+            ...payload,
+            handleJoinGame,
+          }), document.body);
+        } else {
+          render(tGameBoard({
+            ...payload,
+            handleSoundsClick,
+            handleMusicClick,
+            handleShareGame,
+            handleGameMove,
+            handlePlayerCardSelect,
+            handleReloadPage,
+          }), document.body);
+        }
       });
 
 
@@ -150,7 +187,14 @@
         return;
       }
 
-      onSnapshot(doc(db, "users", user.uid, "games", gameId), (doc) => {
+      const query = doc(db, "users", user.uid, "games", gameId);
+
+      getDoc(query).then((doc) => {
+        const game = doc.data();
+        emit({ game, spectator: !doc.exists() });
+      }).catch(console.error);
+
+      onSnapshot(query, (doc) => {
         emit({ game: doc.data() });
       });
 

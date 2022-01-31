@@ -54,6 +54,7 @@ export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
       dealedCards,
     },
     players: [],
+    spectators: [],
     currentPlayer: null,
     currentColor: null,
     deck: suffleCards(),
@@ -73,6 +74,7 @@ export function playerGameCopy(
     penalty,
     outcome,
     players,
+    spectators,
     deck,
     playedCards,
   }
@@ -95,6 +97,7 @@ export function playerGameCopy(
       ...player,
       cards: playerId === id ? cards : cards.map(() => reversedCard),
     })),
+    spectators,
     deck: deck.map(() => reversedCard),
     playedCards: [
       ...playedCards.slice(-2),
@@ -104,7 +107,15 @@ export function playerGameCopy(
   };
 }
 
-export function addPlayer(game, { id, name, cards = [] } = {}) {
+export function spectactorGameCopy(spectator, game) {
+  return playerGameCopy(spectator.id, game);
+}
+
+export function addPlayer(game, { id, name, cards = [] }) {
+  if (game.players.find((player) => player.id === id)) {
+    throw new Error("Player already exists");
+  }
+
   const currentPlayersCount = game.players.length;
   const newPlayer = { id, name, cards };
 
@@ -117,6 +128,13 @@ export function addPlayer(game, { id, name, cards = [] } = {}) {
   } else {
     throw new Error("Game is full");
   }
+}
+
+export function addSpectator(game, { id, name }) {
+  if (game.spectators.find((spectator) => spectator.id === id)) {
+    throw new Error("Spectator already exists");
+  }
+  game.spectators.push({ id, name });
 }
 
 export function getPlayer(game, id) {
