@@ -9,7 +9,7 @@ body {
 
 body, input, button, textarea, select, option {
   font-size: 18px;
-  font-family: monospace;
+  font-family: Verdana, sans-serif;
   line-height: 2;
   box-sizing: border-box;
   background-color: white;
