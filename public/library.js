@@ -91,6 +91,13 @@ export const deepMerge = (target, source) => {
   return target;
 };
 
+import {
+  createAudioContext,
+  SoundPlayer,
+  createSoundListener,
+  SoundSource,
+} from "/library/sounts/index.js";
+
 /**
  * @param {AudioContext} audioContext
  * @param {string} path
@@ -100,3 +107,23 @@ export const loadAudioBuffer = async (audioContext, path) => {
   const data = await response.arrayBuffer();
   return audioContext.decodeAudioData(data);
 };
+
+/**
+ *
+ * @param {string} soundPath
+ * @param {Object} options {  gain = .5, loop = false }}
+ * @returns Methods: play, stop
+ */
+export const createSound = async (soundPath, { gain = 0.5, loop = false } = {}) => {
+  const context = createAudioContext();
+  const source = new SoundSource(context.destination, { gain });
+  const buffer = await loadAudioBuffer(context, soundPath);
+
+  const listener = createSoundListener(context);
+  listener.setPosition(0, -1, 0);
+
+  return {
+    play: () => source.play(buffer, { loop }),
+    stop: () => source.stopAll(),
+  };
+}

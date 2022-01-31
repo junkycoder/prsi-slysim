@@ -15,11 +15,10 @@
   <script type="module">
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
     import tDocumentBody from "./tDocumentBody.js";
-    import { parseUrlParam, deepMerge, loadAudioBuffer } from "/library.js"
+    import { parseUrlParam, deepMerge, createSound } from "/library.js"
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { redirectToVerification, restrictedLocation, onCurrentUserChanged } from "/user.js";
-    import { createAudioContext, SoundPlayer, createSoundListener, SoundSource } from "/library/sounts/index.js";
 
     document.addEventListener("DOMContentLoaded", controller);
 
@@ -63,23 +62,25 @@
         document.dispatchEvent(event);
       }
 
-      const audioContext = createAudioContext();
-      const listener = createSoundListener(audioContext);
-      listener.setPosition(0, -1, 0);
 
-      const rainSource = new SoundSource(audioContext.destination, { gain: .4 });
-      const rainBuffer = await loadAudioBuffer(audioContext, "/assets/light-rain-sound.mp3");
+      let rainSound; // lazy loaded (onclick)
 
-      const handleMusicClick = (event) => {
+      const handleMusicClick = async (event) => {
         event.preventDefault();
         emit({ music: !state.music });
 
+
+        if (!rainSound) {
+          rainSound = await createSound("/assets/light-rain-sound.mp3", { gain: .4, loop: true });
+        }
+
         if (state.music) {
-          rainSource.play(rainBuffer, { loop: true });
+          rainSound.play();
         } else {
-          rainSource.stopAll();
+          rainSound.stop();
         }
       }
+
       const handleSoundsClick = (event) => {
         event.preventDefault();
         emit({ sounds: !state.sounds });
@@ -139,6 +140,7 @@
           handleShareGame,
           handleGameMove,
           handlePlayerCardSelect,
+          handleReloadPage: () => window.location.reload(),
         }), document.body);
       });
 
