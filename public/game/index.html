@@ -189,10 +189,13 @@
 
       const query = doc(db, "users", user.uid, "games", gameId);
 
-      getDoc(query).then((doc) => {
-        const game = doc.data();
-        emit({ game, spectator: !doc.exists() });
-      }).catch(console.error);
+      if (window.location.search.includes("creator")) {
+        getDoc(query).then((doc) => {
+          const game = doc.data();
+          emit({ game, spectator: !doc.exists() });
+        }).catch(console.error);
+        window.location.search = "";
+      }
 
       onSnapshot(query, (doc) => {
         emit({ game: doc.data() });

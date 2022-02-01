@@ -24,7 +24,7 @@
     import { redirectToVerification, restrictedLocation } from "/user.js";
 
     const redirectToTheGame = gameId => {
-      window.location.href = `/game/${gameId}`;
+      window.location.href = `/game/${gameId}#creator`;
     }
 
     const handleUserError = ({ message, code }) => {
