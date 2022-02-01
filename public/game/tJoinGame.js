@@ -27,7 +27,7 @@ export default function tJoinGame({
           />
         </label>
         <input type="hidden" name="id" value=${gameId} />
-        <button type="submit" ?disabled="{joining}">Odeslat</button>
+        <button type="submit" ?disabled=${joining}>Odeslat</button>
         <h2>Co bude dál?</h2>
         <p>Po odeslání budete automaticky zapojeni do hry.</p>
         <h2>O jakou hru jde?</h2>
@@ -36,9 +36,8 @@ export default function tJoinGame({
           <a
             href="https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD"
             title="Wikipedie"
-          >
-            prší </a
-          >. Hra je vytvořená primárně pro uživatele se zrakovým handicapem.<br />
+          >prší </a>.
+          Hra je vytvořená primárně pro uživatele se zrakovým handicapem.<br />
           Více informací <a href="/" title="Prší slyšim">zde</a>.
         </p>
       </form>
