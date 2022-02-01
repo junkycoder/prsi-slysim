@@ -129,10 +129,10 @@ export const join = functions
     }
 
     const db = admin.firestore();
-    const ref = db.collection("games").doc(gameId);
 
     return db.runTransaction(async (batch) => {
       try {
+        const ref = db.collection("games").doc(gameId);
         const game = (await batch.get(ref)).data();
         const player = { id: context.auth.uid, name: playerName };
         if (game.players.length >= game.maxPlayers) {
@@ -140,7 +140,7 @@ export const join = functions
         } else {
           addSpectator(game, player);
         }
-        batch.update(ref, game);
+        batch.set(ref, game, { merge: true });
         await batch.commit();
         return { ok: true };
       } catch (error) {
