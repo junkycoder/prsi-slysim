@@ -129,10 +129,10 @@ export const join = functions
     }
 
     const db = admin.firestore();
+    const ref = db.collection("games").doc(gameId);
 
-    return db.runTransaction(async (batch) => {
-      try {
-        const ref = db.collection("games").doc(gameId);
+    try {
+      await db.runTransaction(async (batch) => {
         const game = (await batch.get(ref)).data();
         const player = { id: context.auth.uid, name: playerName };
         if (game.players.length >= game.maxPlayers) {
@@ -141,12 +141,12 @@ export const join = functions
           addSpectator(game, player);
         }
         batch.set(ref, game, { merge: true });
-        await batch.commit();
-        return { ok: true };
-      } catch (error) {
-        return { ok: false, error: error.message };
-      }
-    });
+        return await batch.commit();
+      });
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
   });
 
 /**
