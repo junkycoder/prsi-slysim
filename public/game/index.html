@@ -41,6 +41,11 @@
       const gameId = parseUrlParam("game");
       const user = await restrictedLocation(window.location.href).catch(handleUserError);
 
+      if (!gameId && confirm("Chybná adresa. Chcete jít domů?")) {
+        window.location.href = "/";
+        return;
+      }
+
       if (!user) {
         console.info("User not verified!");
         return;
@@ -48,7 +53,7 @@
         console.info("User verified.");
       }
 
-      let state = {
+      let theState = {
         sounds: false,
         music: false,
         game: undefined,
@@ -58,9 +63,9 @@
       };
 
       const emit = (payload = {}) => {
-        state = deepMerge(state, payload);
+        theState = deepMerge(theState, payload);
         const event = new CustomEvent('render', {
-          detail: state
+          detail: theState
         });
         document.dispatchEvent(event);
       }
@@ -94,14 +99,14 @@
 
       const handleMusicClick = async (event) => {
         event.preventDefault();
-        emit({ music: !state.music });
+        emit({ music: !theState.music });
 
 
         if (!rainSound) {
           rainSound = await createSound("/assets/light-rain-sound.mp3", { gain: .4, loop: true });
         }
 
-        if (state.music) {
+        if (theState.music) {
           rainSound.play();
         } else {
           rainSound.stop();
@@ -110,7 +115,7 @@
 
       const handleSoundsClick = (event) => {
         event.preventDefault();
-        emit({ sounds: !state.sounds });
+        emit({ sounds: !theState.sounds });
       }
 
       const handleShareGame = (event) => {
@@ -144,12 +149,12 @@
           name: event.target.name,
         };
 
-        if (state.selectedCard) {
-          data.card = state.selectedCard;
+        if (theState.selectedCard) {
+          data.card = theState.selectedCard;
         }
 
-        if (state.selectedColor) {
-          data.color = state.selectedColor;
+        if (theState.selectedColor) {
+          data.color = theState.selectedColor;
         }
 
         addDoc(collection(db, "users", user.uid, "games", gameId, "moves"), data)
@@ -181,20 +186,15 @@
         }
       });
 
-
-      if (!gameId) {
-        emit({ game: { status: 0 } });
-        return;
-      }
-
       const query = doc(db, "users", user.uid, "games", gameId);
 
-      if (window.location.search.includes("creator")) {
+      if (!window.location.hash.includes("creator")) {
+        window.location.hash = "";
+      } else {
         getDoc(query).then((doc) => {
           const game = doc.data();
           emit({ game, spectator: !doc.exists() });
         }).catch(console.error);
-        window.location.search = "";
       }
 
       onSnapshot(query, (doc) => {
