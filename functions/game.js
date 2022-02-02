@@ -140,8 +140,7 @@ export const join = functions
         } else {
           addSpectator(game, player);
         }
-        batch.set(ref, game, { merge: true });
-        return await batch.commit();
+        batch.update(ref, game, { merge: true });
       });
     } catch (error) {
       return { ok: false, error: error.message };
