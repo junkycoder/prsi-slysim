@@ -188,7 +188,7 @@
 
       const query = doc(db, "users", user.uid, "games", gameId);
 
-      if (!window.location.hash.includes("creator")) {
+      if (window.location.hash.includes("creator")) {
         window.location.hash = "";
       } else {
         getDoc(query).then((doc) => {
