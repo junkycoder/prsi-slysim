@@ -135,11 +135,13 @@ export const join = functions
       await db.runTransaction(async (batch) => {
         const game = (await batch.get(ref)).data();
         const player = { id: context.auth.uid, name: playerName };
+
         if (game.players.length >= game.settings.maxPlayers) {
-          addPlayer(game, player);
-        } else {
           addSpectator(game, player);
+        } else {
+          addPlayer(game, player);
         }
+
         batch.update(ref, game, { merge: true });
       });
     } catch (error) {
