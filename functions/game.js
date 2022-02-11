@@ -136,6 +136,10 @@ export const join = functions
         const game = (await batch.get(ref)).data();
         const player = { id: context.auth.uid, name: playerName };
 
+        if (!game) {
+          throw new functions.https.HttpsError("not-found", "Hra neexistuje.");
+        }
+
         if (game.players.length >= game.settings.maxPlayers) {
           addSpectator(game, player);
         } else {
@@ -145,8 +149,14 @@ export const join = functions
         batch.update(ref, game, { merge: true });
       });
     } catch (error) {
-      return { error };
+      return {
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
     }
+
     return { error: null };
   });
 

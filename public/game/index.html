@@ -82,13 +82,13 @@
           if (!error) {
             emit({ spectator: false });
           } else {
-            alert(`Nepodařilo se. Zkuste to prosím znovu. \n${error}`);
+            throw error;
           }
         } catch ({ message, code }) {
           if (code === "functions/permission-denied") {
             redirectToVerification();
           } else {
-            alert(`Nastala chyba:\n${message}`);
+            alert(`Nastala chyba: ${message}`);
           }
         } finally {
           emit({ joining: false })
