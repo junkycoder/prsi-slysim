@@ -10,5 +10,6 @@ export {
   create as createGame,
   copyPlayerGame,
   join as joinGame,
+  move as gameMove,
 } from "./game.js";
 export { userAuthenticated } from "./user.js";

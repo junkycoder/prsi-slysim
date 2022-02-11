@@ -94,9 +94,9 @@ export default function tGameBoard({
           <button
             @click=${handleGameMove}
             name="suffle"
-            ?disabled=${game.currentPlayer.id !== userPlayer?.id}
+            ?disabled=${game.moving || game.currentPlayer.id !== userPlayer?.id}
           >
-            Zamíchat karty na stole
+            Zamíchat balíček karet
           </button>
           <button @click=${handleGameMove} disabled name="deal">
             Rozdat karty

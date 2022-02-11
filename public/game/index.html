@@ -77,9 +77,9 @@
         try {
           const formData = new FormData(event.target);
           const playerName = formData.get("player-name");
-          const { data: { ok = false, error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
+          const { data: { error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
 
-          if (ok) {
+          if (!error) {
             emit({ spectator: false });
           } else {
             alert(`Nepodařilo se. Zkuste to prosím znovu. \n${error}`);
@@ -103,7 +103,7 @@
 
 
         if (!rainSound) {
-          rainSound = await createSound("/assets/light-rain-sound.mp3", { gain: .4, loop: true });
+          rainSound = await createSound("/assets/rain.mp3", { gain: .4, loop: true });
         }
 
         if (theState.music) {
@@ -113,9 +113,28 @@
         }
       }
 
-      const handleSoundsClick = (event) => {
+      let gameSounds = []; // lazy loaded (onclick)
+
+      const handleSoundsClick = async (event) => {
         event.preventDefault();
         emit({ sounds: !theState.sounds });
+
+        if (!gameSounds.length) {
+          gameSounds = [
+            { type: "move", name: "suffle", promise: createSound("/assets/suffle1.wav") },
+            { type: "move", name: "suffle", promise: createSound("/assets/suffle2.wav") },
+            { type: "move", name: "play", promise: createSound("/assets/play-card.wav") },
+            { type: "move", name: "deal", promise: createSound("/assets/deal-cards.wav") },
+            { type: "move", name: "draw", promise: createSound("/assets/suffle2.wav") },
+            { type: "move", name: "suffle", promise: createSound("/assets/suffle2.wav") },
+          ];
+
+          const promises = await Promise.allSettled(gameSounds.map(({ promise }) => promise));
+          for (let [value, index] of promises.map(({ value }, index) => [value, index])) {
+            Object.assign(gameSounds[index], value);
+          }
+        }
+
       }
 
       const handleShareGame = (event) => {
@@ -142,11 +161,13 @@
         emit({ selectedCard: event.target.value });
       }
 
-      const handleGameMove = event => {
+      const handleGameMove = async (event) => {
         event.preventDefault();
+        emit({ game: { moving: true } });
 
         const data = {
           name: event.target.name,
+          gameId,
         };
 
         if (theState.selectedCard) {
@@ -157,10 +178,18 @@
           data.color = theState.selectedColor;
         }
 
-        addDoc(collection(db, "users", user.uid, "games", gameId, "moves"), data)
-          .catch(({ message }) => {
-            alert(message);
-          });
+
+        if (theState.sounds) {
+          const sound = gameSounds.find(({ type, name }) => type === "move" && name === data.name);
+          sound.stop();
+          sound.play();
+        }
+
+        const { data: { error } = {} } = await httpsCallable(fns, "gameMove")(data);
+        if (error) {
+          alert(error);
+        }
+        emit({ game: { moving: false } });
       }
 
       const handleReloadPage = () => {

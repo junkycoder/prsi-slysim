@@ -145,9 +145,9 @@ export const join = functions
         batch.update(ref, game, { merge: true });
       });
     } catch (error) {
-      return { ok: false, error: error.message };
+      return { error };
     }
-    return { ok: true };
+    return { error: null };
   });
 
 /**
@@ -156,3 +156,14 @@ export const join = functions
 export const leave = functions
   .region("europe-west1")
   .https.onCall(async (data, context) => {});
+
+/**
+ * Callable function to make an game move
+ */
+export const move = functions
+  .region("europe-west1")
+  .https.onCall(async (data, context) => {
+    console.log("MOVE", data);
+    // How to allow every move, but force player to take it back if invalid?
+    return { error: null };
+  });
