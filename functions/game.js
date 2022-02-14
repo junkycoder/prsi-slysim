@@ -6,6 +6,8 @@ import {
   playerGameCopy,
   addSpectator,
   spectactorGameCopy,
+  moves,
+  getPlayer,
 } from "prsi";
 
 /**
@@ -172,8 +174,40 @@ export const leave = functions
  */
 export const move = functions
   .region("europe-west1")
-  .https.onCall(async (data, context) => {
-    console.log("MOVE", data);
+  .https.onCall(async ({ name: moveName, gameId, card, color }, context) => {
+    const db = admin.firestore();
+    const ref = db.collection("games").doc(gameId);
+
+    try {
+      await db.runTransaction(async (batch) => {
+        const game = (await batch.get(ref)).data();
+        const player = getPlayer(game, context.auth.uid);
+
+        switch (moveName) {
+          case "suffle":
+            moves.suffleDeck(game, player);
+            break;
+          case "deal":
+            moves.dealCards(game, player);
+            break;
+          case "draw":
+            moves.draw(game, player);
+            break;
+          case "play":
+            moves.play(game, player, card, color);
+            break;
+          default:
+            throw new functions.https.HttpsError(
+              "invalid-argument",
+              "Neznámý tah."
+            );
+        }
+
+        batch.update(ref, game, { merge: true });
+      });
+    } catch (error) {
+      return { error };
+    }
     // How to allow every move, but force player to take it back if invalid?
     return { error: null };
   });
