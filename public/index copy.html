@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prší slyšim</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+  <header>
+    <h1>Prší slyšim!</h1>
+    <p>Online hra prší pro více hráčů, vytvořená primárně pro uživatele se zrakovým handicapem.</p>
+  </header>
+  <main>
+    <h2>Klasické prší</h2>
+    <p>
+      <em>Prší slyšim</em> vám zprostředkuje zážitek z hraní klasické karetní hry
+      <a href="https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD" title="Wikipedie">prší</a>
+      za použití obyčejného textu a akustických efektů.
+    </p>
+    <p>
+      Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
+    </p>
+    <!--  -->
+    <button name="create-game">Založit novou hru</button>
+    <!--  -->
+    <h2>Jak to funguje?</h2>
+    <p>Někdo založí novou hru.</p>
+    <p>Zakladatel hry nasdíli odkaz ostatním hráčům (např. v sms).</p>
+    <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
+    <p>Podmínka: Účastníci hry se verifikují pomocí emailu.</p>
+  </main>
+  <script type="module">
+    import { currentUser, redirectToVerification } from "/user.js";
+
+    document.addEventListener("DOMContentLoaded", controller);
+
+    async function controller() {
+      const button = document.querySelector('button[name="create-game"]');
+      const listener = () => {
+        window.location.href = "/create-game";
+      };
+      button.addEventListener("click", listener);
+      const user = await currentUser();
+
+      if (!user?.emailVerified) {
+        button.removeEventListener('click', listener);
+        button.addEventListener('click', () => {
+          redirectToVerification({ pathname: "/create-game" });
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -5,7 +5,12 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prší slyšim</title>
+  <title>Prší, slyším!</title>
+  <style>
+    [aria-hidden="true"] {
+      display: none;
+    }
+  </style>
   <link rel="stylesheet" href="/styles.css">
 </head>
 
@@ -24,35 +29,56 @@
     <p>
       Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
     </p>
-    <!--  -->
-    <button name="create-game">Založit novou hru</button>
-    <!--  -->
-    <h2>Jak to funguje?</h2>
-    <p>Někdo založí novou hru.</p>
-    <p>Zakladatel hry nasdíli odkaz ostatním hráčům (např. v sms).</p>
-    <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
-    <p>Podmínka: Účastníci hry se verifikují pomocí emailu.</p>
+    <!--
+    <section id="cta">
+      <h2>Chci začít hrát</h2>
+      <p>Vytvořte si svojí hru, podle vlastních preferencí.</p>
+      <button>Nová hra</button>
+    </section>
+    -->
+    <section id="cta">
+      <h2>Chci začít hrát</h2>
+      <p>Pouze ověření uživatelé se mouhou zapojit do hry.</p>
+      <button class="js-dialog-open">Ověřit se</button>
+    </section>
+    <section id="faq">
+      <h2>Jak to funguje?</h2>
+      <p>Někdo založí novou hru.</p>
+      <p>Zakladatel hry nasdíli odkaz ostatním hráčům (např. v sms).</p>
+      <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
+      <p>Podmínka: Hry se mohou účastnit pouze ověření uživatelé.</p>
+    </section>
   </main>
+  <div class="js-dialog dialog" aria-hidden="true">
+    <div class="dialog__inner">
+      <h1 id="dialog-title">Ověřit se přes email</h1>
+      <p>Do hry se mohou zapojit pouze ověření uživatelé. Stačí k tomu však obyčejný email.</p>
+      <form method="post">
+        <label for="email">Váš email:</label>
+        <input type="email" id="email" name="email" placeholder="Zde zandejte svůj e-mail, prosím" required>
+        <p>Na uvedenou adresu vám bude zaslán odkaz pro přihlášení.</p>
+        <button type="submit">Odeslat</button>
+        <button type="button" class="js-dialog-close">Odejít</button>
+      </form>
+    </div>
+  </div>
   <script type="module">
-    import { currentUser, redirectToVerification } from "/user.js";
+    import Dialog, { setDefaults as setDialogDefaults } from "/library/a11y-dialog-component/esm.js";
 
-    document.addEventListener("DOMContentLoaded", controller);
+    window.addEventListener("resize", function syncHeight() {
+      document.documentElement.style.setProperty(
+        "--window-inner-height",
+        `${window.innerHeight}px`
+      );
+    });
 
-    async function controller() {
-      const button = document.querySelector('button[name="create-game"]');
-      const listener = () => {
-        window.location.href = "/create-game";
-      };
-      button.addEventListener("click", listener);
-      const user = await currentUser();
 
-      if (!user?.emailVerified) {
-        button.removeEventListener('click', listener);
-        button.addEventListener('click', () => {
-          redirectToVerification({ pathname: "/create-game" });
-        })
-      }
-    }
+    const verifySelf = new Dialog(".js-dialog", {
+      openingSelector: ".js-dialog-open",
+      closingSelector: ".js-dialog-close",
+      labelledby: "dialog-title",
+    });
+
   </script>
 </body>
 

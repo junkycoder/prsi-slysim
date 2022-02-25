@@ -1,10 +1,23 @@
 
 
+:root {
+  --window-inner-height: 100vh; /* default befor js height sync hits */
+}
+html {
+  box-sizing: border-box;
+}
+
+html.is-disabled,
+html.is-inactive {
+  height: calc(var(--window-inner-height) - 1px);
+  overflow: hidden;
+  touch-action: none;
+}
 
 body {
   max-width: 420px;
   margin: 10px auto;
-  padding: 0 10px;
+  padding: 0 14px;
 }
 
 body, input, button, textarea, select, option {
@@ -15,7 +28,6 @@ body, input, button, textarea, select, option {
   background-color: white;
   color: black;
 }
-
 select, input, button, textarea {
   width: 100%;
   margin-bottom: 18px;
@@ -25,9 +37,10 @@ select, input, button, textarea {
   padding: 4px;
   outline-color: blue;
 }
-
+a, a:visited {
+  color: blue;
+}
 button {
-  text-decoration: underline;
   cursor: pointer;
   color: black;
 }
@@ -35,24 +48,88 @@ button:active {
   color: blue;
   text-decoration: none;
 }
-
+button[type="button"] {
+  background-color: transparent;
+  border: none;
+  text-decoration: none;
+}
 button[disabled], select[disabled], textarea[disabled] {
   color: gray;
   border-color: gray;
   text-decoration: none;
 }
-
 select {
   height: 50px;
   margin-bottom: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  a, a:visited {
+    color: orange;
+  }
+  body, input, button, textarea, select, option {
+    background-color: black;
+    color: white;
+  }
+  select, input, button, textarea {
+    border-color: white;
+  }
+  select:focus, input:focus, button:focus, textarea:focus {
+    outline-color: orange;
+    border-color: orange;
+  }
+  button {
+    color: white;
+  }
+  button:active {
+    color: orange;
+    border-color: orange;
+  }
 }
 
 figure {
   margin-left: 0;
 }
 
-.hidden {
-  visibility: none;
+.dialog {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  background-color: #fff;
+  transition: 0.2s;
+  overflow-y: auto;
+}
+.dialog[aria-hidden='true'] {
+  visibility: hidden;
+  opacity: 0;
+}
+.dialog__inner {
+  max-width: 92vw;
+  margin: auto;
+  padding: 1em 2em;
+}
+.dialog--backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.dialog--backdrop .dialog__inner {
+  background-color: white;
+  cursor: auto;
+}
+@media (prefers-color-scheme: dark) {
+  .dialog {
+    background-color: black;
+  }
+  .dialog--backdrop {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  .dialog--backdrop .dialog__inner {
+    background-color: black;
+  }
 }
 
 

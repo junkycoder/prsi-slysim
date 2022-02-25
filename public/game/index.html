@@ -64,7 +64,7 @@
 
       const emit = (payload = {}) => {
         theState = deepMerge(theState, payload);
-        const event = new CustomEvent('render', {
+        const event = new CustomEvent("render", {
           detail: theState
         });
         document.dispatchEvent(event);
