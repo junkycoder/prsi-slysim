@@ -15,35 +15,39 @@
 </head>
 
 <body>
-  <header>
-    <h1>Prší slyšim!</h1>
-    <p>Online hra prší pro více hráčů, vytvořená primárně pro uživatele se zrakovým handicapem.</p>
-  </header>
-  <main>
-    <h2>Klasické prší</h2>
-    <p>
-      <em>Prší slyšim</em> vám zprostředkuje zážitek z hraní klasické karetní hry
-      <a href="https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD" title="Wikipedie">prší</a>
-      za použití obyčejného textu a akustických efektů.
-    </p>
-    <p>
-      Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
-    </p>
-    <section id="cta">
-      <h2>Chci začít hrát</h2>
-      <p class="js-dialog-verify-self-open">Pouze ověření uživatelé se mouhou zapojit do hry.</p>
-      <p class="js-dialog-create-game-open" aria-hidden="true">Založte si svou vlastní hru.</p>
-      <button class="js-dialog-verify-self-open">Ověřit se</button>
-      <button aria-hidden="true" class="js-dialog-create-game-open">Nová hra</button>
-    </section>
-    <section id="faq">
-      <h2>Jak to funguje?</h2>
-      <p>Někdo založí novou hru.</p>
-      <p>Poté nasdíli odkaz ostatním hráčům (např. v sms).</p>
-      <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
-      <p>Podmínka: Hry se mohou účastnit pouze ověření uživatelé.</p>
-    </section>
-  </main>
+  <div class="js-header">
+    <header>
+      <h1>Prší slyšim!</h1>
+      <p>Online hra prší pro více hráčů, vytvořená primárně pro uživatele se zrakovým handicapem.</p>
+    </header>
+  </div>
+  <div class="js-content">
+    <main>
+      <h2>Klasické prší</h2>
+      <p>
+        <em>Prší slyšim</em> vám zprostředkuje zážitek z hraní běžné karetní hry
+        <a href="https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD" title="Wikipedie">prší</a>
+        za použití obyčejného textu a akustických efektů.
+      </p>
+      <p>
+        Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
+      </p>
+      <section id="cta">
+        <h2>Chci začít hrát</h2>
+        <p class="js-dialog-verify-self-open">Pouze ověření uživatelé se mouhou zapojit do hry.</p>
+        <p class="js-dialog-create-game-open" aria-hidden="true">Založte si svou vlastní hru.</p>
+        <button class="js-dialog-verify-self-open">Ověřit se</button>
+        <button aria-hidden="true" class="js-dialog-create-game-open">Nová hra</button>
+      </section>
+      <section id="faq">
+        <h2>Jak to funguje?</h2>
+        <p>Někdo založí novou hru.</p>
+        <p>Poté nasdíli odkaz ostatním hráčům (např. v sms).</p>
+        <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
+        <p>Podmínka: Hry se mohou účastnit pouze ověření uživatelé.</p>
+      </section>
+    </main>
+  </div>
   <div class="js-dialog-verify-self dialog" aria-hidden="true">
     <section class="dialog__inner">
       <header>
@@ -106,10 +110,14 @@
     import { auth } from "/application.js";
     import { sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
     import { authCompleteEmailStoredLocally } from "/storage.js";
-
-
     import { isVerifyLink, useVerifyLink, currentUser } from "/user.js";
-    import { parseUrlParam } from "/library.js";
+    import { formDataToPayload } from "/library.js";
+    import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
+    import { playerNameStoredLocally } from "/storage.js";
+    import { fns } from "/application.js";
+    import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
+    import * as templates from "/templates.js";
+
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
       openingSelector: ".js-dialog-verify-self-open",
@@ -118,7 +126,8 @@
     });
 
     verifySelf.dialog.querySelector("form").addEventListener(
-      "submit", handleVerifySelfSubmit
+      "submit",
+      handleVerifySelfSubmit
     );
 
     const createGame = new Dialog(".js-dialog-create-game", {
@@ -127,6 +136,16 @@
       labelledby: "create-game-dialog-title",
     });
 
+    createGame.dialog.querySelector("form").addEventListener(
+      "submit",
+      handleCreateGameSubmit
+    );
+
+    const playerNameInput = createGame.dialog.querySelector('form input[name="player-name"]');
+    playerNameInput.value = playerNameStoredLocally.read();
+    playerNameInput.addEventListener("change", ({ target: { value } }) => {
+      playerNameStoredLocally.write(value);
+    });
 
     const { href: link } = window.location;
 
@@ -137,27 +156,34 @@
           "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
         );
         email = window.prompt(
-          `Pokud chcete pokračovat v tompto prohlžeči, vyplně pro kontrolu svojí email adresu:`
+          `Pokud chcete pokračovat v tomto prohlžeči, vyplně svou email adresu znovu:`
         );
       }
 
       useVerifyLink(link, email).then(({ user }) => {
         if (user?.emailVerified) {
-          history.pushState({}, "Noob", parseUrlParam("back", link) || "/");
-          handleUserVerifyChange(user);
+          history.pushState({}, "Noob", "/"); // todo back
           authCompleteEmailStoredLocally.remove();
+          handleUserVerifyChange(user);
         }
       });
     } else {
       currentUser().then(handleUserVerifyChange).catch(error => {
-        alert(`Chyba při ověřování uživatele: ${error.message}`);
+        if (confirm(`Chyba při ověřování uživatele: ${error.message}. Zkusit načíst znovu?`)) {
+          window.location.reload();
+        }
         console.error(error);
       });
     }
 
+    const params = new URLSearchParams(window.location.search)
+    if (params.has("game")) {
+      handleGameStart({ gameId: params.get("game") }); // 👌
+    }
+
     function handleUserVerifyChange(user) {
       const isUserVerified = (user || undefined)?.emailVerified;
-      console.info({ isUserVerified }, user);
+
 
       for (let trigger of verifySelf.openingTriggers) {
         if (isUserVerified) trigger.setAttribute("aria-hidden", "true");
@@ -192,6 +218,62 @@
         console.error(fok)
         alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
       }
+    }
+
+    async function handleCreateGameSubmit(event) {
+      event.preventDefault();
+
+      const submitButton = createGame.dialog.querySelector("button[type=submit]");
+      const submitButtonLabel = submitButton.textContent;
+      submitButton.setAttribute("disabled", "disabled");
+      submitButton.textContent = 'Vytvářím hru...';
+
+      try {
+        const formData = new FormData(event.target);
+        const payload = formDataToPayload(formData);
+        const { data: { id: gameId } = {} } = await httpsCallable(fns, "createGame")(payload);
+
+        if (!gameId) {
+          alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
+        } else {
+          history.pushState({}, "Start Game", `/?game=${gameId}`);
+          handleGameStart({ gameId }); // 👌
+        }
+      } catch ({ message, code }) {
+        if (code === "functions/permission-denied") {
+          if (confirm("Zvláštní, ale na toto nemáte právo. Zkuste načíst stránku znovu.")) {
+            window.location.reload();
+          }
+        } else {
+          alert(`Nastala chyba při vytváření hry.\n${message}`);
+        }
+      } finally {
+        submitButton.removeAttribute("disabled");
+        submitButton.textContent = submitButtonLabel;
+      }
+    }
+
+    function handleGameStart({ gameId }) {
+      createGame.close();
+
+      const [
+        headerElement,
+        contentElement
+      ] = [".js-header", ".js-content"].map(s => document.querySelector(s));
+
+      headerElement.firstElementChild.remove();
+      contentElement.firstElementChild.remove();
+
+      render(
+        templates.header({}),
+        headerElement
+      );
+
+      render(
+        templates.content({ foo: "Meh." }),
+        contentElement,
+      );
+
     }
 
   </script>
