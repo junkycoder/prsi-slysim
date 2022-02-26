@@ -2,7 +2,15 @@
 
 :root {
   --window-inner-height: 100vh; /* default befor js height sync hits */
+  --viewport-width: 420px;
 }
+
+@media screen and (max-width: 420px) and (min-width: 640px) {
+  :root {
+    --viewport-width: 600px;
+  }
+}
+
 html {
   box-sizing: border-box;
 }
@@ -15,7 +23,7 @@ html.is-inactive {
 }
 
 body {
-  max-width: 420px;
+  max-width: var(--viewport-width);
   margin: 10px auto;
   padding: 0 14px;
 }
@@ -36,6 +44,7 @@ select, input, button, textarea {
   font-weight: bold;
   padding: 4px;
   outline-color: blue;
+  border-radius: 1px;
 }
 a, a:visited {
   color: blue;
@@ -108,7 +117,8 @@ figure {
   opacity: 0;
 }
 .dialog__inner {
-  max-width: 92vw;
+  width:  92vw;
+  max-width: var(--viewport-width);
   margin: auto;
   padding: 1em 2em;
 }
