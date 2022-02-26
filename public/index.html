@@ -29,17 +29,11 @@
     <p>
       Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
     </p>
-    <!--
-    <section id="cta">
-      <h2>Chci začít hrát</h2>
-      <p>Vytvořte si svojí hru, podle vlastních preferencí.</p>
-      <button>Nová hra</button>
-    </section>
-    -->
     <section id="cta">
       <h2>Chci začít hrát</h2>
       <p>Pouze ověření uživatelé se mouhou zapojit do hry.</p>
-      <button class="js-dialog-open">Ověřit se</button>
+      <button class="js-dialog-verify-self-open">Ověřit se</button>
+      <button aria-hidden="true" class="js-dialog-create-game-open">Nová hra</button>
     </section>
     <section id="faq">
       <h2>Jak to funguje?</h2>
@@ -49,35 +43,155 @@
       <p>Podmínka: Hry se mohou účastnit pouze ověření uživatelé.</p>
     </section>
   </main>
-  <div class="js-dialog dialog" aria-hidden="true">
-    <div class="dialog__inner">
-      <h1 id="dialog-title">Ověřit se přes email</h1>
-      <p>Do hry se mohou zapojit pouze ověření uživatelé. Stačí k tomu však obyčejný email.</p>
-      <form method="post">
+  <div class="js-dialog-verify-self dialog" aria-hidden="true">
+    <section class="dialog__inner">
+      <header>
+        <h1 id="verify-self-dialog-title">Ověřit se přes email</h1>
+        <p>Do hry se mohou zapojit pouze ověření uživatelé. Stačí k tomu však obyčejný email.</p>
+      </header>
+      <form method="post" name="verify-self">
         <label for="email">Váš email:</label>
         <input type="email" id="email" name="email" placeholder="Zde zandejte svůj e-mail, prosím" required>
         <p>Na uvedenou adresu vám bude zaslán odkaz pro přihlášení.</p>
         <button type="submit">Odeslat</button>
-        <button type="button" class="js-dialog-close">Odejít</button>
+        <button type="button" class="js-dialog-verify-self-close">Zavřít</button>
       </form>
-    </div>
+    </section>
+  </div>
+  <div class="js-dialog-create-game dialog" aria-hidden="true">
+    <section class="dialog__inner">
+      <header class="dialog__header">
+        <h1>Nová hra</h1>
+        <p>
+          Zde můžete založit vlastní hru.
+        </p>
+      </header>
+      <form method="post" name="create-game">
+        <label>
+          <span>Jméno vašeho hráče</span>
+          <input type="text" name="player-name" required />
+        </label>
+        <label>
+          <span>Max. počet hráčů</span>
+          <input type="number" name="max-players" min="2" max="8" value="4" />
+        </label>
+        <label>
+          <span>Počet rozdaných karet</span>
+          <input type="number" name="dealed-cards" min="1" max="6" value="4" />
+        </label>
+        <input type="hidden" name="id" />
+        <button type="submit">Vytvořit hru</button>
+        <h2>Co bude dál?</h2>
+        <p>Po založení budete automaticky připojeni ke hře.</p>
+        <p>
+          Před zahájením hry je potřeba nasdílet odkaz ostatním spoluhráčům.
+          Tento odkaz, s smožností sdílění, vám hra sama nabídne.
+        </p>
+        <p>Hru můžete začít jakmile se u stolu sejde dostatečné množství hráčů.</p>
+        <button type="button" class="js-dialog-create-game-close">Zavřít</button>
+      </form>
+    </section>
   </div>
   <script type="module">
-    import Dialog, { setDefaults as setDialogDefaults } from "/library/a11y-dialog-component/esm.js";
-
     window.addEventListener("resize", function syncHeight() {
       document.documentElement.style.setProperty(
         "--window-inner-height",
         `${window.innerHeight}px`
       );
     });
+  </script>
+  <script type="module">
+    import Dialog, { setDefaults as setDialogDefaults } from "/library/a11y-dialog-component/esm.js";
+    import { auth } from "/application.js";
+    import { sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { authCompleteEmailStoredLocally } from "/storage.js";
 
 
-    const verifySelf = new Dialog(".js-dialog", {
-      openingSelector: ".js-dialog-open",
-      closingSelector: ".js-dialog-close",
-      labelledby: "dialog-title",
+    import { isVerifyLink, useVerifyLink, currentUser } from "/user.js";
+    import { parseUrlParam } from "/library.js";
+
+    const verifySelf = new Dialog(".js-dialog-verify-self", {
+      openingSelector: ".js-dialog-verify-self-open",
+      closingSelector: ".js-dialog-verify-self-close",
+      labelledby: "verify-self-dialog-title",
     });
+
+    verifySelf.dialog.querySelector("form").addEventListener(
+      "submit", handleVerifySelfSubmit
+    );
+
+    const createGame = new Dialog(".js-dialog-create-game", {
+      openingSelector: ".js-dialog-create-game-open",
+      closingSelector: ".js-dialog-create-game-close",
+      labelledby: "create-game-dialog-title",
+    });
+
+
+    const { href: link } = window.location;
+
+    if (isVerifyLink(link)) {
+      let email = authCompleteEmailStoredLocally.read();
+      if (!email) {
+        alert(
+          "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
+        );
+        email = window.prompt(
+          `Pokud chcete pokračovat v tompto prohlžeči, vyplně pro kontrolu svojí email adresu:`
+        );
+      }
+
+      useVerifyLink(link, email).then(({ user }) => {
+        if (user?.emailVerified) {
+          history.pushState({}, "Noob", parseUrlParam("back", link) || "/");
+          handleUserVerifyChange(user);
+          authCompleteEmailStoredLocally.remove();
+        }
+      });
+    } else {
+      currentUser().then(handleUserVerifyChange).catch(error => {
+        alert(`Chyba při ověřování uživatele: ${error.message}`);
+        console.error(error);
+      });
+    }
+
+    function handleUserVerifyChange(user) {
+      const isUserVerified = (user || undefined)?.emailVerified;
+      console.info({ isUserVerified }, user);
+
+      for (let trigger of verifySelf.openingTriggers) {
+        if (isUserVerified) trigger.setAttribute("aria-hidden", "true");
+        else trigger.removeAttribute("aria-hidden");
+      }
+
+      for (let trigger of createGame.openingTriggers) {
+        if (isUserVerified) trigger.removeAttribute("aria-hidden");
+        else trigger.setAttribute("aria-hidden", "true");
+      }
+    };
+
+    async function handleVerifySelfSubmit(event) {
+      event.preventDefault();
+      const { origin, search } = window.location;
+
+      try {
+        const backPath = new URLSearchParams(search).get('back');
+        const formData = new FormData(event.target);
+
+        const email = formData.get("email");
+        const settings = {
+          url: `${origin}${backPath || ''}`,
+          handleCodeInApp: true,
+        };
+
+        await sendSignInLinkToEmail(auth, email, settings);
+        authCompleteEmailStoredLocally.write(email);
+
+        alert(`Odkaz pro přihlášení byl odeslán na adresu ${email}.\n\nToto okno můžete zavřít.`);
+      } catch (fok) {
+        console.error(fok)
+        alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
+      }
+    }
 
   </script>
 </body>

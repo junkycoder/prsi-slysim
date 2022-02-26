@@ -6,6 +6,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { authCompleteEmailStoredLocally } from "/storage.js";
 
+/**
+ *
+ * @param {*} link
+ * @deprecated
+ */
 async function handleSignInWithEmailLink(link) {
   let email = authCompleteEmailStoredLocally.read();
 
@@ -22,15 +27,24 @@ async function handleSignInWithEmailLink(link) {
   authCompleteEmailStoredLocally.remove();
 
   if (!user?.emailVerified) {
-    throw new Error("Verification failed");
+    throw new Error("Nepodařilo se ověřit email");
   }
 
   return user;
 }
 
+export const isVerifyLink = (link) => {
+  return isSignInWithEmailLink(auth, link);
+};
+
+export const useVerifyLink = (link, email) => {
+  return signInWithEmailLink(auth, email, link);
+};
+
 /**
  *
  * @param {*} altloc
+ * @deprecated
  */
 export const redirectToVerification = (altloc) => {
   const location = altloc || window.location;
@@ -59,6 +73,7 @@ export const onCurrentUserChanged = (callback) => {
 /**
  *
  * @param {string} href Complete URL of protected page
+ * @deprecated
  */
 export const restrictedLocation = async (currentHref) => {
   let user = await currentUser();
