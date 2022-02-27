@@ -381,6 +381,8 @@
         // NOT YET IMPLEMENTED
       };
 
+
+
       const emit = (payload = {}) => {
         state = deepMerge(state, payload);
         render(
@@ -409,18 +411,22 @@
 
       const handleSnapshot = (doc) => {
         const game = doc.data();
-        setTimeout(effectGame(game, state.game), 0);
         emit({ game });
-      }
-      const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
 
-      function effectGame({ game: prevGame }, { game: nextGame }) {
-        if (prevGame.players.length > nextGame.players.length) {
-          if()
-          unsubcribePublicCopy();
-          onSnapshot(doc(db, queryToPlayerCopy), handleSnapshot);
+        if (game.players.length > state.game.players.length) {
+          const [lastPlayer] = players.slice(-1);
+          if (lastPlayer.uid === user?.uid) {
+            unsubcribePublicCopy();
+            onSnapshot(doc(db, queryToPlayerCopy), handleSnapshot);
+            // TODO Play you sitting down sound
+          } else {
+            // TODO Play someone sitting down sound
+          }
         }
       }
+
+      const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
+
 
     }
 
