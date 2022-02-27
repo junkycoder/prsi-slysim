@@ -44,7 +44,7 @@ export function content({
                     ? ` a ${players.slice(-1)[0].name}.`
                     : `${players.slice(-1)[0].name} sám.`
                 }`
-              : `U stolu zatím níkdo nesedí.`
+              : `U stolu zatím nikdo nesedí.`
           }
         </p>
         ${players.map(
@@ -77,7 +77,7 @@ export function content({
 
       <section>
         <h2>Tvé možnosti</h2>
-        <button ?disabled=${!isUserVerified} class="js-dialog-join-game">Zapojit se do hry</button>
+        <button ?disabled=${!isUserVerified} class="js-dialog-join-game-open">Zapojit se do hry</button>
         ${
           !isUserVerified
             ? html`

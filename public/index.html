@@ -74,10 +74,6 @@
       </header>
       <form method="post" name="create-game">
         <label>
-          <span>Jméno vašeho hráče</span>
-          <input type="text" name="player-name" required />
-        </label>
-        <label>
           <span>Max. počet hráčů</span>
           <input type="number" name="max-players" min="2" max="8" value="4" />
         </label>
@@ -117,6 +113,21 @@
         </label>
       </p>
       <button type="button" class="js-dialog-sound-effects-close">Zavřít</button>
+    </section>
+  </div>
+  <div class="js-dialog-join-game dialog" aria-hidden="true">
+    <section class="dialog__inner">
+      <header>
+        <h1 id="join-game-dialog-title">Zapojit se do hry</h1>
+        <p>... dokud je u stolu pořád dostatečně místa.</p>
+      </header>
+      <form method="post" name="join-game">
+        <label>
+          <span>Jméno vašeho hráče</span>
+          <input type="text" name="player-name" required />
+        </label>
+        <button type="submit">Zapojit se</button>
+        <button type="button" class="js-dialog-join-game-close">Zavřít</button>
     </section>
   </div>
   <script type="module">
@@ -163,12 +174,6 @@
       handleCreateGameSubmit
     );
 
-    const playerNameInput = createGame.dialog.querySelector('form input[name="player-name"]');
-    playerNameInput.value = playerNameStoredLocally.read();
-    playerNameInput.addEventListener("change", ({ target: { value } }) => {
-      playerNameStoredLocally.write(value);
-    });
-
     const soundEffects = new Dialog(".js-dialog-sound-effects", {
       openingSelector: ".js-dialog-sound-effects-open",
       closingSelector: ".js-dialog-sound-effects-close",
@@ -198,10 +203,28 @@
       }
       console.error(error);
     });
+
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.has("game")) {
       handleGameStart({ gameId: urlParams.get("game") }); // 👌
     }
+
+    const joinGame = new Dialog(".js-dialog-join-game", {
+      openingSelector: ".js-dialog-join-game-open",
+      closingSelector: ".js-dialog-join-game-close",
+      labelledby: "join-game-dialog-title",
+    });
+
+    const playerNameInput = joinGame.dialog.querySelector('form input[name="player-name"]');
+    playerNameInput.value = playerNameStoredLocally.read();
+    playerNameInput.addEventListener("change", ({ target: { value } }) => {
+      playerNameStoredLocally.write(value);
+    });
+
+    joinGame.dialog.querySelector("form").addEventListener(
+      "submit",
+      handleJoinGameSubmit
+    );
 
 
     function handleUserVerifyChange(user) {
@@ -345,6 +368,24 @@
       );
     }
 
+    async function handleJoinGameSubmit(event) {
+      event.preventDefault();
+      const gameId = urlParams.get("game");
+
+      if (!gameId) {
+        if(confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
+          console.error("Game ID not found");
+          window.location.href = "/";
+        }
+        return;
+      }
+
+      // Call the `joinGame` Cloud Function
+      const formData = new FormData(event.target);
+      const playerName = formData.get("player-name");
+      const { data: { error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
+
+    }
 
   </script>
 </body>
