@@ -372,7 +372,13 @@
       const handlers = {
         handleLeaveGame() {
           window.location.href = "/";
-        }
+        },
+        handleGameMove(event) {
+          // TODO
+          // - play sound
+          // - call lambda
+        },
+        // NOT YET IMPLEMENTED
       };
 
       const emit = (payload = {}) => {
@@ -388,7 +394,7 @@
         console.info(state);
       }
 
-      const query = `play/${"public"}/game/${gameId}`;
+      const query = `play/${user?.uid || "public"}/game/${gameId}`;
 
       getDoc(doc(db, query)).then((doc) => {
         emit({ game: doc.data() });

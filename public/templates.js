@@ -20,7 +20,11 @@ export function header({ title = "Hrajte si" } = {}) {
 const noop = () => {};
 
 export function content(
-  { game: { players = [], ...game } = {}, lastCard = null, user } = {},
+  {
+    game: { players = [], currentPlayer, ...game } = {},
+    lastCard = null,
+    user,
+  } = {},
   {
     handleGameMove = noop,
     handlePlayerCardSelect = noop,
@@ -30,8 +34,7 @@ export function content(
   const userPlayer = players.find((player) => player.id === user?.uid);
   const isUserVerified = (user || false) && user.emailVerified;
   const isUserPlaying = Boolean(userPlayer);
-  const isPlayersTurn =
-    isUserPlaying && userPlayer.id === game.currentPlayer.id;
+  const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
 
   console.info({ isUserVerified, isUserPlaying, isPlayersTurn }, userPlayer);
 
@@ -56,9 +59,11 @@ export function content(
         ${players.map(
           (player) => html`
             <figure>
-              ${player.name}${userPlayer?.id &&
-              player.id === userPlayer.id &&
-              " (to jsi ty)"},
+              ${player.name}${player.id === currentPlayer.id ? " na tahu" : ""}${!(
+                userPlayer?.id && player.id === userPlayer.id
+              )
+                ? ""
+                : " (to jsi ty)"},
               ${player.cards?.length
                 ? `počet karet: ${player.cards.length}`
                 : "bez karet"}
@@ -113,7 +118,7 @@ export function content(
                   ?disabled=${!isPlayersTurn}
                   title=${isPlayersTurn
                     ? "Zamíchat karty"
-                    : `Na tahu je ${game.currentPlayer.name}`}
+                    : `Na tahu je ${currentPlayer.name}`}
                 >
                   Zamíchat balíček karet
                 </button>
