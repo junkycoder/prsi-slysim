@@ -429,6 +429,11 @@
       const urlParams = new URLSearchParams(window.location.search);
       const gameId = urlParams.get("game");
 
+      const submitButton = joinGame.dialog.querySelector("button[type=submit]");
+      const submitButtonLabel = submitButton.textContent;
+      submitButton.setAttribute("disabled", "disabled");
+      submitButton.textContent = 'Přihlašuji se...';
+
       if (!gameId) {
         if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
           console.error("Game ID not found");
@@ -449,6 +454,8 @@
           alert(`Nastala chyba při připojování k hře: ${error.message}`);
         }
       } else {
+        submitButton.removeAttribute("disabled");
+        submitButton.textContent = submitButtonLabel;
         joinGame.close();
       }
     }
