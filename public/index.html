@@ -357,9 +357,11 @@
         contentElement
       ] = [".js-header", ".js-content"].map(s => document.querySelector(s));
 
-      // Remove static content
-      headerElement.firstElementChild.remove();
-      contentElement.firstElementChild.remove();
+      clearStaticPage: {
+        headerElement.firstElementChild.remove();
+        contentElement.firstElementChild.remove();
+        window.scrollTo(0, 0);
+      }
 
       let state = {
         title: "Nová hra",
