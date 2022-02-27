@@ -29,9 +29,10 @@
         <a href="https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD" title="Wikipedie">prší</a>
         za použití obyčejného textu a akustických efektů.
       </p>
-      <p>
-        Doporučujeme hrát na klidném místě se sluchátky a se zapnutou čtečkou obrazovky typu VoiceOver.
-      </p>
+      <h2>Zvukové efekty</h2>
+      <p>Doporučujeme hrát na klidném místě nebo/a se sluchátky.</p>
+      <!-- <p>Efekty je nejprve nutné zapnout.</p> -->
+      <button class="js-dialog-sound-effects-open">Nastavit efekty</button>
       <section id="cta">
         <h2>Chci začít hrát</h2>
         <p class="js-dialog-verify-self-open">Pouze ověření uživatelé se mouhou zapojit do hry.</p>
@@ -97,6 +98,25 @@
       </form>
     </section>
   </div>
+  <div class="js-dialog-sound-effects dialog" aria-hidden="true">
+    <section class="dialog__inner">
+      <header>
+        <h1 id="sound-effects-dialog-title">Zvukové efekty</h1>
+        <p>Zde můžete vypnout vybrané nebo veškeré zvuky hry.</p>
+      </header>
+      <div class="flex" style="margin-bottom: 32px">
+        <label class="flex">
+          <input type="checkbox" name="music">
+          <span>déšť na pozadí</span>
+        </label>
+        <label class="flex">
+          <input type="checkbox" name="sounds">
+          <span>zvuky karet</span>
+        </label>
+      </div>
+      <button type="button" class="js-dialog-sound-effects-close">Zavřít</button>
+    </section>
+  </div>
   <script type="module">
     window.addEventListener("resize", function syncHeight() {
       document.documentElement.style.setProperty(
@@ -117,7 +137,7 @@
     import { fns } from "/application.js";
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
     import * as templates from "/templates.js";
-
+    import Sounds from "/sounds.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
       openingSelector: ".js-dialog-verify-self-open",
@@ -147,6 +167,29 @@
       playerNameStoredLocally.write(value);
     });
 
+    const soundEffects = new Dialog(".js-dialog-sound-effects", {
+      openingSelector: ".js-dialog-sound-effects-open",
+      closingSelector: ".js-dialog-sound-effects-close",
+      labelledby: "sound-effects-dialog-title",
+    });
+    Sounds.setSoundsPath("/assets/")
+    Sounds.prepare("rain.mp3", { gain: 0.5 });
+    Sounds.prepareAll([
+      "suffle1.wav",
+      "suffle2.wav",
+      "play-card.wav",
+      "deal-cards.wav",
+      "suffle2.wav",
+      "suffle2.wav",
+    ]);
+
+    for (let input of soundEffects.dialog.querySelectorAll(`input[type="checkbox"]`)) {
+      input.addEventListener(
+        "change",
+        handleSoundEffectsChange
+      );
+    }
+
     const { href: link } = window.location;
 
     if (isVerifyLink(link)) {
@@ -162,7 +205,7 @@
 
       useVerifyLink(link, email).then(({ user }) => {
         if (user?.emailVerified) {
-          history.pushState({}, "Noob", "/"); // todo back
+          history.pushState({}, "Noob", "/"); // todo back to game?
           authCompleteEmailStoredLocally.remove();
           handleUserVerifyChange(user);
         }
@@ -181,9 +224,9 @@
       handleGameStart({ gameId: params.get("game") }); // 👌
     }
 
+
     function handleUserVerifyChange(user) {
       const isUserVerified = (user || undefined)?.emailVerified;
-
 
       for (let trigger of verifySelf.openingTriggers) {
         if (isUserVerified) trigger.setAttribute("aria-hidden", "true");
@@ -237,6 +280,7 @@
           alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
         } else {
           history.pushState({}, "Start Game", `/?game=${gameId}`);
+          createGame.close();
           handleGameStart({ gameId }); // 👌
         }
       } catch ({ message, code }) {
@@ -253,9 +297,31 @@
       }
     }
 
-    function handleGameStart({ gameId }) {
-      createGame.close();
+    function handleSoundEffectsChange(event) {
+      event.preventDefault();
+      const { name, checked: enabled, type } = event.target;
+      if (type !== "checkbox") throw new Error("Unexpected target type");
+      switch (name) {
+        case "music":
+          Sounds.enable("rain.mp3", enabled, { autoplay: true, loop: true, gain: .4 });
+          break;
+        case "sounds":
+          Sounds.enableAll([
+            "suffle1.wav",
+            "suffle2.wav",
+            "play-card.wav",
+            "deal-cards.wav",
+            "suffle2.wav",
+            "suffle2.wav",
+          ], enabled);
+          if (enabled) Sounds.play("play-card.wav");
+          break;
+        default:
+          throw new Error("Unexpected name");
+      }
+    }
 
+    function handleGameStart({ gameId }) {
       const [
         headerElement,
         contentElement
@@ -273,8 +339,8 @@
         templates.content({ foo: "Meh." }),
         contentElement,
       );
-
     }
+
 
   </script>
 </body>

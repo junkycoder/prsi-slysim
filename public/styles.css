@@ -28,7 +28,7 @@ body {
   padding: 0 14px;
 }
 
-body, input, button, textarea, select, option {
+body, input:not([type="checkbox"]), button, textarea, select, option {
   font-size: 18px;
   font-family: Verdana, sans-serif;
   line-height: 2;
@@ -36,7 +36,7 @@ body, input, button, textarea, select, option {
   background-color: white;
   color: black;
 }
-select, input, button, textarea {
+select, input:not([type="checkbox"]), button, textarea {
   width: 100%;
   margin-bottom: 18px;
   background-color: transparent;
@@ -52,6 +52,7 @@ a, a:visited {
 button {
   cursor: pointer;
   color: black;
+  margin-top: 8px;
 }
 button:active {
   color: blue;
@@ -71,16 +72,25 @@ select {
   height: 50px;
   margin-bottom: 8px;
 }
+input[type="checkbox"] {
+  margin: 0;
+  width: 32px;
+  height: 32px;
+}
+input[type="checkbox"] + span {
+  margin-left: 8px;
+  line-height: 32px;
+}
 
 @media (prefers-color-scheme: dark) {
   a, a:visited {
     color: orange;
   }
-  body, input, button, textarea, select, option {
+  body, input:not([type="checkbox"]), button, textarea, select, option {
     background-color: black;
     color: white;
   }
-  select, input, button, textarea {
+  select, input:not([type="checkbox"]), button, textarea {
     border-color: white;
   }
   select:focus, input:focus, button:focus, textarea:focus {
@@ -98,6 +108,11 @@ select {
 
 figure {
   margin-left: 0;
+}
+
+.flex {
+  display: flex;
+  flex: 1;
 }
 
 .dialog {
