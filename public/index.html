@@ -315,8 +315,9 @@
             "deal-cards.wav",
             "suffle2.wav",
             "suffle2.wav",
+            "deck.wav"
           ], enabled);
-          if (enabled) Sounds.play("play-card.wav");
+          if (enabled) Sounds.play("deck.wav");
           break;
         default:
           throw new Error("Unexpected name");
@@ -333,12 +334,18 @@
       contentElement.firstElementChild.remove();
 
       render(
-        templates.header({}),
+        templates.header({
+        }),
         headerElement
       );
 
       render(
-        templates.content({ foo: "Meh." }),
+        templates.content({
+          foo: "Meh.",
+          handleLeaveGame: () => {
+            window.location.href = "/";
+          },
+        }),
         contentElement,
       );
     }
