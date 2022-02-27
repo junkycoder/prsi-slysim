@@ -373,6 +373,24 @@
         handleLeaveGame() {
           window.location.href = "/";
         },
+        handleShareGame(event) {
+          event.preventDefault();
+          const shateLink = window.location.href;
+          const shareText = `Zahrajem si prší? Hra je založená, stačí se připojit..`;
+
+          if (navigator.share) {
+            navigator.share({
+              text: shareText,
+              url: shateLink
+            })
+              .then(() => console.info("Successful share"))
+              .catch((error) => console.error("Error sharing", error));
+          } else {
+            navigator.clipboard.writeText(`${shareText} ${shateLink}`)
+              .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
+              .catch((error) => console.error("Error copying", error));
+          }
+        },
         handleGameMove(event) {
           // TODO
           // - play sound

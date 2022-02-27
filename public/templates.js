@@ -1,13 +1,16 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
 
-export function header({ title = "Hrajte si" } = {}) {
+export function header(
+  { title = "Hrajte si" } = {},
+  { handleShareGame = noop } = {}
+) {
   return html`
     <header>
       <h1>${title}</h1>
       <p>
         Hra ještě nezačala. Čeká se na zapojení dostatečného množství hráčů.
       </p>
-      <button class="js-dialog-share-game-open">Sdílet odkaz na hru</button>
+      <button @click=${handleShareGame}>Sdílet odkaz na hru</button>
 
       <p>Doporučujeme hrát na klidném místě a se sluchátky na uších.</p>
       <button class="js-dialog-sound-effects-open" type="button">
@@ -59,9 +62,9 @@ export function content(
         ${players.map(
           (player) => html`
             <figure>
-              ${player.name}${player.id === currentPlayer.id ? " na tahu" : ""}${!(
-                userPlayer?.id && player.id === userPlayer.id
-              )
+              ${player.name}${player.id === currentPlayer.id
+                ? " na tahu"
+                : ""}${!(userPlayer?.id && player.id === userPlayer.id)
                 ? ""
                 : " (to jsi ty)"},
               ${player.cards?.length
