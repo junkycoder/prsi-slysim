@@ -4,8 +4,6 @@ import {
   createNewGame,
   addPlayer,
   playerGameCopy,
-  addSpectator,
-  spectactorGameCopy,
   moves,
   getPlayer,
 } from "prsi";
@@ -15,88 +13,74 @@ import {
  */
 export const create = functions
   .region("europe-west1")
-  .https.onCall(
-    async ({ maxPlayers = 6, dealedCards = 4, playerName }, context) => {
-      if (!context.auth || !context.auth.token || !context.auth.token.email) {
-        throw new functions.https.HttpsError(
-          "permission-denied",
-          "Založit hru může pouze ověřený uživatel."
-        );
-      }
-
-      if (!playerName) {
-        throw new functions.https.HttpsError(
-          "invalid-argument",
-          "Zadejte jméno hráče."
-        );
-      }
-
-      if (!maxPlayers || maxPlayers < 2 || maxPlayers > 8) {
-        throw new functions.https.HttpsError(
-          "invalid-argument",
-          "Zadejte počet hráčů v rozmezí 2 až 8."
-        );
-      }
-
-      if (!dealedCards || dealedCards < 1 || dealedCards > 6) {
-        throw new functions.https.HttpsError(
-          "invalid-argument",
-          "Zadejte počet karet v rozmezí 1 až 6."
-        );
-      }
-
-      const db = admin.firestore();
-      const ref = db.collection("games").doc();
-      const batch = db.batch();
-
-      const game = createNewGame({
-        maxPlayers: Number(maxPlayers),
-        dealedCards: Number(dealedCards),
-      });
-
-      addPlayer(game, { id: context.auth.uid, name: playerName });
-
-      const meta = {
-        id: ref.id,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        createdBy: context.auth.uid,
-      };
-
-      batch.set(ref, {
-        ...game,
-        ...meta,
-      });
-
-      const copy = playerGameCopy(context.auth.uid, game);
-      await batch.commit();
-
-      return { ...copy, ...meta };
+  .https.onCall(async ({ maxPlayers = 6, dealedCards = 4 }, context) => {
+    if (!context.auth || !context.auth.token || !context.auth.token.email) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Založit hru může pouze ověřený uživatel."
+      );
     }
-  );
+
+    if (!maxPlayers || maxPlayers < 2 || maxPlayers > 8) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Zadejte počet hráčů v rozmezí 2 až 8."
+      );
+    }
+
+    if (!dealedCards || dealedCards < 1 || dealedCards > 6) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Zadejte počet karet v rozmezí 1 až 6."
+      );
+    }
+
+    const db = admin.firestore();
+    const refPrivate = db.collection("play/private/game").doc();
+    const refPublic = db.collection("play/public/game").doc(refPrivate.id);
+    const batch = db.batch();
+
+    const game = createNewGame({
+      maxPlayers: Number(maxPlayers),
+      dealedCards: Number(dealedCards),
+    });
+
+    const meta = {
+      id: refPrivate.id,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdBy: context.auth.uid,
+    };
+
+    batch.set(refPrivate, {
+      ...game,
+      ...meta,
+    });
+
+    const copy = playerGameCopy(null, game);
+    batch.set(refPublic, copy);
+
+    await batch.commit();
+
+    return { ...copy, ...meta };
+  });
 
 export const copyPlayerGame = functions
   .region("europe-west1")
-  .firestore.document("games/{gameId}")
+  .firestore.document("play/private/game/{gameId}")
   .onWrite(async (change, context) => {
     const db = admin.firestore();
     const game = change.after.data();
     const batch = db.batch();
 
-    for (let i = 0; i < game.players.length; i++) {
-      const player = game.players[i];
+    batch.set(
+      db.collection(`play/public/game`).doc(game.id),
+      playerGameCopy(null, game)
+    );
 
+    for (const player of game.players) {
       batch.set(
-        db.collection(`users/${player.id}/games`).doc(game.id),
+        db.collection(`play/${player.id}/game`).doc(game.id),
         playerGameCopy(player.id, game)
-      );
-    }
-
-    for (let i = 0; i < game.spectators.length; i++) {
-      const spectactor = game.spectators[i];
-
-      batch.set(
-        db.collection(`users/${spectactor.id}/games`).doc(game.id),
-        spectactorGameCopy(spectactor.id, game)
       );
     }
 
@@ -131,7 +115,7 @@ export const join = functions
     }
 
     const db = admin.firestore();
-    const ref = db.collection("games").doc(gameId);
+    const ref = db.collection("play/private/game").doc(gameId);
 
     try {
       await db.runTransaction(async (batch) => {
@@ -143,7 +127,10 @@ export const join = functions
         }
 
         if (game.players.length >= game.settings.maxPlayers) {
-          addSpectator(game, player);
+          throw new functions.https.HttpsError(
+            "invalid-argument",
+            "Hra je plná."
+          );
         } else {
           addPlayer(game, player);
         }
@@ -176,7 +163,7 @@ export const move = functions
   .region("europe-west1")
   .https.onCall(async ({ name: moveName, gameId, card, color }, context) => {
     const db = admin.firestore();
-    const ref = db.collection("games").doc(gameId);
+    const ref = db.doc(`play/private/game/${gameId}/moves`);
 
     try {
       await db.runTransaction(async (batch) => {

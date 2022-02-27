@@ -1,9 +1,9 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
 
-export function header({ game = {}, nah } = {}) {
+export function header({ title = "Hrajte si" } = {}) {
   return html`
     <header>
-      <h1>Nová hra</h1>
+      <h1>${title}</h1>
       <p>
         Hra ještě nezačala. Čeká se na zapojení dostatečného množství hráčů.
       </p>
@@ -19,16 +19,22 @@ export function header({ game = {}, nah } = {}) {
 
 const noop = () => {};
 
-export function content({
-  game = {},
-  players = [],
-  userPlayer = undefined,
-  lastCard = null,
-  handleGameMove = noop,
-  handlePlayerCardSelect = noop,
-  handleLeaveGame = noop,
-  isUserVerified = false,
-} = {}) {
+export function content(
+  { game: { players = [], ...game } = {}, lastCard = null, user } = {},
+  {
+    handleGameMove = noop,
+    handlePlayerCardSelect = noop,
+    handleLeaveGame = noop,
+  } = {}
+) {
+  const userPlayer = players.find((player) => player.id === user?.uid);
+  const isUserVerified = (user || false) && user.emailVerified;
+  const isUserPlaying = Boolean(userPlayer);
+  const isPlayersTurn =
+    isUserPlaying && userPlayer.id === game.currentPlayer.id;
+
+  console.info({ isUserVerified, isUserPlaying, isPlayersTurn }, userPlayer);
+
   return html`
     <main>
       <section>
@@ -70,24 +76,49 @@ export function content({
         <figure>
         ${
           game.deck?.length
-            ? `Balíček karet` // TODO: Show howmany cards left but not exactly
+            ? `Balíček karet (${game.deck.length})` // TODO: Show howmany cards left but not exactly
             : `Balíček tu ${!lastCard ? "také " : ""} není.`
         }
       </section>
 
       <section>
         <h2>Tvé možnosti</h2>
-        <button ?disabled=${!isUserVerified} class="js-dialog-join-game-open">Zapojit se do hry</button>
         ${
-          !isUserVerified
-            ? html`
-              <p>Pro zapojení do hry musíš být ověřený.</p>
-              <button class="js-dialog-verify-self-open">Ověřit se</button> `
-            : ""
+          isUserPlaying
+            ? ""
+            : html`
+                <button
+                  ?disabled=${!isUserVerified}
+                  class="js-dialog-join-game-open"
+                >
+                  Zapojit se do hry
+                </button>
+              `
         }
-        <!-- <button @click=${handleGameMove} name="suffle">
-          Zamíchat balíček karet
-        </button> -->
+        ${
+          isUserVerified || isUserPlaying
+            ? ""
+            : html`
+                <p>Pro zapojení do hry musíš být ověřený.</p>
+                <button class="js-dialog-verify-self-open">Ověřit se</button>
+              `
+        }
+        ${
+          !isUserPlaying
+            ? ""
+            : html`
+                <button
+                  @click=${handleGameMove}
+                  name="suffle"
+                  ?disabled=${!isPlayersTurn}
+                  title=${isPlayersTurn
+                    ? "Zamíchat karty"
+                    : `Na tahu je ${game.currentPlayer.name}`}
+                >
+                  Zamíchat balíček karet
+                </button>
+              `
+        }
         <!-- <button @click=${handleGameMove} disabled name="deal">
           Rozdat karty
         </button> -->

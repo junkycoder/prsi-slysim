@@ -144,13 +144,16 @@
     import { sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
     import { authCompleteEmailStoredLocally } from "/storage.js";
     import { isVerifyLink, useVerifyLink, currentUser } from "/user.js";
-    import { formDataToPayload } from "/library.js";
+    import { formDataToPayload, deepMerge } from "/library.js";
     import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
     import { playerNameStoredLocally } from "/storage.js";
     import { fns } from "/application.js";
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
     import * as templates from "/templates.js";
     import Sounds from "/sounds.js";
+    import { db } from "/application.js";
+    import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { onCurrentUserChanged } from "/user.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
       openingSelector: ".js-dialog-verify-self-open",
@@ -197,17 +200,19 @@
       );
     }
 
-    currentUser().then(handleUserVerifyChange).catch(error => {
-      if (confirm(`Chyba při ověřování uživatele: ${error.message}. Zkusit načíst znovu?`)) {
+
+    currentUser().then(handleUserVerifyChange).then((user) => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("game")) {
+        handleGamePlay({ gameId: urlParams.get("game"), user }); // 👌 Running Game ENTRYPOINT
+      }
+    }).catch(error => {
+      console.error(error);
+      if (confirm(`Chyba nastala: ${error.message}. Zkusit načíst stránku znovu?`)) {
         window.location.reload();
       }
-      console.error(error);
     });
 
-    const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.has("game")) {
-      handleGameStart({ gameId: urlParams.get("game") }); // 👌
-    }
 
     const joinGame = new Dialog(".js-dialog-join-game", {
       openingSelector: ".js-dialog-join-game-open",
@@ -244,6 +249,7 @@
         }
 
         useVerifyLink(link, email).then(({ user: u }) => {
+          const urlParams = new URLSearchParams(window.location.search);
           history.pushState({}, "Verified", urlParams.has("game") ? `/?game=${urlParams.get("game")}` : "/");
           handleUserVerifyChange(u);
         });
@@ -258,6 +264,8 @@
         if (isUserVerified) trigger.removeAttribute("aria-hidden");
         else trigger.setAttribute("aria-hidden", "true");
       }
+
+      return user;
     };
 
     async function handleVerifySelfSubmit(event) {
@@ -266,7 +274,7 @@
 
       try {
         const formData = new FormData(event.target);
-
+        const urlParams = new URLSearchParams(window.location.search);
         const email = formData.get("email");
         const settings = {
           url: `${origin}${urlParams.has("game") ? `?game=${urlParams.get("game")}` : ""}`,
@@ -301,7 +309,8 @@
         } else {
           history.pushState({}, "New Game", `/?game=${gameId}`);
           createGame.close();
-          handleGameStart({ gameId }); // 👌
+          const user = await currentUser();
+          handleGamePlay({ gameId, user }); // 👌 New Game ENTRYPOINT
         }
       } catch ({ message, code }) {
         if (code === "functions/permission-denied") {
@@ -342,38 +351,67 @@
       }
     }
 
-    function handleGameStart({ gameId }) {
+    function handleGamePlay({ gameId, user }) {
       const [
         headerElement,
         contentElement
       ] = [".js-header", ".js-content"].map(s => document.querySelector(s));
 
+      // Remove static content
       headerElement.firstElementChild.remove();
       contentElement.firstElementChild.remove();
 
-      render(
-        templates.header({
-        }),
-        headerElement
-      );
+      let state = {
+        title: "Nová hra",
+        game: undefined,
+        user: user?.toJSON(),
+        selectedCard: undefined,
+        selectedColor: undefined,
+      };
 
-      render(
-        templates.content({
-          isUserVerified: true,
-          handleLeaveGame: () => {
-            window.location.href = "/";
-          },
-        }),
-        contentElement,
-      );
+      const handlers = {
+        handleLeaveGame() {
+          window.location.href = "/";
+        }
+      };
+
+      const emit = (payload = {}) => {
+        state = deepMerge(state, payload);
+        render(
+          templates.header(state, handlers),
+          headerElement
+        );
+        render(
+          templates.content(state, handlers),
+          contentElement,
+        );
+        console.info(state);
+      }
+
+      const query = `play/${"public"}/game/${gameId}`;
+
+      getDoc(doc(db, query)).then((doc) => {
+        emit({ game: doc.data() });
+      });
+
+      onSnapshot(doc(db, query), (doc) => {
+        const game = doc.data();
+        emit({ game });
+      });
+
+      onCurrentUserChanged((user) => {
+        emit({ user });
+      });
+
     }
 
     async function handleJoinGameSubmit(event) {
       event.preventDefault();
+      const urlParams = new URLSearchParams(window.location.search);
       const gameId = urlParams.get("game");
 
       if (!gameId) {
-        if(confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
+        if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
           console.error("Game ID not found");
           window.location.href = "/";
         }
@@ -385,6 +423,15 @@
       const playerName = formData.get("player-name");
       const { data: { error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
 
+      if (error) {
+        if (error.code === "already-exists") {
+          alert(`${playerName} již hraje v této hře.`);
+        } else {
+          alert(`Nastala chyba při připojování k hře: ${error.message}`);
+        }
+      } else {
+        joinGame.close();
+      }
     }
 
   </script>
