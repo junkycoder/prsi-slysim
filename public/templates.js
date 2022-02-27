@@ -27,6 +27,7 @@ export function content({
   handleGameMove = noop,
   handlePlayerCardSelect = noop,
   handleLeaveGame = noop,
+  isUserVerified = false,
 } = {}) {
   return html`
     <main>
@@ -76,7 +77,14 @@ export function content({
 
       <section>
         <h2>Tvé možnosti</h2>
-        <button class="js-dialog-join-game">Zapojit se do hry</button>
+        <button ?disabled=${!isUserVerified} class="js-dialog-join-game">Zapojit se do hry</button>
+        ${
+          !isUserVerified
+            ? html`
+              <p>Pro zapojení do hry musíš být ověřený.</p>
+              <button class="js-dialog-verify-self-open">Ověřit se</button> `
+            : ""
+        }
         <!-- <button @click=${handleGameMove} name="suffle">
           Zamíchat balíček karet
         </button> -->

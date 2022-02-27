@@ -192,43 +192,39 @@
       );
     }
 
-    const { href: link } = window.location;
-
-    if (isVerifyLink(link)) {
-      let email = authCompleteEmailStoredLocally.read();
-      if (!email) {
-        alert(
-          "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
-        );
-        email = window.prompt(
-          `Pokud chcete pokračovat v tomto prohlžeči, vyplně svou email adresu znovu:`
-        );
+    currentUser().then(handleUserVerifyChange).catch(error => {
+      if (confirm(`Chyba při ověřování uživatele: ${error.message}. Zkusit načíst znovu?`)) {
+        window.location.reload();
       }
-
-      useVerifyLink(link, email).then(({ user }) => {
-        if (user?.emailVerified) {
-          history.pushState({}, "Noob", "/"); // todo back to game?
-          authCompleteEmailStoredLocally.remove();
-          handleUserVerifyChange(user);
-        }
-      });
-    } else {
-      currentUser().then(handleUserVerifyChange).catch(error => {
-        if (confirm(`Chyba při ověřování uživatele: ${error.message}. Zkusit načíst znovu?`)) {
-          window.location.reload();
-        }
-        console.error(error);
-      });
-    }
-
-    const params = new URLSearchParams(window.location.search)
-    if (params.has("game")) {
-      handleGameStart({ gameId: params.get("game") }); // 👌
+      console.error(error);
+    });
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.has("game")) {
+      handleGameStart({ gameId: urlParams.get("game") }); // 👌
     }
 
 
     function handleUserVerifyChange(user) {
       const isUserVerified = (user || undefined)?.emailVerified;
+
+      const { href: link } = window.location;
+
+      if (!isUserVerified && isVerifyLink(link)) {
+        let email = authCompleteEmailStoredLocally.read();
+        if (!email) {
+          alert(
+            "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
+          );
+          email = window.prompt(
+            `Pokud chcete pokračovat v tomto prohlžeči, vyplně svou email adresu znovu:`
+          );
+        }
+
+        useVerifyLink(link, email).then(({ user: u }) => {
+          history.pushState({}, "Verified", urlParams.has("game") ? `/?game=${urlParams.get("game")}` : "/");
+          handleUserVerifyChange(u);
+        });
+      }
 
       for (let trigger of verifySelf.openingTriggers) {
         if (isUserVerified) trigger.setAttribute("aria-hidden", "true");
@@ -246,19 +242,18 @@
       const { origin, search } = window.location;
 
       try {
-        const backPath = new URLSearchParams(search).get('back');
         const formData = new FormData(event.target);
 
         const email = formData.get("email");
         const settings = {
-          url: `${origin}${backPath || ''}`,
+          url: `${origin}${urlParams.has("game") ? `?game=${urlParams.get("game")}` : ""}`,
           handleCodeInApp: true,
         };
 
         await sendSignInLinkToEmail(auth, email, settings);
         authCompleteEmailStoredLocally.write(email);
 
-        alert(`Odkaz pro přihlášení byl odeslán na adresu ${email}.\n\nToto okno můžete zavřít.`);
+        alert(`Odesláno, pokračujte prosím do vaší ${email} schránky.\n\Tuto stránku můžete zavřít.`);
       } catch (fok) {
         console.error(fok)
         alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
@@ -281,7 +276,7 @@
         if (!gameId) {
           alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
         } else {
-          history.pushState({}, "Start Game", `/?game=${gameId}`);
+          history.pushState({}, "New Game", `/?game=${gameId}`);
           createGame.close();
           handleGameStart({ gameId }); // 👌
         }
@@ -341,7 +336,7 @@
 
       render(
         templates.content({
-          foo: "Meh.",
+          isUserVerified: true,
           handleLeaveGame: () => {
             window.location.href = "/";
           },
