@@ -394,20 +394,33 @@
         console.info(state);
       }
 
-      const query = `play/${user?.uid || "public"}/game/${gameId}`;
-
-      getDoc(doc(db, query)).then((doc) => {
-        emit({ game: doc.data() });
-      });
-
-      onSnapshot(doc(db, query), (doc) => {
-        const game = doc.data();
-        emit({ game });
-      });
 
       onCurrentUserChanged((user) => {
         emit({ user });
       });
+
+
+      const queryToPublicCopy = `play/public/game/${gameId}`;
+      const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
+
+      getDoc(doc(db, queryToPublicCopy)).then((doc) => {
+        emit({ game: doc.data() });
+      });
+
+      const handleSnapshot = (doc) => {
+        const game = doc.data();
+        setTimeout(effectGame(game, state.game), 0);
+        emit({ game });
+      }
+      const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
+
+      function effectGame({ game: prevGame }, { game: nextGame }) {
+        if (prevGame.players.length > nextGame.players.length) {
+          if()
+          unsubcribePublicCopy();
+          onSnapshot(doc(db, queryToPlayerCopy), handleSnapshot);
+        }
+      }
 
     }
 
