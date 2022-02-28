@@ -375,7 +375,7 @@
         handleShareGame(event) {
           event.preventDefault();
           const shateLink = window.location.href;
-          const shareText = `Zahrajem si prší? Hra je založená, stačí se připojit..`;
+          const shareText = `Hra je založená, stačí se připojit..`;
 
           if (navigator.share) {
             navigator.share({
@@ -384,7 +384,7 @@
             });
           } else {
             navigator.clipboard
-              .writeText(`${shareText} ${shateLink}`)
+              .writeText(`${shateLink} ${shareText}`)
               .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
           }
         },
