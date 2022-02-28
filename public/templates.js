@@ -12,15 +12,19 @@ export function header({ game = {}, title = "Hrajte si" } = {}) {
                 : ""
             }`
           : html`Hra probíhá. Na tahu je
-              <strong>${game.currentPlayer.name}</strong>.`}
+              <strong>${game.currentPlayer?.name}</strong>.`}
       </p>
     </header>
   `;
 }
 
 const noop = () => {};
-const getGameUser = (userId, list = []) =>
-  list.find((user) => userId && user.id === userId);
+
+// const getGameUser = (userId, list = []) =>
+//  list.find((user) => userId && user.id === userId);
+
+const ifelse = (condition, then = "", elze = "") => (condition ? then : elze);
+const unless = (negacondition, then = "") => ifelse(!negacondition, then);
 
 export function content(
   {
@@ -76,158 +80,152 @@ export function content(
         )}
         <h2>Stůl</h2>
         <figure>
-          ${
-            lastCard
-              ? html`
-                  Na stole je
-                  <strong>${lastCard.value}–${lastCard.color}</strong>.
-                  ${!(game.playedCards.length - 1)
-                    ? ""
-                    : `Odehraných karet celkem: ${game.playedCards.length}`}
-                `
-              : "Na stole není vyložená žádná karta."
-          }
+          ${ifelse(
+            lastCard,
+            html`
+              Na stole je
+              <strong>${lastCard?.value}–${lastCard?.color}</strong>.
+              ${!(game.playedCards?.length - 1)
+                ? ""
+                : `Odehraných karet celkem: ${game.playedCards.length}`}
+            `,
+            "Na stole není vyložená žádná karta."
+          )}
         </figure>
         <figure>
-        ${
-          game.deck?.length
-            ? `Balíček karet (${game.deck.length}) ${
-                game.deckShuffled ? "" : "není zamíchaný"
-              }`
-            : `Balíček tu ${!lastCard ? "také " : ""} není.`
-        }
+        ${ifelse(
+          game.deck?.length,
+          `Balíček karet (${game.deck?.length}) ${
+            game.deckShuffled ? "" : "není zamíchaný"
+          }`,
+          `Balíček tu ${!lastCard ? "také " : ""} není.`
+        )}
       </section>
 
       <section>
         <h2>Tvé možnosti</h2>
-        ${
-          isUserPlaying
-            ? ""
-            : html`
-                <button
-                  ?disabled=${!isUserVerified}
-                  class="js-dialog-join-game-open"
-                >
-                  Zapojit se do hry
-                </button>
-              `
-        }
-        ${
-          isUserVerified || isUserPlaying
-            ? ""
-            : html`
-                <p>Pro zapojení do hry musíš být ověřený.</p>
-                <button class="js-dialog-verify-self-open">Ověřit se</button>
-              `
-        }
-        ${
-          !isUserPlaying || game.status
-            ? ""
-            : html`
-                <button
-                  @click=${handleYourMove}
-                  name="shuffle"
-                  ?disabled=${!isPlayersTurn}
-                  title=${isPlayersTurn
-                    ? "Zamíchat karty"
-                    : `Na tahu je ${currentPlayer.name}`}
-                >
-                  Zamíchat balíček karet
-                </button>
-                <button
-                  @click=${handleYourMove}
-                  name="deal"
-                  ?disabled=${!isPlayersTurn ||
-                  !game.deckShuffled ||
-                  players.length < 2}
-                  data-sound-effect="deal-cards.wav"
-                  data-busy-title="Lížu..."
-                  title=${isPlayersTurn
-                    ? !game.deckShuffled
-                      ? "Nejprve je potřeba balíček zamíchat"
-                      : players.length > 1
-                      ? "Rozdat karty"
-                      : "Nedostatek hráčů"
-                    : `Na tahu je ${currentPlayer.name}`}
-                >
-                  Rozdat karty
-                </button>
-              `
-        }
-        ${
-          !game.status
-            ? ""
-            : html`
-                <button
-                  ?disabled=${!isPlayersTurn || !game.deck.length}
-                  @click=${handleYourMove}
-                  name="draw"
-                  data-sound-effect="draw.wav"
-                  data-busy-title="Lížu..."
-                  title=${isPlayersTurn
-                    ? game.deck.length
-                      ? ""
-                      : "Balíček je prázdný"
-                    : `Na tahu je ${currentPlayer.name}`}
-                >
-                  Líznout si
-                </button>
-              `
-        }
-        ${
-          !game.status || game.deck.length
-            ? ""
-            : html`
-                <button
-                  ?disabled=${!isPlayersTurn || game.playedCards.length < 2}
-                  @click=${handleYourMove}
-                  name="flip"
-                  data-sound-effect="deck.wav"
-                  data-busy-title="Otáčím..."
-                  title=${isPlayersTurn
-                    ? game.playedCards.length > 1
-                      ? ""
-                      : "Nejsou odehrané žádné karty"
-                    : `Na tahu je ${currentPlayer.name}`}
-                >
-                  Otočit odehrané karty
-                </button>
-              `
-        }
-        ${
-          !game.status
-            ? ""
-            : html`
-                <select name="card" @change=${handlePlayerCardSelect}>
-                  ${userPlayer?.cards.map(
-                    ({ id, value, color }) => html`
-                      <option ?selected=${selectedCard?.id} value="${id}">
-                        ${value}–${color}
-                      </option>
-                    `
-                  )}
-                  <option disabled selected>
-                    ${!userPlayer?.cards.length
-                      ? "žádné karty v ruce"
-                      : "Zvolte kartu"}
+        ${unless(
+          isUserPlaying,
+          html`
+            <button
+              ?disabled=${!isUserVerified}
+              class="js-dialog-join-game-open"
+            >
+              Zapojit se do hry
+            </button>
+          `
+        )}
+        ${unless(
+          isUserVerified || isUserPlaying,
+          html`
+            <p>Pro zapojení do hry musíš být ověřený.</p>
+            <button class="js-dialog-verify-self-open">Ověřit se</button>
+          `
+        )}
+        ${unless(
+          !isUserPlaying || game.status,
+          html`
+            <button
+              @click=${handleYourMove}
+              name="shuffle"
+              ?disabled=${!isPlayersTurn}
+              title=${isPlayersTurn
+                ? "Zamíchat karty"
+                : `Na tahu je ${currentPlayer?.name}`}
+            >
+              Zamíchat balíček karet
+            </button>
+            <button
+              @click=${handleYourMove}
+              name="deal"
+              ?disabled=${!isPlayersTurn ||
+              !game.deckShuffled ||
+              players.length < 2}
+              data-sound-effect="deal-cards.wav"
+              data-busy-title="Lížu..."
+              title=${isPlayersTurn
+                ? !game.deckShuffled
+                  ? "Nejprve je potřeba balíček zamíchat"
+                  : players.length > 1
+                  ? "Rozdat karty"
+                  : "Nedostatek hráčů"
+                : `Na tahu je ${currentPlayer?.name}`}
+            >
+              Rozdat karty
+            </button>
+          `
+        )}
+        ${unless(
+          !game.status,
+          html`
+            <button
+              ?disabled=${!isPlayersTurn || !game.deck.length}
+              @click=${handleYourMove}
+              name="draw"
+              data-sound-effect="draw.wav"
+              data-busy-title="Lížu..."
+              title=${isPlayersTurn
+                ? game.deck.length
+                  ? ""
+                  : "Balíček je prázdný"
+                : `Na tahu je ${currentPlayer?.name}`}
+            >
+              Líznout si
+            </button>
+          `
+        )}
+        ${unless(
+          !game.status || game.deck.length,
+          html`
+            <button
+              ?disabled=${!isPlayersTurn || game.playedCards.length < 2}
+              @click=${handleYourMove}
+              name="flip"
+              data-sound-effect="deck.wav"
+              data-busy-title="Otáčím..."
+              title=${isPlayersTurn
+                ? game.playedCards.length > 1
+                  ? ""
+                  : "Nejsou odehrané žádné karty"
+                : `Na tahu je ${currentPlayer?.name}`}
+            >
+              Otočit odehrané karty
+            </button>
+          `
+        )}
+        ${unless(
+          !game.status,
+          html`
+            <select name="card" @change=${handlePlayerCardSelect}>
+              ${userPlayer?.cards.map(
+                ({ id, value, color }) => html`
+                  <option ?selected=${selectedCard?.id} value="${id}">
+                    ${value}–${color}
                   </option>
-                </select>
-                <button
-                  @click=${handleYourMove}
-                  ?disabled=${!isPlayersTurn || !selectedCard}
-                  name="play"
-                  data-sound-effect="play-card.wav"
-                  data-busy-title="Táhnu..."
-                  title=${isPlayersTurn
-                    ? selectedCard
-                      ? "Hrát kartu"
-                      : "Nejprve je potřeba vybrat kartu"
-                    : `Na tahu je ${currentPlayer.name}`}
-                >
-                  Táhnout kartu
-                </button>
-              `
-        }
+                `
+              )}
+              <option disabled selected>
+                ${!userPlayer?.cards.length
+                  ? "žádné karty v ruce"
+                  : "Zvolte kartu"}
+              </option>
+            </select>
+            <button
+              @click=${handleYourMove}
+              ?disabled=${!isPlayersTurn || !selectedCard}
+              name="play"
+              data-sound-effect="play-card.wav"
+              data-busy-title="Táhnu..."
+              title=${isPlayersTurn
+                ? selectedCard
+                  ? "Hrát kartu"
+                  : "Nejprve je potřeba vybrat kartu"
+                : `Na tahu je ${currentPlayer?.name}`}
+            >
+              Táhnout kartu
+            </button>
+          `
+        )}
         <!-- <button @click=${handleYourMove} disabled name="stay">Stát</button> -->
         <!-- <button @click=${handleYourMove} name="leave" type="button">Vzdát se</button> -->
 
