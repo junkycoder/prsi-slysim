@@ -331,7 +331,8 @@
             "shuffle2.wav",
             "play-card.wav",
             "deal-cards.wav",
-            "deck.wav"
+            "deck.wav",
+            "draw.wav"
           ], enabled);
           if (enabled) Sounds.play("deck.wav");
           break;
@@ -381,106 +382,31 @@
           }
         },
         handleYourMove(event) {
-          const buttonElement = event.target;
-          const { name: moveType } = buttonElement;
           const urlParams = new URLSearchParams(window.location.search);
           const gameId = urlParams.get("game");
 
-          // TODO reduce switch to one line
+          const buttonElement = event.target;
+          const { name: moveType } = buttonElement;
+          const buttonElementLabel = buttonElement.textContent;
+          buttonElement.setAttribute("disabled", "disabled");
 
-          switch (moveType) {
-            case "shuffle": {
-              const buttonElementLabel = buttonElement.textContent;
-              buttonElement.setAttribute("disabled", "disabled");
-              buttonElement.textContent = 'Míchám...';
+          buttonElement.textContent = buttonElement.dataset.busyTitle || "Zpracovávám...";
+          Promise.all([
+            Sounds.play(buttonElement.dataset.soundEffect || "plop.m4a"),
+            httpsCallable(fns, "gameMove")({
+              moveType,
+              gameId,
+              card: state.selectedCard,
+              color: state.selectedColor
+            }),
+          ]).catch(error => {
+            console.error(error);
+            alert(`Nastala chyba "${error.message}". Zkuste to prosím znovu.`);
+          }).finally(() => {
+            buttonElement.removeAttribute("disabled");
+            buttonElement.textContent = buttonElementLabel;
+          });
 
-              Promise.all([
-                Sounds.play("shuffle1.wav"),
-                httpsCallable(fns, "gameMove")({ moveType, gameId }),
-              ]).catch(error => {
-                console.error(error);
-                alert("Nastala chyba při míchání. Zkuste to prosím znovu.");
-              }).finally(() => {
-                buttonElement.removeAttribute("disabled");
-                buttonElement.textContent = buttonElementLabel;
-              });
-              break;
-            }
-
-            case "deal": {
-              const buttonElementLabel = buttonElement.textContent;
-              buttonElement.setAttribute("disabled", "disabled");
-              buttonElement.textContent = 'Vydávám...';
-
-              Promise.all([
-                Sounds.play("deal-cards.wav"),
-                httpsCallable(fns, "gameMove")({ moveType, gameId }),
-              ]).catch(error => {
-                console.error(error);
-                alert("Nastala chyba při vydávání. Zkuste to prosím znovu.");
-              }).finally(() => {
-                buttonElement.removeAttribute("disabled");
-                buttonElement.textContent = buttonElementLabel;
-              });
-              break;
-            }
-
-            case "play": {
-              Promise.all([
-                Sounds.play("play-card.wav"),
-                httpsCallable(fns, "gameMove")({
-                  moveType, gameId,
-                  card: state.selectedCard,
-                  color: state.selectedColor
-                }),
-              ]).catch(error => {
-                console.error(error);
-                alert("Nastala chyba při tahu. Zkuste to prosím znovu.");
-              }).finally(() => {
-                buttonElement.removeAttribute("disabled");
-                buttonElement.textContent = buttonElementLabel;
-              });
-            }
-
-            case "draw": {
-              const buttonElementLabel = buttonElement.textContent;
-              buttonElement.setAttribute("disabled", "disabled");
-              buttonElement.textContent = 'Lížu...';
-
-              Promise.all([
-                Sounds.play("draw.wav"),
-                httpsCallable(fns, "gameMove")({ moveType, gameId }),
-              ]).catch(error => {
-                console.error(error);
-                alert("Nastala chyba při lízání. Zkuste to prosím znovu.");
-              }).finally(() => {
-                buttonElement.removeAttribute("disabled");
-                buttonElement.textContent = buttonElementLabel;
-              });
-              break;
-            }
-
-            case "flip": {
-              const buttonElementLabel = buttonElement.textContent;
-              buttonElement.setAttribute("disabled", "disabled");
-              buttonElement.textContent = 'Otáčím...';
-
-              Promise.all([
-                Sounds.play("deck.wav"),
-                httpsCallable(fns, "gameMove")({ moveType, gameId }),
-              ]).catch(error => {
-                console.error(error);
-                alert("Nastala chyba při lízání. Zkuste to prosím znovu.");
-              }).finally(() => {
-                buttonElement.removeAttribute("disabled");
-                buttonElement.textContent = buttonElementLabel;
-              });
-              break;
-            }
-            default:
-              console.error("Unknown move type", moveType)
-              break;
-          }
         },
         handlePlayerCardSelect(event) {
           emit({ selectedCard: event.target.value });
@@ -492,8 +418,7 @@
 
       function emit(payload = {}) {
         state = deepMerge(state, payload);
-        console.log(state.game?.deck);
-        // Kua drat, ono te nemerguje polata
+
         render(
           templates.header(state, handlers),
           headerElement

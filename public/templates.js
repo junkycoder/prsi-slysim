@@ -41,7 +41,7 @@ export function content(
   const isUserPlaying = Boolean(userPlayer);
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
   const [lastCard] = game.playedCards?.slice(-1) || [];
-  console.log(isPlayersTurn);
+
   return html`
     <main>
       <section>
@@ -78,8 +78,13 @@ export function content(
         <figure>
           ${
             lastCard
-              ? html`Na stole je
-                  <strong>${lastCard.value}–${lastCard.color}</strong>.`
+              ? html`
+                  Na stole je
+                  <strong>${lastCard.value}–${lastCard.color}</strong>.
+                  ${!(game.playedCards.length - 1)
+                    ? ""
+                    : `Odehraných karet celkem: ${game.playedCards.length}`}
+                `
               : "Na stole není vyložená žádná karta."
           }
         </figure>
@@ -135,6 +140,8 @@ export function content(
                   ?disabled=${!isPlayersTurn ||
                   !game.deckShuffled ||
                   players.length < 2}
+                  data-sound-effect="deal-cards.wav"
+                  data-busy-title="Lížu..."
                   title=${isPlayersTurn
                     ? !game.deckShuffled
                       ? "Nejprve je potřeba balíček zamíchat"
@@ -155,6 +162,8 @@ export function content(
                   ?disabled=${!isPlayersTurn || !game.deck.length}
                   @click=${handleYourMove}
                   name="draw"
+                  data-sound-effect="draw.wav"
+                  data-busy-title="Lížu..."
                   title=${isPlayersTurn
                     ? game.deck.length
                       ? ""
@@ -173,6 +182,8 @@ export function content(
                   ?disabled=${!isPlayersTurn || game.playedCards.length < 2}
                   @click=${handleYourMove}
                   name="flip"
+                  data-sound-effect="deck.wav"
+                  data-busy-title="Otáčím..."
                   title=${isPlayersTurn
                     ? game.playedCards.length > 1
                       ? ""
@@ -205,6 +216,8 @@ export function content(
                   @click=${handleYourMove}
                   ?disabled=${!isPlayersTurn || !selectedCard}
                   name="play"
+                  data-sound-effect="play-card.wav"
+                  data-busy-title="Táhnu..."
                   title=${isPlayersTurn
                     ? selectedCard
                       ? "Hrát kartu"
