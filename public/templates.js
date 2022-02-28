@@ -51,7 +51,7 @@ export function content(
                   .join(", ")}${
                   players.length > 1
                     ? ` a ${players.slice(-1)[0].name}.`
-                    : `${players.slice(-1)[0].name} sám.`
+                    : `${players.slice(-1)[0].name}.`
                 }`
               : `U stolu zatím nikdo nesedí.`
           }
@@ -111,7 +111,7 @@ export function content(
               `
         }
         ${
-          !isUserPlaying
+          !isUserPlaying || game.status
             ? ""
             : html`
                 <button
@@ -124,11 +124,21 @@ export function content(
                 >
                   Zamíchat balíček karet
                 </button>
+                <button
+                  @click=${handleYourMove}
+                  name="deal"
+                  ?disabled=${!isPlayersTurn || !game.deckShuffled || players.length < 2}
+                  title=${isPlayersTurn
+                    ? !game.deckShuffled
+                      ? "Nejprve je potřeba balíček zamíchat"
+                      : players.length > 1 ? "Rozdat karty" : "Nedostatek hráčů"
+                    : `Na tahu je ${currentPlayer.name}`}
+                >
+                  Rozdat karty
+                </button>
               `
         }
-        <!-- <button @click=${handleYourMove} disabled name="deal">
-          Rozdat karty
-        </button> -->
+        <!--  -->
         <!-- <button @click=${handleYourMove} disabled name="draw">
           Líznout si
         </button> -->
