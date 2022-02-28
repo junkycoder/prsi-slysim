@@ -5,14 +5,16 @@ export function header({ game = {}, title = "Hrajte si" } = {}) {
     <header>
       <h1>${title}</h1>
       <p>
-        ${!game.status
-          ? `Hra ještě nezačala. ${
-              (game.players || []).length < 2
-                ? "Čeká se na zapojení dostatečného množství hráčů."
-                : ""
-            }`
-          : html`Hra probíhá. Na tahu je
-              <strong>${game.currentPlayer?.name}</strong>.`}
+        ${ifelse(
+          !game.status,
+          `Hra ještě nezačala. ${
+            (game.players || []).length < 2
+              ? "Čeká se na alespoň jednoho spoluhráče."
+              : ""
+          }`,
+          html`Hra probíhá. Na tahu je
+            <strong>${game.currentPlayer?.name}</strong>.`
+        )}
       </p>
     </header>
   `;
@@ -25,6 +27,30 @@ const noop = () => {};
 
 const ifelse = (condition, then = "", elze = "") => (condition ? then : elze);
 const unless = (negacondition, then = "") => ifelse(!negacondition, then);
+
+export const player_line = ({ player, userPlayer, currentPlayer }) => {
+  let line = player.name;
+  if (userPlayer?.id && player.id === userPlayer.id) {
+    line += " (to jsi ty)";
+  }
+  if (player.id === currentPlayer.id) {
+    line += " je na tahu";
+  }
+  if (player.cards?.length) {
+    line += `, má karet ${player.cards.length}`;
+  }
+  line += ".";
+  return line;
+};
+
+export const table_card_line = ({ card, color }) => {
+  let line = `${card?.value}–${card?.color}`;
+  line = html`Na stole je <strong>${line}</strong>`;
+  // if (game.playedCards?.length - 1) {
+  //   line += `+ ${game.playedCards-1.length} odehraných`
+  // }
+  return line;
+};
 
 export function content(
   {
@@ -49,7 +75,7 @@ export function content(
   return html`
     <main>
       <section>
-        <h2>Hráči (${players?.length || 0})</h2>
+        <h2>${`Hráči (${players?.length || 0})`}</h2>
         <p>
           ${
             players.length
@@ -67,14 +93,7 @@ export function content(
         ${players.map(
           (player) => html`
             <figure>
-              ${player.name}${!(userPlayer?.id && player.id === userPlayer.id)
-                ? ""
-                : " (to jsi ty)"}${player.id === currentPlayer.id
-                ? ", je na tahu"
-                : ""},
-              ${player.cards?.length
-                ? `počet karet: ${player.cards.length}`
-                : "bez karet"}
+              ${player_line({ player, userPlayer, currentPlayer })}
             </figure>
           `
         )}
@@ -82,13 +101,7 @@ export function content(
         <figure>
           ${ifelse(
             lastCard,
-            html`
-              Na stole je
-              <strong>${lastCard?.value}–${lastCard?.color}</strong>.
-              ${!(game.playedCards?.length - 1)
-                ? ""
-                : `Odehraných karet celkem: ${game.playedCards.length}`}
-            `,
+            table_card_line({ card: lastCard, color: game.selectedColor }),
             "Na stole není vyložená žádná karta."
           )}
         </figure>
