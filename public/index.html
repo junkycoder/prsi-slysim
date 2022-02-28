@@ -119,7 +119,7 @@
     <section class="dialog__inner">
       <header>
         <h1 id="join-game-dialog-title">Zapojit se do hry</h1>
-        <p>... dokud je u stolu pořád dostatečně místa.</p>
+        <p>... dokud je u stolu místo.</p>
       </header>
       <form method="post" name="join-game">
         <label>
@@ -185,12 +185,12 @@
     Sounds.setSoundsPath("/assets/")
     Sounds.prepare("rain.mp3", { gain: 0.5 });
     Sounds.prepareAll([
-      "suffle1.wav",
-      "suffle2.wav",
+      "shuffle1.wav",
+      "shuffle2.wav",
       "play-card.wav",
       "deal-cards.wav",
-      "suffle2.wav",
-      "suffle2.wav",
+      "shuffle2.wav",
+      "shuffle2.wav",
     ]);
 
     for (let input of soundEffects.dialog.querySelectorAll(`input[type="checkbox"]`)) {
@@ -198,6 +198,10 @@
         "change",
         handleSoundEffectsChange
       );
+      // Sounds are enabled by default
+      if (input.name === "sounds") {
+        input.click();
+      }
     }
 
 
@@ -336,12 +340,12 @@
           break;
         case "sounds":
           Sounds.enableAll([
-            "suffle1.wav",
-            "suffle2.wav",
+            "shuffle1.wav",
+            "shuffle2.wav",
             "play-card.wav",
             "deal-cards.wav",
-            "suffle2.wav",
-            "suffle2.wav",
+            "shuffle2.wav",
+            "shuffle2.wav",
             "deck.wav"
           ], enabled);
           if (enabled) Sounds.play("deck.wav");
@@ -384,16 +388,36 @@
             navigator.share({
               text: shareText,
               url: shateLink
-            })
-              .then(() => console.info("Successful share"))
-              .catch((error) => console.error("Error sharing", error));
+            });
           } else {
-            navigator.clipboard.writeText(`${shareText} ${shateLink}`)
+            navigator.clipboard
+              .writeText(`${shareText} ${shateLink}`)
               .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
-              .catch((error) => console.error("Error copying", error));
           }
         },
-        handleGameMove(event) {
+        handleYourMove(event) {
+          const buttonElement = event.target;
+          const { name: moveType } = buttonElement;
+
+
+          switch (moveType) {
+            case "shuffle":
+              const buttonElementLabel = buttonElement.textContent;
+              buttonElement.setAttribute("disabled", "disabled");
+              buttonElement.textContent = 'Míchám...';
+
+              Promise.all([
+                Sounds.play("shuffle2.wav"),
+                // TODO: call game move
+              ]).then(() => {
+                buttonElement.removeAttribute("disabled");
+                buttonElement.textContent = buttonElementLabel;
+              });
+              break;
+            default:
+              console.error("Unknown move type", moveType)
+              break;
+          }
           // TODO
           // - play sound
           // - call lambda
@@ -413,7 +437,7 @@
           templates.content(state, handlers),
           contentElement,
         );
-        console.info(state);
+        console.info("STATE UPDATE\n", state, "\n\n");
       }
 
 
@@ -439,8 +463,10 @@
             unsubcribePublicCopy();
             onSnapshot(doc(db, queryToPlayerCopy), handleSnapshot);
             // TODO Play you sitting down sound
+            Sounds.play("plop.mp3");
           } else {
             // TODO Play someone sitting down sound
+            Sounds.play("plop.mp3");
           }
         }
       }
@@ -458,7 +484,7 @@
       const submitButton = joinGame.dialog.querySelector("button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Přihlašuji se...';
+      submitButton.textContent = 'Přisedám...';
 
       if (!gameId) {
         if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {

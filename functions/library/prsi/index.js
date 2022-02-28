@@ -42,7 +42,7 @@ for (let color of cardColors) {
 
 export const penalties = {};
 
-export const suffleCards = (_cards = cards) =>
+export const shuffleCards = (_cards = cards) =>
   [..._cards.values()].sort(() => Math.random() - 0.5);
 
 export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
@@ -56,7 +56,7 @@ export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
     players: [],
     currentPlayer: null,
     currentColor: null,
-    deck: suffleCards(),
+    deck: shuffleCards(),
     playedCards: [],
     penalty: null,
     outcome: null,
@@ -99,8 +99,7 @@ export function playerGameCopy(
     playedCards: [
       ...playedCards.slice(-2),
       ...playedCards.slice(0, -2).map(() => reversedCard),
-    ],
-    you: true,
+    ]
   };
 }
 

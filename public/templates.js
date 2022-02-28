@@ -29,7 +29,7 @@ export function content(
     user,
   } = {},
   {
-    handleGameMove = noop,
+    handleYourMove = noop,
     handlePlayerCardSelect = noop,
     handleLeaveGame = noop,
   } = {}
@@ -38,8 +38,6 @@ export function content(
   const isUserVerified = (user || false) && user.emailVerified;
   const isUserPlaying = Boolean(userPlayer);
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
-
-  console.info({ isUserVerified, isUserPlaying, isPlayersTurn }, userPlayer);
 
   return html`
     <main>
@@ -116,8 +114,8 @@ export function content(
             ? ""
             : html`
                 <button
-                  @click=${handleGameMove}
-                  name="suffle"
+                  @click=${handleYourMove}
+                  name="shuffle"
                   ?disabled=${!isPlayersTurn}
                   title=${isPlayersTurn
                     ? "Zamíchat karty"
@@ -127,10 +125,10 @@ export function content(
                 </button>
               `
         }
-        <!-- <button @click=${handleGameMove} disabled name="deal">
+        <!-- <button @click=${handleYourMove} disabled name="deal">
           Rozdat karty
         </button> -->
-        <!-- <button @click=${handleGameMove} disabled name="draw">
+        <!-- <button @click=${handleYourMove} disabled name="draw">
           Líznout si
         </button> -->
         <!-- <select name="card" @change=${handlePlayerCardSelect} disabled>
@@ -146,11 +144,11 @@ export function content(
             html`<option disabled selected>žádné karty v ruce</option>`
           }
         </select>
-        <button @click=${handleGameMove} disabled name="card">
+        <button @click=${handleYourMove} disabled name="card">
           Táhnout kartu
         </button> -->
-        <!-- <button @click=${handleGameMove} disabled name="stay">Stát</button> -->
-        <!-- <button @click=${handleGameMove} name="leave" type="button">Vzdát se</button> -->
+        <!-- <button @click=${handleYourMove} disabled name="stay">Stát</button> -->
+        <!-- <button @click=${handleYourMove} name="leave" type="button">Vzdát se</button> -->
 
         <button @click=${handleLeaveGame} type="button">Odejít</button>
       </section>

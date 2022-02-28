@@ -121,12 +121,12 @@
 
         if (!gameSounds.length) {
           gameSounds = [
-            { type: "move", name: "suffle", promise: createSound("/assets/suffle1.wav") },
-            { type: "move", name: "suffle", promise: createSound("/assets/suffle2.wav") },
+            { type: "move", name: "shuffle", promise: createSound("/assets/shuffle1.wav") },
+            { type: "move", name: "shuffle", promise: createSound("/assets/shuffle2.wav") },
             { type: "move", name: "play", promise: createSound("/assets/play-card.wav") },
             { type: "move", name: "deal", promise: createSound("/assets/deal-cards.wav") },
-            { type: "move", name: "draw", promise: createSound("/assets/suffle2.wav") },
-            { type: "move", name: "suffle", promise: createSound("/assets/suffle2.wav") },
+            { type: "move", name: "draw", promise: createSound("/assets/shuffle2.wav") },
+            { type: "move", name: "shuffle", promise: createSound("/assets/shuffle2.wav") },
           ];
 
           const promises = await Promise.allSettled(gameSounds.map(({ promise }) => promise));
@@ -161,7 +161,7 @@
         emit({ selectedCard: event.target.value });
       }
 
-      const handleGameMove = async (event) => {
+      const handleYourMove = async (event) => {
         event.preventDefault();
         emit({ game: { moving: true } });
 
@@ -208,7 +208,7 @@
             handleSoundsClick,
             handleMusicClick,
             handleShareGame,
-            handleGameMove,
+            handleYourMove,
             handlePlayerCardSelect,
             handleReloadPage,
           }), document.body);

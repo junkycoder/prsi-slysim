@@ -24,7 +24,7 @@ export default function tGameBoard({
   selectedCard,
   handleSoundsClick,
   handleMusicClick,
-  handleGameMove,
+  handleYourMove,
   handleShareGame,
   handlePlayerCardSelect,
   handleReloadPage,
@@ -92,16 +92,16 @@ export default function tGameBoard({
         <section>
           <h2>Tvoje možnosti</h2>
           <button
-            @click=${handleGameMove}
-            name="suffle"
+            @click=${handleYourMove}
+            name="shuffle"
             ?disabled=${game.moving || game.currentPlayer.id !== userPlayer?.id}
           >
             Zamíchat balíček karet
           </button>
-          <button @click=${handleGameMove} disabled name="deal">
+          <button @click=${handleYourMove} disabled name="deal">
             Rozdat karty
           </button>
-          <button @click=${handleGameMove} disabled name="draw">
+          <button @click=${handleYourMove} disabled name="draw">
             Líznout si
           </button>
           <select name="card" @change=${handlePlayerCardSelect} disabled>
@@ -115,11 +115,11 @@ export default function tGameBoard({
             ${!userPlayer?.cards.length &&
             html`<option disabled selected>žádné karty v ruce</option>`}
           </select>
-          <button @click=${handleGameMove} disabled name="card">
+          <button @click=${handleYourMove} disabled name="card">
             Táhnout kartu
           </button>
-          <button @click=${handleGameMove} disabled name="stay">Stát</button>
-          <button @click=${handleGameMove} name="leave">Opustit hru</button>
+          <button @click=${handleYourMove} disabled name="stay">Stát</button>
+          <button @click=${handleYourMove} name="leave">Opustit hru</button>
         </section>
       `}
       <!-- ${tTodoList()} -->

@@ -171,8 +171,8 @@ export const move = functions
         const player = getPlayer(game, context.auth.uid);
 
         switch (moveName) {
-          case "suffle":
-            moves.suffleDeck(game, player);
+          case "shuffle":
+            moves.shuffleDeck(game, player);
             break;
           case "deal":
             moves.dealCards(game, player);

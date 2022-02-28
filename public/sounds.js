@@ -30,12 +30,15 @@ export const createSound = async (soundPath, { gain = 1 } = {}) => {
   listener.setPosition(0, -1, 0);
 
   return {
-    play: ({ loop = false }) => source.play(buffer, { loop }),
+    play: ({ loop = false }) =>
+      new Promise((resolve) => {
+        source.play(buffer, { loop }).addEventListener("ended", resolve);
+      }),
     stop: () => source.stopAll(),
   };
 };
 
-let sounds = new Map();
+let promises = new Map();
 let soundPath = "/sounds/";
 
 export default {
@@ -43,12 +46,14 @@ export default {
     soundPath = path;
   },
   enable(name, enabled = true, { autoplay = false, loop = false } = {}) {
-    const sound = sounds.get(name);
-    if (sound) {
+    const promise = promises.get(name);
+    if (promise) {
+      promise.enabled = enabled;
+
       if (!enabled) {
-        sound.then((s) => s.stop());
+        promise.then((s) => s.stop());
       } else if (autoplay) {
-        sound.then((s) => s.play({ loop }));
+        promise.then((s) => s.play({ loop }));
       }
     }
   },
@@ -57,16 +62,17 @@ export default {
       this.enable(name, enabled, autoplay, { loop });
     }
   },
-  play(name, { loop = false, gain = 1 } = {}) {
-    if (!sounds.has(name)) {
-      sounds.set(name, createSound(soundPath + name, { gain }));
+  async play(name, { loop = false, gain = 1 } = {}) {
+    if (!promises.has(name)) {
+      promises.set(name, createSound(soundPath + name, { gain }));
     }
-    const sound = sounds.get(name);
-    sound.then((s) => s.play({ loop }));
+    const promise = promises.get(name);
+    if (!promise.enabled) return false;
+    return (await promise).play({ loop });
   },
   prepare(name, { gain = 1 } = {}) {
-    if (sounds.has(name)) return;
-    sounds.set(name, createSound(soundPath + name, { gain }));
+    if (promises.has(name)) return true;
+    promises.set(name, createSound(soundPath + name, { gain }));
   },
   prepareAll(names, { gain } = {}) {
     for (let name of names) {

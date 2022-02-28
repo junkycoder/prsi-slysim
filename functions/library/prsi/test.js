@@ -87,7 +87,7 @@ console.assert(
 );
 
 
-Game.moves.suffleDeck(g, p);
+Game.moves.shuffleDeck(g, p);
 Game.moves.dealCards(g, p);
 
 console.assert(
@@ -106,7 +106,7 @@ console.assert(
 );
 
 try {
-  Game.moves.suffleDeck(g, p2);
+  Game.moves.shuffleDeck(g, p2);
 } catch (e) {
   console.assert(
     e.message === "Game has already started",

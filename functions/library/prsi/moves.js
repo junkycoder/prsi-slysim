@@ -1,6 +1,6 @@
 import {
   GAME_STATUS,
-  suffleCards,
+  shuffleCards,
   getLastPlayedCard,
   isWinner,
 } from "./index.js";
@@ -45,14 +45,14 @@ function endTurn(game, player, { card, stood = false, color } = {}) {
   }
 }
 
-export function suffleDeck(game, player) {
+export function shuffleDeck(game, player) {
   if (game.status === GAME_STATUS.STARTED) {
     throw new Error("Game has already started");
   }
 
-  game.deck = suffleCards(suffleCards(game.deck));
+  game.deck = shuffleCards(shuffleCards(game.deck));
 
-  console.log(`${game.turn}. ${player.name} suffled deck`);
+  console.log(`${game.turn}. ${player.name} shuffled deck`);
 }
 
 export function dealCards(game, player) {
