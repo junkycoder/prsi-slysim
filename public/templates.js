@@ -129,6 +129,8 @@ export function content(
               @click=${handleYourMove}
               name="shuffle"
               ?disabled=${!isPlayersTurn}
+              data-sound-effect="shuffle1.wav"
+              data-busy-title="Míchám..."
               title=${isPlayersTurn
                 ? "Zamíchat karty"
                 : `Na tahu je ${currentPlayer?.name}`}
