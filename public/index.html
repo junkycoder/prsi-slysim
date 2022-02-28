@@ -396,7 +396,8 @@
         handleYourMove(event) {
           const buttonElement = event.target;
           const { name: moveType } = buttonElement;
-
+          const urlParams = new URLSearchParams(window.location.search);
+          const gameId = urlParams.get("game");
 
           switch (moveType) {
             case "shuffle":
@@ -406,8 +407,11 @@
 
               Promise.all([
                 Sounds.play("shuffle1.wav"),
-                // TODO: call game move
-              ]).then(() => {
+                httpsCallable(fns, "gameMove")({ moveType, gameId }),
+              ]).catch(error => {
+                console.error(error);
+                alert("Nastala chyba při míchání. Zkuste to prosím znovu.");
+              }).finally(() => {
                 buttonElement.removeAttribute("disabled");
                 buttonElement.textContent = buttonElementLabel;
               });
@@ -492,7 +496,6 @@
         return;
       }
 
-      // Call the `joinGame` Cloud Function
       const formData = new FormData(event.target);
       const playerName = formData.get("player-name");
       const { data: { error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });

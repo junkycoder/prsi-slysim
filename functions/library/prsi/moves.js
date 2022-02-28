@@ -50,7 +50,8 @@ export function shuffleDeck(game, player) {
     throw new Error("Game has already started");
   }
 
-  game.deck = shuffleCards(shuffleCards(game.deck));
+  game.deck = shuffleCards(game.deck);
+  game.deckShuffled = true;
 
   console.log(`${game.turn}. ${player.name} shuffled deck`);
 }

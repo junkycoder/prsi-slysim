@@ -161,16 +161,16 @@ export const leave = functions
  */
 export const move = functions
   .region("europe-west1")
-  .https.onCall(async ({ name: moveName, gameId, card, color }, context) => {
+  .https.onCall(async ({ moveType, gameId, card, color }, context) => {
     const db = admin.firestore();
-    const ref = db.doc(`play/private/game/${gameId}/moves`);
+    const ref = db.doc(`play/private/game/${gameId}`);
 
     try {
       await db.runTransaction(async (batch) => {
         const game = (await batch.get(ref)).data();
         const player = getPlayer(game, context.auth.uid);
 
-        switch (moveName) {
+        switch (moveType) {
           case "shuffle":
             moves.shuffleDeck(game, player);
             break;
@@ -190,10 +190,23 @@ export const move = functions
             );
         }
 
+        const moveRecord = {
+          type: moveType,
+          playerName: player.name,
+          playerId: player.id,
+        };
+        if (card) moveRecord.card = card;
+        if (color) moveRecord.color = color;
+        game.moves.push(moveRecord);
+
         batch.update(ref, game, { merge: true });
       });
     } catch (error) {
-      return { error };
+      console.error(error);
+      throw new functions.https.HttpsError(
+        "unknown",
+        "Chyba při provádění tahu."
+      );
     }
     // How to allow every move, but force player to take it back if invalid?
     return { error: null };

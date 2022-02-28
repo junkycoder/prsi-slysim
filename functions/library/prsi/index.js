@@ -40,8 +40,6 @@ for (let color of cardColors) {
   }
 }
 
-export const penalties = {};
-
 export const shuffleCards = (_cards = cards) =>
   [..._cards.values()].sort(() => Math.random() - 0.5);
 
@@ -57,9 +55,10 @@ export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
     currentPlayer: null,
     currentColor: null,
     deck: shuffleCards(),
+    deckShuffled: false, // it is shuffled but we need user to to it as well
     playedCards: [],
-    penalty: null,
     outcome: null,
+    moves: [],
   };
 }
 
@@ -70,11 +69,12 @@ export function playerGameCopy(
     status,
     settings,
     currentPlayer,
-    penalty,
     outcome,
     players,
     deck,
+    deckShuffled,
     playedCards,
+    moves,
   }
 ) {
   return {
@@ -88,7 +88,6 @@ export function playerGameCopy(
           ? currentPlayer.cards
           : currentPlayer.cards.map((card) => reversedCard),
     }),
-    penalty,
     outcome,
     players: players.map(({ id, cards, ...player }) => ({
       id,
@@ -96,10 +95,12 @@ export function playerGameCopy(
       cards: playerId === id ? cards : cards.map(() => reversedCard),
     })),
     deck: deck.map(() => reversedCard),
+    deckShuffled,
     playedCards: [
       ...playedCards.slice(-2),
       ...playedCards.slice(0, -2).map(() => reversedCard),
-    ]
+    ],
+    moves,
   };
 }
 

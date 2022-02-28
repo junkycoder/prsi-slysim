@@ -21,13 +21,11 @@ export function header(
 }
 
 const noop = () => {};
+const getGameUser = (userId, list = []) =>
+  list.find((user) => userId && user.id === userId);
 
 export function content(
-  {
-    game: { players = [], currentPlayer, ...game } = {},
-    lastCard = null,
-    user,
-  } = {},
+  { game: { players = [], currentPlayer, ...game } = {}, user } = {},
   {
     handleYourMove = noop,
     handlePlayerCardSelect = noop,
@@ -38,6 +36,7 @@ export function content(
   const isUserVerified = (user || false) && user.emailVerified;
   const isUserPlaying = Boolean(userPlayer);
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
+  const [lastCard] = game.playedCards?.slice(-1) || [];
 
   return html`
     <main>
@@ -82,7 +81,9 @@ export function content(
         <figure>
         ${
           game.deck?.length
-            ? `Balíček karet (${game.deck.length})` // TODO: Show howmany cards left but not exactly
+            ? `Balíček karet (${game.deck.length}), ${
+                game.deckShuffled ? "zamíchaný" : "nezamíchaný"
+              }`
             : `Balíček tu ${!lastCard ? "také " : ""} není.`
         }
       </section>
@@ -152,6 +153,14 @@ export function content(
 
         <button @click=${handleLeaveGame} type="button">Odejít</button>
       </section>
+      ${!game.moves?.length ? "" : html`
+        <section>
+          <h2>Poslední tahy</h2>
+          ${game.moves.map(move => html`
+            <p>${move.playerName} ${move.type} ${move.card?.value} ${move.card?.color}</p>
+          `)}
+        </section>
+      `}
     </main>
   `;
 }
