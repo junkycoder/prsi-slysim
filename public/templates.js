@@ -153,14 +153,6 @@ export function content(
 
         <button @click=${handleLeaveGame} type="button">Odejít</button>
       </section>
-      ${!game.moves?.length ? "" : html`
-        <section>
-          <h2>Poslední tahy</h2>
-          ${game.moves.map(move => html`
-            <p>${move.playerName} ${move.type} ${move.card?.value} ${move.card?.color}</p>
-          `)}
-        </section>
-      `}
     </main>
   `;
 }
