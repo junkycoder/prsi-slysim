@@ -57,7 +57,7 @@
       </header>
       <form method="post" name="verify-self">
         <label for="email">Váš email:</label>
-        <input type="email" id="email" name="email" placeholder="Zde zandejte svůj e-mail, prosím" required>
+        <input type="email" id="email" name="email" placeholder="pepa@zdepa.cz" required>
         <p>Na uvedenou adresu vám bude zaslán odkaz pro přihlášení.</p>
         <button type="submit">Odeslat</button>
         <button type="button" class="js-dialog-verify-self-close">Zavřít</button>
@@ -386,8 +386,10 @@
           const urlParams = new URLSearchParams(window.location.search);
           const gameId = urlParams.get("game");
 
+          // TODO reduce switch to one line
+
           switch (moveType) {
-            case "shuffle":
+            case "shuffle": {
               const buttonElementLabel = buttonElement.textContent;
               buttonElement.setAttribute("disabled", "disabled");
               buttonElement.textContent = 'Míchám...';
@@ -403,21 +405,95 @@
                 buttonElement.textContent = buttonElementLabel;
               });
               break;
+            }
+
+            case "deal": {
+              const buttonElementLabel = buttonElement.textContent;
+              buttonElement.setAttribute("disabled", "disabled");
+              buttonElement.textContent = 'Vydávám...';
+
+              Promise.all([
+                Sounds.play("deal-cards.wav"),
+                httpsCallable(fns, "gameMove")({ moveType, gameId }),
+              ]).catch(error => {
+                console.error(error);
+                alert("Nastala chyba při vydávání. Zkuste to prosím znovu.");
+              }).finally(() => {
+                buttonElement.removeAttribute("disabled");
+                buttonElement.textContent = buttonElementLabel;
+              });
+              break;
+            }
+
+            case "play": {
+              Promise.all([
+                Sounds.play("play-card.wav"),
+                httpsCallable(fns, "gameMove")({
+                  moveType, gameId,
+                  card: state.selectedCard,
+                  color: state.selectedColor
+                }),
+              ]).catch(error => {
+                console.error(error);
+                alert("Nastala chyba při tahu. Zkuste to prosím znovu.");
+              }).finally(() => {
+                buttonElement.removeAttribute("disabled");
+                buttonElement.textContent = buttonElementLabel;
+              });
+            }
+
+            case "draw": {
+              const buttonElementLabel = buttonElement.textContent;
+              buttonElement.setAttribute("disabled", "disabled");
+              buttonElement.textContent = 'Lížu...';
+
+              Promise.all([
+                Sounds.play("draw.wav"),
+                httpsCallable(fns, "gameMove")({ moveType, gameId }),
+              ]).catch(error => {
+                console.error(error);
+                alert("Nastala chyba při lízání. Zkuste to prosím znovu.");
+              }).finally(() => {
+                buttonElement.removeAttribute("disabled");
+                buttonElement.textContent = buttonElementLabel;
+              });
+              break;
+            }
+
+            case "flip": {
+              const buttonElementLabel = buttonElement.textContent;
+              buttonElement.setAttribute("disabled", "disabled");
+              buttonElement.textContent = 'Otáčím...';
+
+              Promise.all([
+                Sounds.play("deck.wav"),
+                httpsCallable(fns, "gameMove")({ moveType, gameId }),
+              ]).catch(error => {
+                console.error(error);
+                alert("Nastala chyba při lízání. Zkuste to prosím znovu.");
+              }).finally(() => {
+                buttonElement.removeAttribute("disabled");
+                buttonElement.textContent = buttonElementLabel;
+              });
+              break;
+            }
             default:
               console.error("Unknown move type", moveType)
               break;
           }
-          // TODO
-          // - play sound
-          // - call lambda
         },
-        // NOT YET IMPLEMENTED
+        handlePlayerCardSelect(event) {
+          emit({ selectedCard: event.target.value });
+        },
+        // ...
       };
 
 
 
-      const emit = (payload = {}) => {
+      function emit(payload = {}) {
         state = deepMerge(state, payload);
+        console.log(state.game?.deck);
+        // Kua drat, ono te nemerguje polata
         render(
           templates.header(state, handlers),
           headerElement
@@ -431,9 +507,8 @@
 
 
       onCurrentUserChanged((user) => {
-        emit({ user });
+        emit({ user: user?.toJSON() });
       });
-
 
       const queryToPublicCopy = `play/public/game/${gameId}`;
       const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
@@ -442,30 +517,30 @@
         emit({ game: doc.data() });
       });
 
-      const handleSnapshot = (doc) => {
-        const game = doc.data();
-        emit({ game });
-
-        if (game.players.length > state.game.players.length) {
-          const [lastPlayer] = players.slice(-1);
-          if (lastPlayer.uid === user?.uid) {
-            unsubcribePublicCopy();
-            onSnapshot(doc(db, queryToPlayerCopy), handleSnapshot);
-            // TODO Play you sitting down sound
-            Sounds.play("plop.mp3");
-          } else {
-            // TODO Play someone sitting down sound
-            Sounds.play("plop.mp3");
-          }
-        }
-      }
+      // Firstly using public copy, then, once user joins the game we start using private copy
+      let usedCopy = queryToPublicCopy;
 
       const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
 
+      function handleSnapshot(d) {
+        const game = d.data();
+
+        emit({ game });
+
+        if (
+          usedCopy === queryToPublicCopy &&
+          game.players.map(({ id = null }) => id).includes(user?.uid)
+        ) {
+          usedCopy = queryToPlayerCopy;
+          unsubcribePublicCopy();
+          onSnapshot(doc(db, usedCopy), handleSnapshot);
+        }
+      }
 
     }
 
     async function handleJoinGameSubmit(event) {
+      console.warn("TODO: allow only one same player name in the game, remove playerId from public game events then")
       event.preventDefault();
       const urlParams = new URLSearchParams(window.location.search);
       const gameId = urlParams.get("game");

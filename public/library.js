@@ -82,8 +82,19 @@ export const deepMerge = (target, source) => {
   Object.keys(source).forEach((key) => {
     const targetValue = target[key];
     const sourceValue = source[key];
-
-    if (targetValue && typeof targetValue === "object" && typeof sourceValue === "object") {
+    if (
+      targetValue &&
+      Array.isArray(targetValue) &&
+      Array.isArray(sourceValue)
+    ) {
+      // hotifix for non propagating array changes,
+      //  array item references are now BROKEN
+      target[key] = sourceValue;
+    } else if (
+      targetValue &&
+      typeof targetValue === "object" &&
+      typeof sourceValue === "object"
+    ) {
       target[key] = deepMerge(targetValue, sourceValue);
     } else {
       target[key] = sourceValue;

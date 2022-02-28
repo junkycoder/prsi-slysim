@@ -85,7 +85,9 @@ export function dealCards(game, player) {
   }
 }
 
-export function play(game, player, card, { color } = {}) {
+export function play(game, player, cardId, { color } = {}) {
+  const card = player.cards.find((card) => card.id === cardId);
+
   if (!card.id) {
     throw new Error("Card is not valid");
   }
@@ -139,6 +141,10 @@ export function play(game, player, card, { color } = {}) {
 }
 
 export function draw(game, player, n = 1) {
+  if (game.deck.length < n) {
+    throw new Error("Not enough cards in deck");
+  }
+
   // toddo: check if player can draw and how many cards he has to draw
   for (let i = 0; i < n; i++) {
     game.currentPlayer.cards.push(game.deck.shift());
@@ -157,7 +163,7 @@ export function stay(game, player) {
 
 export function flipPlayedCardsToDeck(game, player) {
   const lastPlayedCard = game.playedCards.pop();
-  game.deck = [...game.playedCards];
+  game.deck = [...game.playedCards].reverse();
   game.playedCards = [lastPlayedCard];
 
   console.log(`${game.turn}. ${player.name} flipped played cards to deck`);

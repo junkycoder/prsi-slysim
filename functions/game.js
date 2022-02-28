@@ -183,6 +183,9 @@ export const move = functions
           case "play":
             moves.play(game, player, card, color);
             break;
+          case "flip":
+            moves.flipPlayedCardsToDeck(game, player);
+            break;
           default:
             throw new functions.https.HttpsError(
               "invalid-argument",
@@ -205,7 +208,7 @@ export const move = functions
       console.error(error);
       throw new functions.https.HttpsError(
         "unknown",
-        "Chyba při provádění tahu."
+        error.message || "Chyba při provádění tahu."
       );
     }
     // How to allow every move, but force player to take it back if invalid?
