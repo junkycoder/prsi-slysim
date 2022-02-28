@@ -344,8 +344,6 @@
             "shuffle2.wav",
             "play-card.wav",
             "deal-cards.wav",
-            "shuffle2.wav",
-            "shuffle2.wav",
             "deck.wav"
           ], enabled);
           if (enabled) Sounds.play("deck.wav");
@@ -407,7 +405,7 @@
               buttonElement.textContent = 'Míchám...';
 
               Promise.all([
-                Sounds.play("shuffle2.wav"),
+                Sounds.play("shuffle1.wav"),
                 // TODO: call game move
               ]).then(() => {
                 buttonElement.removeAttribute("disabled");
