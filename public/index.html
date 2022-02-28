@@ -108,7 +108,7 @@
       </p>
       <p>
         <label class="flex">
-          <input type="checkbox" name="sounds">
+          <input type="checkbox" name="sounds" checked="checked">
           <span>zvuky karet</span>
         </label>
       </p>
@@ -183,27 +183,14 @@
       labelledby: "sound-effects-dialog-title",
     });
     Sounds.setSoundsPath("/assets/")
-    Sounds.prepare("rain.mp3", { gain: 0.5 });
-    Sounds.prepareAll([
-      "shuffle1.wav",
-      "shuffle2.wav",
-      "play-card.wav",
-      "deal-cards.wav",
-      "shuffle2.wav",
-      "shuffle2.wav",
-    ]);
+
 
     for (let input of soundEffects.dialog.querySelectorAll(`input[type="checkbox"]`)) {
       input.addEventListener(
         "change",
         handleSoundEffectsChange
       );
-      // Sounds are enabled by default
-      if (input.name === "sounds") {
-        input.click();
-      }
     }
-
 
     currentUser().then(handleUserVerifyChange).then((user) => {
       const urlParams = new URLSearchParams(window.location.search);

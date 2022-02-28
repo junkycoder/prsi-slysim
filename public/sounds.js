@@ -18,7 +18,7 @@ export const loadAudioBuffer = async (audioContext, path) => {
 /**
  *
  * @param {string} soundPath
- * @param {Object} options {  gain = .5, loop = false }}
+ * @param {Object} options { gain = .5, loop = false }
  * @returns Methods: play, stop
  */
 export const createSound = async (soundPath, { gain = 1 } = {}) => {
@@ -46,6 +46,9 @@ export default {
     soundPath = path;
   },
   enable(name, enabled = true, { autoplay = false, loop = false } = {}) {
+    if (!promises.has(name)) {
+      promises.set(name, createSound(soundPath + name, { loop }));
+    }
     const promise = promises.get(name);
     if (promise) {
       promise.enabled = enabled;
@@ -67,16 +70,7 @@ export default {
       promises.set(name, createSound(soundPath + name, { gain }));
     }
     const promise = promises.get(name);
-    if (!promise.enabled) return false;
+    if (promise.enabled === false) return false; // sound is disabled
     return (await promise).play({ loop });
-  },
-  prepare(name, { gain = 1 } = {}) {
-    if (promises.has(name)) return true;
-    promises.set(name, createSound(soundPath + name, { gain }));
-  },
-  prepareAll(names, { gain } = {}) {
-    for (let name of names) {
-      this.prepare(name, { gain });
-    }
-  },
+  }
 };
