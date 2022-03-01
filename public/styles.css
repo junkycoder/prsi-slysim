@@ -5,9 +5,9 @@
   --viewport-width: 420px;
 }
 
-@media screen and (max-width: 420px) and (min-width: 640px) {
+@media screen and (min-width: 640px) {
   :root {
-    --viewport-width: 600px;
+    --viewport-width: 580px;
   }
 }
 
