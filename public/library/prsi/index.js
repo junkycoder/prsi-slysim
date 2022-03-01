@@ -101,8 +101,8 @@ export function playerGameCopy(
     deck: deck.map(() => reversedCard),
     deckShuffled,
     playedCards: [
-      ...playedCards.slice(-2),
       ...playedCards.slice(0, -2).map(() => reversedCard),
+      ...playedCards.slice(-2),
     ],
     moves,
   };
