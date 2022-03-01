@@ -130,6 +130,8 @@ export function play(game, player, { id: cardId }, color) {
     } else {
       throw new Error("Color is required");
     }
+  } else {
+    game.currentColor = card.color;
   }
 
   console.log(
