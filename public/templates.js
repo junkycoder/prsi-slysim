@@ -44,6 +44,7 @@ export const player_line = ({ player, userPlayer, currentPlayer }) => {
   if (player.cards?.length) {
     line += `, má karet ${player.cards.length}`;
   }
+  if(line === player.name) return "";
   line += ".";
   return line;
 };
