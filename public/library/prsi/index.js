@@ -26,6 +26,8 @@ export const cardValues = [
 ];
 
 export const cardColors = ["kule", "zelený", "srdce", "žaludy"];
+export const changeColorCardValue = "svršek";
+export const stayCardValue = "eso";
 
 export const cards = new Map();
 
@@ -69,6 +71,7 @@ export function playerGameCopy(
     status,
     settings,
     currentPlayer,
+    currentColor,
     outcome,
     players,
     deck,
@@ -88,6 +91,7 @@ export function playerGameCopy(
           ? currentPlayer.cards
           : currentPlayer.cards.map((card) => reversedCard),
     }),
+    currentColor,
     outcome,
     players: players.map(({ id, cards, ...player }) => ({
       id,

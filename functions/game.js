@@ -170,6 +170,13 @@ export const move = functions
         const game = (await batch.get(ref)).data();
         const player = getPlayer(game, context.auth.uid);
 
+        if(player.id !== game.currentPlayer.id) {
+          throw new functions.https.HttpsError(
+            "invalid-argument",
+            "Nejste na tahu."
+          );
+        }
+
         switch (moveType) {
           case "shuffle":
             moves.shuffleDeck(game, player);

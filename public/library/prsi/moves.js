@@ -85,7 +85,7 @@ export function dealCards(game, player) {
   }
 }
 
-export function play(game, player, cardId, color) {
+export function play(game, player, { id: cardId }, color) {
   const card = player.cards.find((card) => card.id === cardId);
 
   if (!card.id) {

@@ -1,4 +1,9 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
+import {
+  cardColors,
+  changeColorCardValue,
+  stayCardValue,
+} from "/library/prsi/index.js";
 
 export function header({ game = {}, title = "Hrajte si" } = {}) {
   return html`
@@ -46,6 +51,11 @@ export const player_line = ({ player, userPlayer, currentPlayer }) => {
 export const table_card_line = ({ card, color }) => {
   let line = `${card?.value}–${card?.color}`;
   line = html`Na stole je <strong>${line}</strong>`;
+
+  if (card?.value === changeColorCardValue) {
+    line += `a mění barvu na ${color}`;
+  }
+
   // if (game.playedCards?.length - 1) {
   //   line += `+ ${game.playedCards-1.length} odehraných`
   // }
@@ -62,6 +72,7 @@ export function content(
   {
     handleYourMove = noop,
     handlePlayerCardSelect = noop,
+    handleCardColorSelect = noop,
     handleLeaveGame = noop,
     handleShareGame = noop,
   } = {}
@@ -121,8 +132,14 @@ export function content(
           isUserPlaying,
           html`
             <button
-              ?disabled=${!isUserVerified}
+              ?disabled=${!isUserVerified || game.status}
               class="js-dialog-join-game-open"
+              aria-label=${ifelse(
+                game.status,
+                "Hra již probíhá",
+                unless(isUserVerified, "Nejprve se potřebujete ověřit")
+              )}
+              type=${ifelse(game.status, "button", "submit")}
             >
               Zapojit se do hry
             </button>
@@ -131,7 +148,10 @@ export function content(
         ${unless(
           isUserVerified || isUserPlaying,
           html`
-            <p>Pro zapojení do hry musíš být ověřený.</p>
+            ${unless(
+              game.status,
+              html`<p>Pro zapojení do hry musíš být ověřený.</p>`
+            )}
             <button class="js-dialog-verify-self-open">Ověřit se</button>
           `
         )}
@@ -144,9 +164,11 @@ export function content(
               ?disabled=${!isPlayersTurn}
               data-sound-effect="shuffle1.wav"
               data-busy-title="Míchám..."
-              title=${isPlayersTurn
-                ? "Zamíchat karty"
-                : `Na tahu je ${currentPlayer?.name}`}
+              aria-label=${ifelse(
+                isPlayersTurn,
+                "Zamíchat karty",
+                `Na tahu je ${currentPlayer?.name}`
+              )}
             >
               Zamíchat balíček karet
             </button>
@@ -157,21 +179,25 @@ export function content(
               !game.deckShuffled ||
               players.length < 2}
               data-sound-effect="deal-cards.wav"
-              data-busy-title="Lížu..."
-              title=${isPlayersTurn
-                ? !game.deckShuffled
-                  ? "Nejprve je potřeba balíček zamíchat"
-                  : players.length > 1
-                  ? "Rozdat karty"
-                  : "Nedostatek hráčů"
-                : `Na tahu je ${currentPlayer?.name}`}
+              data-busy-title="Rozdávám..."
+              aria-label=${ifelse(
+                isPlayersTurn,
+                ifelse(
+                  !game.deckShuffled,
+                  "Nejprve je potřeba balíček zamíchat",
+                  ifelse(players.length > 1, "Rozdat karty", "Nedostatek hráčů")
+                ),
+                `Na tahu je ${currentPlayer?.name}`
+              )}
             >
               Rozdat karty
             </button>
           `
         )}
         ${unless(
-          !game.status,
+          !game.status ||
+            !isUserPlaying ||
+            selectedCard?.value === stayCardValue,
           html`
             <button
               ?disabled=${!isPlayersTurn || !game.deck.length}
@@ -179,39 +205,64 @@ export function content(
               name="draw"
               data-sound-effect="draw.wav"
               data-busy-title="Lížu..."
-              title=${isPlayersTurn
-                ? game.deck.length
-                  ? ""
-                  : "Balíček je prázdný"
-                : `Na tahu je ${currentPlayer?.name}`}
+              aria-label=${ifelse(
+                isPlayersTurn,
+                unless(game.deck?.length, "Balíček je prázdný"),
+                `Na tahu je ${currentPlayer?.name}`
+              )}
             >
               Líznout si
             </button>
           `
         )}
         ${unless(
-          !game.status || game.deck.length,
+          !game.status || !isUserPlaying || lastCard?.value !== stayCardValue,
           html`
             <button
-              ?disabled=${!isPlayersTurn || game.playedCards.length < 2}
+              ?disabled=${!isPlayersTurn || !game.deck.length}
+              @click=${handleYourMove}
+              name="draw"
+              data-sound-effect="draw.wav"
+              data-busy-title="Stojím..."
+              aria-label=${unless(
+                isPlayersTurn,
+                `Na tahu je ${currentPlayer?.name}`
+              )}
+            >
+              Stát
+            </button>
+          `
+        )}
+        ${unless(
+          !game.status || !isUserPlaying || game.deck.length,
+          html`
+            <button
+              ?disabled=${!isPlayersTurn || game.playedCards?.length < 2}
               @click=${handleYourMove}
               name="flip"
               data-sound-effect="deck.wav"
               data-busy-title="Otáčím..."
-              title=${isPlayersTurn
-                ? game.playedCards.length > 1
-                  ? ""
-                  : "Nejsou odehrané žádné karty"
-                : `Na tahu je ${currentPlayer?.name}`}
+              aria-label=${ifelse(
+                isPlayersTurn,
+                unless(
+                  game.playedCards?.length > 1,
+                  "Nejsou odehrané žádné karty"
+                ),
+                `Na tahu je ${currentPlayer?.name}`
+              )}
             >
               Otočit odehrané karty
             </button>
           `
         )}
         ${unless(
-          !game.status,
+          !game.status || !isUserPlaying,
           html`
-            <select name="card" @change=${handlePlayerCardSelect}>
+            <select
+              name="card"
+              @change=${handlePlayerCardSelect}
+              aria-label="Vaše karty"
+            >
               ${userPlayer?.cards.map(
                 ({ id, value, color }) => html`
                   <option ?selected=${selectedCard?.id} value="${id}">
@@ -220,22 +271,46 @@ export function content(
                 `
               )}
               <option disabled selected>
-                ${!userPlayer?.cards.length
-                  ? "žádné karty v ruce"
-                  : "Zvolte kartu"}
+                ${ifelse(
+                  !userPlayer?.cards.length,
+                  "žádné karty v ruce",
+                  "Zvolte kartu"
+                )}
               </option>
             </select>
+            ${ifelse(
+              selectedCard?.value === changeColorCardValue,
+              html`
+                <select
+                  name="color"
+                  @change=${handleCardColorSelect}
+                  aria-label="Změna barvy"
+                >
+                  ${cardColors.map(
+                    (color) => html`
+                      <option ?selected=${color === selectedCard?.color}>
+                        ${color}
+                      </option>
+                    `
+                  )}
+                </select>
+              `
+            )}
             <button
               @click=${handleYourMove}
               ?disabled=${!isPlayersTurn || !selectedCard}
               name="play"
               data-sound-effect="play-card.wav"
               data-busy-title="Táhnu..."
-              title=${isPlayersTurn
-                ? selectedCard
-                  ? "Hrát kartu"
-                  : "Nejprve je potřeba vybrat kartu"
-                : `Na tahu je ${currentPlayer?.name}`}
+              aria-label=${ifelse(
+                isPlayersTurn,
+                ifelse(
+                  selectedCard,
+                  "Hrát kartu",
+                  "Nejprve je potřeba vybrat kartu"
+                ),
+                `Na tahu je ${currentPlayer?.name}`
+              )}
             >
               Táhnout kartu
             </button>
@@ -251,13 +326,10 @@ export function content(
         Sdílet odkaz na hru
       </button>
 
-      ${
-        !game.status
-          ? html`<p>
-              Doporučujeme hrát na klidném místě a se sluchátky na uších.
-            </p>`
-          : ""
-      }
+      ${unless(
+        game.status,
+        html`<p>Doporučujeme hrát na klidném místě a se sluchátky na uších.</p>`
+      )}
       <button class="js-dialog-sound-effects-open" type="button">
         Nastavit zvukové efekty
       </button>

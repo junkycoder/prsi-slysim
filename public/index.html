@@ -161,6 +161,7 @@
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { onCurrentUserChanged } from "/user.js";
+    import { getPlayer, changeColorCardValue } from "/library/prsi/index.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
       openingSelector: ".js-dialog-verify-self-open",
@@ -409,14 +410,29 @@
           ]).catch(error => {
             console.error(error);
             alert(`Nastala chyba "${error.message}". Zkuste to prosím znovu.`);
-          }).finally(() => {
             buttonElement.removeAttribute("disabled");
+          }).finally(() => {
+            // button should stay disabled on the end of the move
+            // buttonElement.removeAttribute("disabled");
             buttonElement.textContent = buttonElementLabel;
           });
 
         },
         handlePlayerCardSelect(event) {
-          emit({ selectedCard: event.target.value });
+          const cardId = event.target.value;
+          const player = getPlayer(state.game, user.uid);
+          const card = player.cards.find(card => card.id === cardId)
+
+          if (card.value === changeColorCardValue) {
+            emit({ selectedCard: card, selectedColor: card.color });
+          } else {
+            emit({ selectedCard: card });
+          }
+
+        },
+        handleCardColorSelect(event) {
+          const color = event.target.value;
+          emit({ selectedColor: color });
         },
         // ...
       };
@@ -445,9 +461,9 @@
       const queryToPublicCopy = `play/public/game/${gameId}`;
       const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
 
-      getDoc(doc(db, queryToPublicCopy)).then((doc) => {
-        emit({ game: doc.data() });
-      });
+      // getDoc(doc(db, queryToPublicCopy)).then((doc) => {
+      //   emit({ game: doc.data() });
+      // });
 
       // Firstly using public copy, then, once user joins the game we start using private copy
       let usedCopy = queryToPublicCopy;
@@ -461,7 +477,7 @@
 
         if (
           usedCopy === queryToPublicCopy &&
-          game.players.map(({ id = null }) => id).includes(user?.uid)
+          getPlayer(game, user?.uid)
         ) {
           usedCopy = queryToPlayerCopy;
           unsubcribePublicCopy();

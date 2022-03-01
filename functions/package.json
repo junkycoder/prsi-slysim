@@ -16,7 +16,7 @@
   "dependencies": {
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.14.1",
-    "prsi": "file:library/prsi"
+    "prsi": "file:../public/library/prsi"
   },
   "devDependencies": {
     "eslint": "^8.7.0",
