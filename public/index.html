@@ -461,9 +461,9 @@
       const queryToPublicCopy = `play/public/game/${gameId}`;
       const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
 
-      // getDoc(doc(db, queryToPublicCopy)).then((doc) => {
-      //   emit({ game: doc.data() });
-      // });
+      getDoc(doc(db, queryToPublicCopy)).then((doc) => {
+        emit({ game: doc.data() });
+      });
 
       // Firstly using public copy, then, once user joins the game we start using private copy
       let usedCopy = queryToPublicCopy;
