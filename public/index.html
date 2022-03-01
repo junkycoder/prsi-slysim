@@ -466,7 +466,7 @@
       });
 
       // Firstly using public copy, then, once user joins the game we start using private copy
-      let usedCopy = queryToPublicCopy;
+      let usedCopyQuery = queryToPublicCopy;
 
       const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
 
@@ -477,12 +477,12 @@
 
         if (
           user?.uid &&
-          usedCopy === queryToPublicCopy &&
+          usedCopyQuery === queryToPublicCopy &&
           getPlayer(game, user?.uid)
         ) {
-          usedCopy = queryToPlayerCopy;
+          usedCopyQuery = queryToPlayerCopy;
           unsubcribePublicCopy();
-          onSnapshot(doc(db, usedCopy), handleSnapshot);
+          onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
         }
       }
 

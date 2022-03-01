@@ -85,27 +85,20 @@ export function dealCards(game, player) {
   }
 }
 
-export function play(game, player, { id: cardId }, color) {
+export function play(game, { id: playerId }, { id: cardId }, color) {
+  const player = game.players.find(({ id }) => id === playerId);
   const card = player.cards.find((card) => card.id === cardId);
 
-  if (!card.id) {
-    throw new Error("Card is not valid");
-  }
-
-  if (game.currentPlayer.id !== player.id) {
-    throw new Error("It is not your turn");
-  }
-
-  const currentPlayerCardIndex = game.currentPlayer.cards.findIndex(
-    ({ id: cardId }) => cardId === card.id
-  );
-
-  if (currentPlayerCardIndex === -1) {
+  if (!card) {
     throw new Error(
       `Player ${player.id} does not have card ${card.value} ${card.color}`
     );
   }
+  if (game.currentPlayer.id !== player.id) {
+    throw new Error("It is not your turn");
+  }
 
+  // Fixme: last played card does not means it was not already played
   const lastPlayedCard = getLastPlayedCard(game);
 
   if (
@@ -118,11 +111,8 @@ export function play(game, player, { id: cardId }, color) {
     );
   }
 
-  const [playedCard] = game.currentPlayer.cards.splice(
-    currentPlayerCardIndex,
-    1
-  );
-  game.playedCards.push(playedCard);
+  player.cards = player.cards.filter((c) => c.id !== card.id);
+  game.playedCards.push(card);
 
   if (card.value === "svršek") {
     if (color) {
