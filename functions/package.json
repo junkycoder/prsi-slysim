@@ -15,8 +15,8 @@
   "main": "index.js",
   "dependencies": {
     "firebase-admin": "^10.0.2",
-    "firebase-functions": "^3.14.1",
-    "prsi": "file:../public/library/prsi"
+    "firebase-functions": "^3.18.1",
+    "prsi": "latest"
   },
   "devDependencies": {
     "eslint": "^8.7.0",
