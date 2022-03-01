@@ -147,7 +147,9 @@ export function draw(game, player, n = 1) {
 
   // toddo: check if player can draw and how many cards he has to draw
   for (let i = 0; i < n; i++) {
-    game.currentPlayer.cards.push(game.deck.shift());
+    const card = game.deck.shift();
+    // game.currentPlayer.cards.push(card);
+    game.players.find(({ id }) => player.id === id).cards.push(card);
   }
 
   console.log(`${game.turn}. ${player.name} drew ${n} cards`);
