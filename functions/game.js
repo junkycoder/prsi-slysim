@@ -197,6 +197,7 @@ export const move = functions
           type: moveType,
           playerName: player.name,
           playerId: player.id,
+          turn: game.turn,
         };
         if (card) moveRecord.card = card;
         if (color) moveRecord.color = color;
