@@ -476,6 +476,7 @@
         emit({ game });
 
         if (
+          user?.uid &&
           usedCopy === queryToPublicCopy &&
           getPlayer(game, user?.uid)
         ) {
