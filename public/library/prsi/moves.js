@@ -95,7 +95,7 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
 }
 
 export function draw(game, player) {
-  const n = game.drawCardValue;
+  const n = game.drawCardsCount;
 
   if (game.deck.length < n) {
     throw new Error("Not enough cards in deck");
