@@ -95,12 +95,14 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
 }
 
 export function draw(game, player) {
-  if (game.deck.length < game.drawCardValue) {
+  const n = game.drawCardValue;
+
+  if (game.deck.length < n) {
     throw new Error("Not enough cards in deck");
   }
 
   // toddo: check if player can draw and how many cards he has to draw
-  for (let i = 0; i < game.drawCardValue; i++) {
+  for (let i = 0; i < n; i++) {
     const card = game.deck.shift();
     // game.currentPlayer.cards.push(card);
     game.players.find(({ id }) => player.id === id).cards.push(card);
@@ -108,7 +110,7 @@ export function draw(game, player) {
 
   console.log(`${game.turn}. ${player.name} drew ${n} cards`);
 
-  endTurn(game, player, { drawn: game.drawCardValue });
+  endTurn(game, player, { drawn: n });
 }
 
 export function stay(game, player) {
