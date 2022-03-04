@@ -233,7 +233,6 @@
 
     function handleUserVerifyChange(user) {
       const isUserVerified = (user || undefined)?.emailVerified;
-
       const { href: link } = window.location;
 
       if (!isUserVerified && isVerifyLink(link)) {
@@ -271,6 +270,11 @@
       event.preventDefault();
       const { origin, search } = window.location;
 
+      const submitButton = verifySelf.dialog.querySelector("form button[type=submit]");
+      const submitButtonLabel = submitButton.textContent;
+      submitButton.setAttribute("disabled", "disabled");
+      submitButton.textContent = 'Odesílám...';
+
       try {
         const formData = new FormData(event.target);
         const urlParams = new URLSearchParams(window.location.search);
@@ -283,10 +287,17 @@
         await sendSignInLinkToEmail(auth, email, settings);
         authCompleteEmailStoredLocally.write(email);
 
+        submitButton.textContent = "Odesláno";
         alert(`Odesláno, pokračujte prosím do vaší ${email} schránky.\n\Tuto stránku můžete zavřít.`);
+        setTimeout(() => {
+          submitButton.textContent = submitButtonLabel;
+          submitButton.removeAttribute("disabled");
+        }, 5000);
       } catch (fok) {
         console.error(fok)
         alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
+        submitButton.removeAttribute("disabled");
+        submitButton.textContent = submitButtonLabel;
       }
     }
 
