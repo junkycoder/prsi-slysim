@@ -118,7 +118,8 @@ export function content(
     game.status &&
     isUserPlaying &&
     (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
-  const showCardColorSelect = isPlayersTurn && selectedCard?.value === changeColorCardValue;
+  const showCardColorSelect =
+    isPlayersTurn && selectedCard?.value === changeColorCardValue;
   const showPlayersCards = game.status && isUserPlaying;
   const showFlipPlayedCardsToDeck =
     game.status && isUserPlaying && !game.deck.length;
@@ -139,7 +140,8 @@ export function content(
     isPlayersTurn &&
     selectedCard &&
     (cardOnTable.value !== stayCardValue ||
-      selectedCard.value === stayCardValue);
+      selectedCard.value === stayCardValue ||
+      game.lastMove?.stood);
   const canStay = isPlayersTurn && cardOnTable?.value === stayCardValue;
   const canFlipPlayedCardsToDeck =
     isPlayersTurn && game.playedCards?.length < 2;
