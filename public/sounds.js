@@ -74,6 +74,11 @@ export default {
     if (promise.enabled === false) return false; // sound is disabled
     return (await promise).play({ loop });
   },
+  async playTimes(name, times, opts) {
+    for (let i = 0; i < times; i++) {
+      await this.play(name, opts);
+    }
+  },
 };
 
 export const toPositionInCircle = ({ index, length }) => {
