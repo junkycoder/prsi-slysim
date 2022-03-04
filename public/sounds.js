@@ -30,8 +30,9 @@ export const createSound = async (soundPath, { gain = 1 } = {}) => {
   listener.setPosition(0, -1, 0);
 
   return {
-    play: ({ loop = false }) =>
+    play: ({ loop = false, position = [0, 1, 0] }) =>
       new Promise((resolve) => {
+        source.setPosition(...position);
         source.play(buffer, { loop }).addEventListener("ended", resolve);
       }),
     stop: () => source.stopAll(),
@@ -72,5 +73,15 @@ export default {
     const promise = promises.get(name);
     if (promise.enabled === false) return false; // sound is disabled
     return (await promise).play({ loop });
-  }
+  },
+};
+
+export const toPositionInCircle = ({ index, length }) => {
+  const angle = (index / length) * Math.PI * 2;
+  const x = Math.cos(angle);
+  const y = Math.sin(angle);
+
+  const z = 1; // FIXME
+
+  return [x, y, z];
 };

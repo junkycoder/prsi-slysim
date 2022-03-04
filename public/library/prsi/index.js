@@ -191,9 +191,20 @@ export function endTurn(
 
   game.turn++;
 
+  let callerName;
+  try {
+    throw new Error();
+  } catch (e) {
+    var re = /(\w+)@|at (\w+) \(/g,
+      st = e.stack,
+      m;
+    re.exec(st), (m = re.exec(st));
+    callerName = m[1] || m[2];
+  }
+
   game.lastMove = {
     player,
-    type: endTurn.caller.name,
+    type: callerName,
     card,
     color,
     stood,

@@ -157,7 +157,7 @@
     import { fns } from "/application.js";
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
     import * as templates from "/templates.js";
-    import Sounds from "/sounds.js";
+    import Sounds, { toPositionInCircle } from "/sounds.js";
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { onCurrentUserChanged } from "/user.js";
@@ -411,7 +411,7 @@
           buttonElement.setAttribute("disabled", "disabled");
 
           const playSoundEffects = [
-            ...new Array(buttonElement.dataset.n || 0)
+            ...new Array(buttonElement.dataset.n || 1)
           ].map(() => Sounds.play(MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default));
 
           buttonElement.textContent = buttonElement.dataset.busyTitle || "Zpracovávám...";
@@ -488,6 +488,15 @@
       function handleSnapshot(d) {
         const game = d.data();
 
+        if (
+          game.lastMove !== state.game.lastMove &&
+          game.lastMove?.player.id !== user?.uid
+        ) {
+          setTimeout(() => {
+            playPlayerMoveEffects(game);
+          }, 10);
+        }
+
         emit({ game });
 
         if (
@@ -499,22 +508,22 @@
           unsubcribePublicCopy();
           onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
         }
-
-        if (game.lastMove !== state.game.lastMove) {
-          setTimeout(playPlayerMoveEffects(game), 10);
-        }
       }
 
       function playPlayerMoveEffects({ lastMove, players }) {
-        // TODO calculate 3d position of player
-        // const playerIndex = players.findIndex(player => player.id === lastMove.player.id);
-        // const playersCount = players.length;
+
         const sound = MOVE_EFFECTS[lastMove.type] || MOVE_EFFECTS.default;
+        const position = toPositionInCircle({
+          index: players.findIndex(player => player.id === lastMove.player.id),
+          length: players.length,
+        });
 
         if (lastMove.drawn) {
-          [...new Array(lastMove.drawn)].forEach(() => Sounds.play(sound));
+          [...new Array(lastMove.drawn)].forEach(() => Sounds.play(sound), {
+            position,
+          });
         } else {
-          Sounds.play(sound);
+          Sounds.play(sound, { position });
         }
       }
 
