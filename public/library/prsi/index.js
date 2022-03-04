@@ -154,7 +154,7 @@ export * as autopilot from "./autoplay.js";
  * @param {Player} player
  * @param {Object} options
  */
-function endTurn(game, player, { card, stood = false, color, drawn = 0 } = {}) {
+export function endTurn(game, player, { card, stood = false, color, drawn = 0 } = {}) {
   game.previousPlayer = player;
   const playerIndex = game.players.findIndex(({ id }) => id === player.id);
   game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
