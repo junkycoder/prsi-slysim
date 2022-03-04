@@ -414,16 +414,16 @@
 
           buttonElement.textContent = buttonElement.dataset.busyTitle || "Zpracovávám...";
           Promise.all([
-            ...playSoundEffects,
             httpsCallable(fns, "gameMove")({
               moveType,
               gameId,
               card: state.selectedCard,
               color: state.selectedColor,
             }),
+            ...playSoundEffects,
           ]).catch(error => {
             console.error(error);
-            alert(`Nastala chyba "${error.message}". Zkuste to prosím znovu.`);
+            alert("Špatný tah.");
             buttonElement.removeAttribute("disabled");
           }).finally(() => {
             if (buttonElement.dataset.allowMany === "true") {
