@@ -113,6 +113,7 @@ export function content(
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
   const [cardOnTable] = game.playedCards?.slice(-1) || [];
 
+  // consider to move this shit to the prsi module
   const showDrawCard =
     game.status && isUserPlaying && cardOnTable?.value !== stayCardValue;
   const showCardColorSelect = selectedCard?.value === changeColorCardValue;
@@ -137,7 +138,7 @@ export function content(
     selectedCard &&
     (cardOnTable.value !== stayCardValue ||
       selectedCard.value === stayCardValue);
-  const canStay = isPlayersTurn && cardOnTable?.value === stayCardValue; // todo check if previous player did not stayed
+  const canStay = isPlayersTurn && cardOnTable?.value === stayCardValue;
   const canFlipPlayedCardsToDeck =
     isPlayersTurn && game.playedCards?.length < 2;
 

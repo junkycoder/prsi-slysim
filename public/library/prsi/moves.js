@@ -2,67 +2,10 @@ import {
   GAME_STATUS,
   shuffleCards,
   getLastPlayedCard,
-  isWinner,
   drawCardValue,
+  endTurn,
 } from "./index.js";
 
-/**
- * @private
- * @param {Game} game
- * @param {Player} player
- * @param {Object} options
- */
-function endTurn(game, player, { card, stood = false, color, drawn = 0 } = {}) {
-  game.previousPlayer = player;
-  const playerIndex = game.players.findIndex(({ id }) => id === player.id);
-  game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
-
-  const lastPlayedCard = getLastPlayedCard(game);
-
-  if (color) {
-    if (card.value === "svršek") {
-      game.currentColor = color;
-    } else {
-      throw new Error("Player can only use svršek card to change color");
-    }
-  }
-
-  if (
-    card &&
-    card.value !== "svršek" &&
-    card.value !== lastPlayedCard.value &&
-    card.color !== game.currentColor
-  ) {
-    throw new Error(
-      `Player ${player.id} tried to play "${card.value} ${card.color}" but last played card was "${lastPlayedCard.value} ${lastPlayedCard.color}"`
-    );
-  }
-
-  game.turn++;
-
-  game.lastMove = {
-    player,
-    card,
-    color,
-    stood,
-    drawn,
-  };
-
-  game.drawCardsCount = 1;
-
-  if (card?.value === drawCardValue && !game.lastMove.drawn) {
-    drawCardsCount =
-      [...game.playedCards]
-        .reverse()
-        .filter((card) => card.value === drawCardValue).length * 2;
-  }
-
-  if (isWinner(player)) {
-    game.outcome = { winner: player };
-    console.log("GAME OVER:\n", game.outcome);
-    game.status = GAME_STATUS.OVER;
-  }
-}
 
 export function shuffleDeck(game, player) {
   if (game.status === GAME_STATUS.STARTED) {
