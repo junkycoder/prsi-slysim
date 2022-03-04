@@ -77,11 +77,9 @@ export default {
 };
 
 export const toPositionInCircle = ({ index, length }) => {
-  const angle = (index / length) * Math.PI * 2;
-  const x = Math.cos(angle);
-  const y = Math.sin(angle);
-
-  const z = 1; // FIXME
-
+  // TODO calculate player position around of circle tabel
+  const x = 0;
+  const y = 1;
+  const z = 1;
   return [x, y, z];
 };
