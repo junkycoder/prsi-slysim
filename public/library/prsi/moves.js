@@ -60,6 +60,7 @@ function endTurn(game, player, { card, stood = false, color, drawn = 0 } = {}) {
   if (isWinner(player)) {
     game.outcome = { winner: player };
     console.log("GAME OVER:\n", game.outcome);
+    game.status = GAME_STATUS.OVER;
   }
 }
 
