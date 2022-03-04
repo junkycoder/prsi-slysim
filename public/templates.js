@@ -5,22 +5,26 @@ import {
   stayCardValue,
 } from "/library/prsi/index.js";
 
-export function header({ game = {}, title = "Hrajte si" } = {}) {
+export const game_summary_line = (game) => {
+  let line = "";
+
+  if (!game.status) {
+    line += `Hra ještě nezačala.`;
+    if ((game.players || []).length < 2) {
+      line += ` Čeká se na alespoň jednoho spoluhráče..`;
+    }
+  } else {
+    line += `Je ${game.turn}. kolo.`;
+  }
+
+  return line;
+};
+
+export function header({ game = {} } = {}) {
   return html`
     <header>
-      <h1>${title}</h1>
-      <p>
-        ${ifelse(
-          !game.status,
-          `Hra ještě nezačala. ${
-            (game.players || []).length < 2
-              ? "Čeká se na alespoň jednoho spoluhráče."
-              : ""
-          }`,
-          html`Hra probíhá. Na tahu je
-            <strong>${game.currentPlayer?.name}</strong>.`
-        )}
-      </p>
+      <h1>${game.status ? "Hra probíhá" : "Nová hra"}</h1>
+      <p>${game_summary_line(game)}</p>
     </header>
   `;
 }
@@ -33,6 +37,27 @@ const noop = () => {};
 const ifelse = (condition, then = "", elze = "") => (condition ? then : elze);
 const unless = (negacondition, then = "") => ifelse(!negacondition, then);
 
+export const players_summary_line = ({ players = [] }) => {
+  if (!players.length) {
+    return `U stolu zatím nikdo nesedí.`;
+  }
+
+  let line = `U stolu sedí `;
+
+  line += players
+    .slice(0, -1)
+    .map(({ name }) => name)
+    .join(", ");
+
+  if (players.length > 1) {
+    line += ` a ${players.slice(-1)[0].name}.`;
+  } else {
+    line += `${players.slice(-1)[0].name}.`;
+  }
+
+  return line;
+};
+
 export const player_line = ({ player, userPlayer, currentPlayer }) => {
   let line = player.name;
   if (userPlayer?.id && player.id === userPlayer.id) {
@@ -42,19 +67,18 @@ export const player_line = ({ player, userPlayer, currentPlayer }) => {
     line += " je na tahu";
   }
   if (player.cards?.length) {
-    line += `, má karet ${player.cards.length}`;
+    line += `, karet: ${player.cards.length}`;
   }
-  if(line === player.name) return "";
-  line += ".";
+  if (line === player.name) return "";
   return line;
 };
 
 export const table_card_line = ({ card, color }) => {
   let line = `${card?.value}–${card?.color}`;
-  line = html`Na stole je <strong>${line}</strong>`;
+  line = `Na stole je ${line}`;
 
   if (card?.value === changeColorCardValue) {
-    line += `a mění barvu na ${color}`;
+    line += ` a mění barvu na ${color}`;
   }
 
   // if (game.playedCards?.length - 1) {
@@ -64,12 +88,7 @@ export const table_card_line = ({ card, color }) => {
 };
 
 export function content(
-  {
-    game: { players = [], currentPlayer, ...game } = {},
-    user,
-    selectedCard,
-    selectedColor,
-  } = {},
+  { game = {}, user, selectedCard, selectedColor } = {},
   {
     handleYourMove = noop,
     handlePlayerCardSelect = noop,
@@ -78,30 +97,46 @@ export function content(
     handleShareGame = noop,
   } = {}
 ) {
+  const { players = [], currentPlayer } = game;
   const userPlayer = players.find((player) => player.id === user?.uid);
   const isUserVerified = (user || false) && user.emailVerified;
   const isUserPlaying = Boolean(userPlayer);
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
-  const [lastCard] = game.playedCards?.slice(-1) || [];
+  const [cardOnTable] = game.playedCards?.slice(-1) || [];
+
+  const showDrawCard =
+    game.status && isUserPlaying && cardOnTable?.value !== stayCardValue;
+  const showCardColorSelect = selectedCard?.value === changeColorCardValue;
+  const showPlayersCards = game.status && isUserPlaying;
+  const showFlipPlayedCardsToDeck =
+    game.status && isUserPlaying && !game.deck.length;
+  const showStay =
+    game.status &&
+    isUserPlaying &&
+    cardOnTable?.value === stayCardValue &&
+    !game.lastMove?.stood;
+  const showShuffleDeck = isUserPlaying && !game.status;
+  const showVerfySelf = !isUserVerified && !isUserPlaying;
+  const showJoinGame = !isUserPlaying;
+
+  const canJoinGame = isUserVerified && !game.status;
+  const canShuffleDeck = isPlayersTurn && !game.status;
+  const canDealCards = isPlayersTurn && game.deckShuffled && players.length < 1;
+  const canDrawCard = isPlayersTurn && game.deck.length;
+  const canPlayCard =
+    isPlayersTurn &&
+    selectedCard &&
+    (cardOnTable.value !== stayCardValue ||
+      selectedCard.value === stayCardValue);
+  const canStay = isPlayersTurn && cardOnTable?.value === stayCardValue; // todo check if previous player did not stayed
+  const canFlipPlayedCardsToDeck =
+    isPlayersTurn && game.playedCards?.length < 2;
 
   return html`
     <main>
       <section>
         <h2>${`Hráči (${players?.length || 0})`}</h2>
-        <p>
-          ${
-            players.length
-              ? `U stolu sedí ${players
-                  .slice(0, -1)
-                  .map(({ name }) => name)
-                  .join(", ")}${
-                  players.length > 1
-                    ? ` a ${players.slice(-1)[0].name}.`
-                    : `${players.slice(-1)[0].name}.`
-                }`
-              : `U stolu zatím nikdo nesedí.`
-          }
-        </p>
+        <p>${players_summary_line(game)}</p>
         ${players.map(
           (player) => html`
             <figure>
@@ -112,8 +147,8 @@ export function content(
         <h2>Stůl</h2>
         <figure>
           ${ifelse(
-            lastCard,
-            table_card_line({ card: lastCard, color: game.selectedColor }),
+            cardOnTable,
+            table_card_line({ card: cardOnTable, color: game.currentColor }),
             "Na stole není vyložená žádná karta."
           )}
         </figure>
@@ -123,17 +158,17 @@ export function content(
           `Balíček karet (${game.deck?.length}) ${
             game.deckShuffled ? "" : "není zamíchaný"
           }`,
-          `Balíček tu ${!lastCard ? "také " : ""} není.`
+          `Balíček tu ${!cardOnTable ? "také " : ""} není.`
         )}
       </section>
 
       <section>
         <h2>Tvé možnosti</h2>
-        ${unless(
-          isUserPlaying,
+        ${ifelse(
+          showJoinGame,
           html`
             <button
-              ?disabled=${!isUserVerified || game.status}
+              ?disabled=${!canJoinGame}
               class="js-dialog-join-game-open"
               aria-label=${ifelse(
                 game.status,
@@ -146,8 +181,8 @@ export function content(
             </button>
           `
         )}
-        ${unless(
-          isUserVerified || isUserPlaying,
+        ${ifelse(
+          showVerfySelf,
           html`
             ${unless(
               game.status,
@@ -156,15 +191,16 @@ export function content(
             <button class="js-dialog-verify-self-open">Ověřit se</button>
           `
         )}
-        ${unless(
-          !isUserPlaying || game.status,
+        ${ifelse(
+          showShuffleDeck,
           html`
             <button
               @click=${handleYourMove}
               name="shuffle"
-              ?disabled=${!isPlayersTurn}
+              ?disabled=${!canShuffleDeck}
               data-sound-effect="shuffle1.wav"
               data-busy-title="Míchám..."
+              data-allow-many="true"
               aria-label=${ifelse(
                 isPlayersTurn,
                 "Zamíchat karty",
@@ -176,9 +212,7 @@ export function content(
             <button
               @click=${handleYourMove}
               name="deal"
-              ?disabled=${!isPlayersTurn ||
-              !game.deckShuffled ||
-              players.length < 2}
+              ?disabled=${!canDealCards}
               data-sound-effect="deal-cards.wav"
               data-busy-title="Rozdávám..."
               aria-label=${ifelse(
@@ -195,15 +229,14 @@ export function content(
             </button>
           `
         )}
-        ${unless(
-          !game.status ||
-            !isUserPlaying ||
-            selectedCard?.value === stayCardValue,
+        ${ifelse(
+          showDrawCard,
           html`
             <button
-              ?disabled=${!isPlayersTurn || !game.deck.length}
+              ?disabled=${!canDrawCard}
               @click=${handleYourMove}
               name="draw"
+              data-n=${game.drawCardsCount}
               data-sound-effect="draw.wav"
               data-busy-title="Lížu..."
               aria-label=${ifelse(
@@ -212,18 +245,18 @@ export function content(
                 `Na tahu je ${currentPlayer?.name}`
               )}
             >
-              Líznout si
+              ${`Líznout si ${game.drawCardsCount}`}
             </button>
           `
         )}
-        ${unless(
-          !game.status || !isUserPlaying || lastCard?.value !== stayCardValue,
+        ${ifelse(
+          showStay,
           html`
             <button
-              ?disabled=${!isPlayersTurn || !game.deck.length}
+              ?disabled=${!canStay}
               @click=${handleYourMove}
               name="draw"
-              data-sound-effect="draw.wav"
+              data-sound-effect=""
               data-busy-title="Stojím..."
               aria-label=${unless(
                 isPlayersTurn,
@@ -234,11 +267,11 @@ export function content(
             </button>
           `
         )}
-        ${unless(
-          !game.status || !isUserPlaying || game.deck.length,
+        ${ifelse(
+          showFlipPlayedCardsToDeck,
           html`
             <button
-              ?disabled=${!isPlayersTurn || game.playedCards?.length < 2}
+              ?disabled=${!canFlipPlayedCardsToDeck}
               @click=${handleYourMove}
               name="flip"
               data-sound-effect="deck.wav"
@@ -256,8 +289,8 @@ export function content(
             </button>
           `
         )}
-        ${unless(
-          !game.status || !isUserPlaying,
+        ${ifelse(
+          showPlayersCards,
           html`
             <select
               name="card"
@@ -280,7 +313,7 @@ export function content(
               </option>
             </select>
             ${ifelse(
-              selectedCard?.value === changeColorCardValue,
+              showCardColorSelect,
               html`
                 <select
                   name="color"
@@ -299,7 +332,7 @@ export function content(
             )}
             <button
               @click=${handleYourMove}
-              ?disabled=${!isPlayersTurn || !selectedCard}
+              ?disabled=${!canPlayCard}
               name="play"
               data-sound-effect="play-card.wav"
               data-busy-title="Táhnu..."
@@ -317,9 +350,6 @@ export function content(
             </button>
           `
         )}
-        <!-- <button @click=${handleYourMove} disabled name="stay">Stát</button> -->
-        <!-- <button @click=${handleYourMove} name="leave" type="button">Vzdát se</button> -->
-
       <button
         @click=${handleShareGame}
         type=${game.status ? "button" : "submit"}
