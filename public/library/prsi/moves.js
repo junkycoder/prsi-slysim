@@ -50,7 +50,7 @@ function endTurn(game, player, { card, stood = false, color, drawn = 0 } = {}) {
 
   game.drawCardsCount = 1;
 
-  if (card.value === drawCardValue && !game.lastMove.drawn) {
+  if (card?.value === drawCardValue && !game.lastMove.drawn) {
     drawCardsCount =
       [...game.playedCards]
         .reverse()
