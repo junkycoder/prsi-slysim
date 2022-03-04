@@ -29,19 +29,19 @@ for (let [, card] of Game.cards) {
 }
 
 console.assert(
-  Game.isCardFace(Game.reversedCard) === false,
-  "Game.isCardFace(Game.reversedCard) === false",
-  Game.isCardFace(Game.reversedCard)
+  Game.isCardFace(Game.REVERSED_CARD) === false,
+  "Game.isCardFace(Game.REVERSED_CARD) === false",
+  Game.isCardFace(Game.REVERSED_CARD)
 );
 console.assert(
-  Game.reversedCard.value === null,
-  "Game.reversedCard.value === null",
-  Game.reversedCard.value
+  Game.REVERSED_CARD.value === null,
+  "Game.REVERSED_CARD.value === null",
+  Game.REVERSED_CARD.value
 );
 console.assert(
-  Game.reversedCard.color === null,
-  "Game.reversedCard.color === null",
-  Game.reversedCard.color
+  Game.REVERSED_CARD.color === null,
+  "Game.REVERSED_CARD.color === null",
+  Game.REVERSED_CARD.color
 );
 
 const g = Game.createNewGame({ maxPlayers: 3, dealedCards: 4 });

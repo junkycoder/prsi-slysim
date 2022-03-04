@@ -12,10 +12,10 @@ export const GAME_STATUS = {
   OVER: 2,
 };
 
-export const reversedCard = { color: null, value: null };
+export const REVERSED_CARD = { color: null, value: null };
 export const isCardFace = ({ color, value }) => Boolean(color && value);
 
-export const cardValues = [
+export const CARD_VALUES = [
   "spodek",
   "svršek",
   "sedmička",
@@ -26,17 +26,17 @@ export const cardValues = [
   "eso",
 ];
 
-export const cardColors = ["kule", "zelený", "srdce", "žaludy"];
-export const changeColorCardValue = "svršek";
-export const stayCardValue = "eso";
-export const drawCardValue = "sedmička";
+export const CARD_COLORS = ["kule", "zelený", "srdce", "žaludy"];
+export const CHANGE_CARD_VALUE = "svršek";
+export const STAY_CARD_VALUE = "eso";
+export const DRAW_CARD_VALUE = "sedmička";
 
-export const cards = new Map();
+export const CARDS = new Map();
 
-for (let color of cardColors) {
-  for (let value of cardValues) {
+for (let color of CARD_COLORS) {
+  for (let value of CARD_VALUES) {
     const id = `${value}_${color}`;
-    cards.set(id, {
+    CARDS.set(id, {
       id,
       color,
       value,
@@ -44,8 +44,8 @@ for (let color of cardColors) {
   }
 }
 
-export const shuffleCards = (_cards = cards) =>
-  [..._cards.values()].sort(() => Math.random() - 0.5);
+export const shuffleCards = (cards = CARDS) =>
+  [...cards.values()].sort(() => Math.random() - 0.5);
 
 export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
   return {
@@ -85,7 +85,6 @@ export function playerGameCopy(
     drawCardsCount,
   }
 ) {
-
   return {
     turn,
     status,
@@ -97,19 +96,19 @@ export function playerGameCopy(
           cards:
             currentPlayer.id === playerId
               ? currentPlayer.cards
-              : currentPlayer.cards.map((card) => reversedCard),
+              : currentPlayer.cards.map((card) => REVERSED_CARD),
         },
     currentColor,
     outcome,
     players: players.map(({ id, cards, ...player }) => ({
       id,
       ...player,
-      cards: playerId === id ? cards : cards.map(() => reversedCard),
+      cards: playerId === id ? cards : cards.map(() => REVERSED_CARD),
     })),
-    deck: deck.map(() => reversedCard),
+    deck: deck.map(() => REVERSED_CARD),
     deckShuffled,
     playedCards: [
-      ...playedCards.slice(0, -2).map(() => reversedCard),
+      ...playedCards.slice(0, -2).map(() => REVERSED_CARD),
       ...playedCards.slice(-2),
     ],
     lastMove,
@@ -205,11 +204,11 @@ export function endTurn(
   };
 
   game.drawCardsCount = 1;
-  if (card?.value === drawCardValue && !game.lastMove.drawn) {
+  if (card?.value === DRAW_CARD_VALUE && !game.lastMove.drawn) {
     game.drawCardsCount =
       [...game.playedCards]
         .reverse()
-        .filter((card) => card.value === drawCardValue).length * 2;
+        .filter((card) => card.value === DRAW_CARD_VALUE).length * 2;
   }
 
   if (isWinner(player)) {

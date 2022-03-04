@@ -161,7 +161,7 @@
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { onCurrentUserChanged } from "/user.js";
-    import { getPlayer, changeColorCardValue } from "/library/prsi/index.js";
+    import { getPlayer, CHANGE_CARD_VALUE } from "/library/prsi/index.js";
     import * as moves from "/library/prsi/moves.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
@@ -433,13 +433,18 @@
             buttonElement.textContent = buttonElementLabel;
           });
 
+          // cleanup ui controls
+          emit({
+            selectedCard: null,
+            selectedColor: null,
+          });
         },
         handlePlayerCardSelect(event) {
           const cardId = event.target.value;
           const player = getPlayer(state.game, user.uid);
           const { value, color, id } = player.cards.find(card => card.id === cardId)
 
-          if (value === changeColorCardValue) {
+          if (value === CHANGE_CARD_VALUE) {
             emit({
               selectedCard: { value, color, id },
               selectedColor: color
@@ -501,7 +506,6 @@
             playPlayerMoveEffects(game.lastMove, game.players, game.settings);
           }, 300);
         }
-
 
         if (
           user?.uid &&

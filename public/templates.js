@@ -3,9 +3,9 @@ import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
 
 import * as moves from "/library/prsi/moves.js";
 import {
-  cardColors,
-  changeColorCardValue,
-  stayCardValue,
+  CARD_COLORS,
+  CHANGE_CARD_VALUE,
+  STAY_CARD_VALUE,
   GAME_STATUS,
 } from "/library/prsi/index.js";
 
@@ -88,7 +88,7 @@ export const table_card_line = ({ card, color }) => {
   let line = `${card?.value}–${card?.color}`;
   line = `Na stole je ${line}`;
 
-  if (card?.value === changeColorCardValue) {
+  if (card?.value === CHANGE_CARD_VALUE) {
     line += ` a mění barvu na ${color}`;
   }
 
@@ -119,16 +119,16 @@ export function content(
   const showDrawCard =
     game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
-    (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
-  const showCardColorSelect =
-    isPlayersTurn && selectedCard?.value === changeColorCardValue;
+    (cardOnTable?.value !== STAY_CARD_VALUE || game.lastMove?.stood);
+  const showCARD_COLORSelect =
+    isPlayersTurn && selectedCard?.value === CHANGE_CARD_VALUE;
   const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
   const showFlipPlayedCardsToDeck =
     isPlayersTurn && isUserPlaying && !game.deck.length;
   const showStay =
     game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
-    cardOnTable?.value === stayCardValue &&
+    cardOnTable?.value === STAY_CARD_VALUE &&
     !game.lastMove?.stood;
   const showShuffleDeck =
     isUserPlaying &&
@@ -147,10 +147,10 @@ export function content(
   const canPlayCard =
     isPlayersTurn &&
     selectedCard &&
-    (cardOnTable.value !== stayCardValue ||
-      selectedCard.value === stayCardValue ||
+    (cardOnTable.value !== STAY_CARD_VALUE ||
+      selectedCard.value === STAY_CARD_VALUE ||
       game.lastMove?.stood);
-  const canStay = isPlayersTurn && cardOnTable?.value === stayCardValue;
+  const canStay = isPlayersTurn && cardOnTable?.value === STAY_CARD_VALUE;
   const canFlipPlayedCardsToDeck =
     isPlayersTurn && game.playedCards?.length < 2;
 
@@ -185,7 +185,66 @@ export function content(
       </section>
 
       <section>
-        <h2>Tvé možnosti</h2>
+        <h2>Tvé karty a možnosti</h2>
+         ${ifelse(
+          showPlayersCards,
+          html`
+            <div class="flex horizontal-scroll" aria-label="Vaše karty">
+              ${userPlayer?.cards.map(
+                ({ id, value, color }) => html`
+                  <label class="flex">
+                    <input
+                      ?checked=${id === selectedCard?.id}
+                      type="radio"
+                      value="${id}"
+                      name="play"
+                      @change=${handlePlayerCardSelect}
+                    />
+                    ${`${value}–${color}`}
+                  </label>
+                `
+              )}
+            </div>
+            ${ifelse(
+              showCARD_COLORSelect,
+              html`
+                <div class="flex horizontal-scroll" aria-label="Změna barvy">
+                  ${CARD_COLORS.map(
+                    (color) => html`
+                      <label class="flex">
+                        <input
+                          ?checked=${color === selectedCard?.color}
+                          type="radio"
+                          value="${color}"
+                          name="color"
+                          @click=${handleCardColorSelect}
+                        />
+                        ${color}
+                      </label>
+                    `
+                  )}
+                </div>
+              `
+            )}
+            <button
+              @click=${handleMove}
+              ?disabled=${!canPlayCard}
+              name=${moves.play.name}
+              data-busy-title="Táhnu..."
+              aria-label=${ifelse(
+                isPlayersTurn,
+                ifelse(
+                  selectedCard,
+                  `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
+                  "Před tahem vyberte kartu"
+                ),
+                `Táhnout kartu nelze, na tahu je ${currentPlayer?.name}`
+              )}
+            >
+              Táhnout kartu
+            </button>
+          `
+        )}
         ${ifelse(
           showJoinGame,
           html`
@@ -308,65 +367,6 @@ export function content(
               )}
             >
               Otočit odehrané karty
-            </button>
-          `
-        )}
-        ${ifelse(
-          showPlayersCards,
-          html`
-            <div class="flex horizontal-scroll" aria-label="Vaše karty">
-              ${userPlayer?.cards.map(
-                ({ id, value, color }) => html`
-                  <label class="flex">
-                    <input
-                      ?checked=${id === selectedCard?.id}
-                      type="radio"
-                      value="${id}"
-                      name="play"
-                      @change=${handlePlayerCardSelect}
-                    />
-                    ${`${value}–${color}`}
-                  </label>
-                `
-              )}
-            </div>
-            ${ifelse(
-              showCardColorSelect,
-              html`
-                <div class="flex horizontal-scroll" aria-label="Změna barvy">
-                  ${cardColors.map(
-                    (color) => html`
-                      <label class="flex">
-                        <input
-                          ?checked=${color === selectedCard?.color}
-                          type="radio"
-                          value="${color}"
-                          name="color"
-                          @click=${handleCardColorSelect}
-                        />
-                        ${color}
-                      </label>
-                    `
-                  )}
-                </div>
-              `
-            )}
-            <button
-              @click=${handleMove}
-              ?disabled=${!canPlayCard}
-              name=${moves.play.name}
-              data-busy-title="Táhnu..."
-              aria-label=${ifelse(
-                isPlayersTurn,
-                ifelse(
-                  selectedCard,
-                  `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
-                  "Před tahem vyberte kartu"
-                ),
-                `Táhnout kartu nelze, na tahu je ${currentPlayer?.name}`
-              )}
-            >
-              Táhnout kartu
             </button>
           `
         )}

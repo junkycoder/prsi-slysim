@@ -3,8 +3,9 @@ import {
   shuffleCards,
   getLastPlayedCard,
   endTurn,
+  STAY_CARD_VALUE,
+  CHANGE_CARD_VALUE,
 } from "./index.js";
-
 
 export function shuffleDeck(game, player) {
   if (game.status === GAME_STATUS.STARTED) {
@@ -37,7 +38,7 @@ export function dealCards(game, player) {
 
   game.status = GAME_STATUS.STARTED;
 
-  if (firstCard.value === "svršek") {
+  if (firstCard.value === CHANGE_CARD_VALUE) {
     const { color } = game.deck[game.deck.length - 1];
     console.log(`Used last deck card color "${color}"`);
     endTurn(game, player, dealCards.name, { card: firstCard, color });
@@ -59,23 +60,19 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
     throw new Error("It is not your turn");
   }
 
-  // Fixme: last played card does not means it was not already played
   const lastPlayedCard = getLastPlayedCard(game);
-
   if (
-    card.value !== "svršek" &&
-    card.value !== lastPlayedCard.value &&
-    card.color !== game.currentColor
+    lastPlayedCard.value === STAY_CARD_VALUE &&
+    game.lastMove?.value !== STAY_CARD_VALUE &&
+    card.value !== STAY_CARD_VALUE
   ) {
-    throw new Error(
-      `Player ${player.id} tried to play "${card.value} ${card.color}" but last played card was "${lastPlayedCard.value} ${lastPlayedCard.color}"`
-    );
+    throw new Error("Only card you can play is " + STAY_CARD_VALUE);
   }
 
   player.cards = player.cards.filter((c) => c.id !== card.id);
   game.playedCards.push(card);
 
-  if (card.value === "svršek") {
+  if (card.value === CHANGE_CARD_VALUE) {
     if (color) {
       game.currentColor = color;
     } else {
