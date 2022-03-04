@@ -411,8 +411,9 @@
             alert(`Nastala chyba "${error.message}". Zkuste to prosím znovu.`);
             buttonElement.removeAttribute("disabled");
           }).finally(() => {
-            // button should stay disabled on the end of the move
-            // buttonElement.removeAttribute("disabled");
+            if (buttonElement.dataset.allowMany === "true") {
+              buttonElement.removeAttribute("disabled");
+            }
             buttonElement.textContent = buttonElementLabel;
           });
 
