@@ -5,6 +5,7 @@ import {
   endTurn,
   STAY_CARD_VALUE,
   CHANGE_CARD_VALUE,
+  DRAW_CARD_VALUE,
 } from "./index.js";
 
 export function shuffleDeck(game, player) {
@@ -63,10 +64,18 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
   const lastPlayedCard = getLastPlayedCard(game);
   if (
     lastPlayedCard.value === STAY_CARD_VALUE &&
-    game.lastMove?.value !== STAY_CARD_VALUE &&
+    !game.lastMove?.stood &&
     card.value !== STAY_CARD_VALUE
   ) {
     throw new Error("Only card you can play is " + STAY_CARD_VALUE);
+  }
+
+  if (
+    lastPlayedCard.value === DRAW_CARD_VALUE &&
+    !game.lastMove?.drown &&
+    card.value !== DRAW_CARD_VALUE
+  ) {
+    throw new Error("Only card you can play is " + DRAW_CARD_VALUE);
   }
 
   player.cards = player.cards.filter((c) => c.id !== card.id);
