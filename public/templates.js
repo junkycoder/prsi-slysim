@@ -115,20 +115,21 @@ export function content(
 
   // consider to move this shit to the prsi module
   const showDrawCard =
-    game.status &&
+    game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
     (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
   const showCardColorSelect =
-    isPlayersTurn && selectedCard?.value === changeColorCardValue;
-  const showPlayersCards = game.status && isUserPlaying;
+    (isPlayersTurn && selectedCard?.value === changeColorCardValue) ||
+    game.lastMove?.color;
+  const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
   const showFlipPlayedCardsToDeck =
-    game.status && isUserPlaying && !game.deck.length;
+    isPlayersTurn && isUserPlaying && !game.deck.length;
   const showStay =
-    game.status &&
+    game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
     cardOnTable?.value === stayCardValue &&
     !game.lastMove?.stood;
-  const showShuffleDeck = isUserPlaying && !game.status;
+  const showShuffleDeck = isUserPlaying && [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const showVerfySelf = !isUserVerified && !isUserPlaying;
   const showJoinGame = !isUserPlaying;
 
