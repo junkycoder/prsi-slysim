@@ -115,7 +115,9 @@ export function content(
 
   // consider to move this shit to the prsi module
   const showDrawCard =
-    game.status && isUserPlaying && cardOnTable?.value !== stayCardValue;
+    game.status &&
+    isUserPlaying &&
+    (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
   const showCardColorSelect = selectedCard?.value === changeColorCardValue;
   const showPlayersCards = game.status && isUserPlaying;
   const showFlipPlayedCardsToDeck =
