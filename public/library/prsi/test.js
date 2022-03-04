@@ -5,12 +5,12 @@ const logObj = (obj) =>
   console.log(inspect(obj, { showHidden: false, depth: null, colors: true }));
 
 console.assert(
-  Game.cards.size === 32,
-  "Game.cards.size === 32",
-  Game.cards.size
+  Game.CARDS.size === 32,
+  "Game.CARDS.size === 32",
+  Game.CARDS.size
 );
 
-for (let [, card] of Game.cards) {
+for (let [, card] of Game.CARDS) {
   console.assert(
     Game.isCardFace(card),
     "Game.isCardFace(card)",

@@ -1,14 +1,13 @@
-
 import * as moves from "./moves.js";
-
+import {
+  DRAW_CARD_VALUE,
+  STAY_CARD_VALUE,
+  CHANGE_CARD_VALUE,
+} from "./index.js";
 
 export function autoplay(game) {
-  const { playedCards,  currentPlayer: player } = game;
+  const { playedCards, currentPlayer: player } = game;
   const lastPlayedCard = playedCards[playedCards.length - 1];
-
-  if (!game.deck.length) {
-    moves.flipPlayedCardsToDeck(game, player);
-  }
 
   const sameValueCards = player.cards.filter(
     ({ value }) => value === lastPlayedCard.value
@@ -20,25 +19,36 @@ export function autoplay(game) {
 
   let cardToPlay;
 
-  if (sameValueCards.length) {
+  if (lastPlayedCard.value === DRAW_CARD_VALUE && !game.lastMove?.drawn) {
+    cardToPlay = sameValueCards.find(({ value }) => value === DRAW_CARD_VALUE);
+  } else if (
+    lastPlayedCard.value === STAY_CARD_VALUE &&
+    !game.lastMove?.stood
+  ) {
+    cardToPlay = sameValueCards.find(({ value }) => value === STAY_CARD_VALUE);
+  } else if (sameValueCards.length) {
     const [firstCard] = sameValueCards;
     cardToPlay = firstCard;
-  }
-
-  if (sameColorCards.length) {
+  } else if (sameColorCards.length) {
     const [firstCard] = sameColorCards;
     cardToPlay = firstCard;
   }
 
   if (cardToPlay) {
-    if (cardToPlay.value === "svršek") {
-      moves.play(game, player, cardToPlay, {
-        color: mostNumerousColor(player.cards),
-      });
+    if (cardToPlay.value === CHANGE_CARD_VALUE) {
+      moves.play(game, player, cardToPlay, mostNumerousColor(player.cards));
     } else {
       moves.play(game, player, cardToPlay);
     }
+  } else if (
+    lastPlayedCard.value === STAY_CARD_VALUE &&
+    !game.lastMove?.stood
+  ) {
+    moves.stay(game, player);
   } else {
+    if (game.deck.length < game.drawCardsCount) {
+      moves.flipPlayedCardsToDeck(game, player);
+    }
     moves.draw(game, player);
   }
 }

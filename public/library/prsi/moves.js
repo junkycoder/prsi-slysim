@@ -28,13 +28,10 @@ export function shuffleDeck(game, player) {
     }
 
     game.lastMove = null;
-    console.log(`${game.turn}. Game state renewed`);
   }
 
   game.deck = shuffleCards(game.deck);
   game.deckShuffled = true;
-
-  console.log(`${game.turn}. ${player.name} shuffled deck`);
 }
 
 export function dealCards(game, player) {
@@ -51,15 +48,10 @@ export function dealCards(game, player) {
   game.playedCards.push(firstCard);
   game.currentColor = firstCard.color;
 
-  console.log(
-    `${game.turn}. ${player.name} dealed cards, "${firstCard.value} ${firstCard.color}" is on the table`
-  );
-
   game.status = GAME_STATUS.STARTED;
 
   if (firstCard.value === CHANGE_CARD_VALUE) {
     const { color } = game.deck[game.deck.length - 1];
-    console.log(`Used last deck card color "${color}"`);
     endTurn(game, player, dealCards.name, { card: firstCard, color });
   } else {
     endTurn(game, player, dealCards.name);
@@ -69,6 +61,7 @@ export function dealCards(game, player) {
 export function play(game, { id: playerId }, { id: cardId }, color) {
   const player = game.players.find(({ id }) => id === playerId);
   const card = player.cards.find((card) => card.id === cardId);
+  const lastPlayedCard = getLastPlayedCard(game);
 
   if (!card) {
     throw new Error(
@@ -78,8 +71,6 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
   if (game.currentPlayer.id !== player.id) {
     throw new Error("It is not your turn");
   }
-
-  const lastPlayedCard = getLastPlayedCard(game);
   if (
     lastPlayedCard.value === STAY_CARD_VALUE &&
     !game.lastMove?.stood &&
@@ -90,7 +81,7 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
 
   if (
     lastPlayedCard.value === DRAW_CARD_VALUE &&
-    !game.lastMove?.drown &&
+    !game.lastMove?.drawn &&
     card.value !== DRAW_CARD_VALUE
   ) {
     throw new Error("Only card you can play is " + DRAW_CARD_VALUE);
@@ -109,11 +100,6 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
     game.currentColor = card.color;
   }
 
-  console.log(
-    `${game.turn}. ${player.name} played "${card.value} ${card.color}"`,
-    color ? `with color "${color}"` : ""
-  );
-
   endTurn(game, player, play.name, { card, color });
 }
 
@@ -131,23 +117,23 @@ export function draw(game, player) {
     game.players.find(({ id }) => player.id === id).cards.push(card);
   }
 
-  console.log(`${game.turn}. ${player.name} drew ${n} cards`);
-
   endTurn(game, player, draw.name, { drawn: n });
 }
 
 export function stay(game, player) {
+  if (
+    getLastPlayedCard(game).value !== STAY_CARD_VALUE &&
+    !game.lastMove?.stood
+  ) {
+    throw new Error("You can't stay twice");
+  }
   endTurn(game, player, stay.name, { stood: true });
-
-  console.log(`${game.turn}. ${player.name} staying`);
 }
 
 export function flipPlayedCardsToDeck(game, player) {
   const lastPlayedCard = game.playedCards.pop();
   game.deck = [...game.playedCards].reverse();
   game.playedCards = [lastPlayedCard];
-
-  console.log(`${game.turn}. ${player.name} flipped played cards to deck`);
 }
 
 export function leave() {

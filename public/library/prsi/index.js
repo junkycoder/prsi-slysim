@@ -189,6 +189,18 @@ export function endTurn(
     );
   }
 
+  console.info(
+    `${game.turn}. ${[
+      player.name,
+      moveType,
+      card?.id,
+      color,
+      drawn,
+    ]
+      .filter(Boolean)
+      .join(" ")}`
+  );
+
   game.turn++;
 
   game.lastMove = {
