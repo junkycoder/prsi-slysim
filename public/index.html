@@ -463,6 +463,7 @@
 
       function emit(payload = {}) {
         state = deepMerge(state, payload);
+        console.log(JSON.stringify(state, null, 2));
 
         render(
           templates.header(state, handlers),
@@ -487,11 +488,6 @@
 
       // Firstly using public copy, then, once user joins the game we start using private copy
       let usedCopyQuery = queryToPublicCopy();
-
-      window.addEventListener("focus", () => {
-        getDoc(doc(db, usedCopyQuery)).then(handleSnapshot);
-      })
-
       const unsubcribePublicCopy = onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
 
       function handleSnapshot(d) {
