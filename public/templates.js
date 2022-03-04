@@ -130,7 +130,7 @@ export function content(
 
   const canJoinGame = isUserVerified && !game.status;
   const canShuffleDeck = isPlayersTurn && !game.status;
-  const canDealCards = isPlayersTurn && game.deckShuffled && players.length < 1;
+  const canDealCards = isPlayersTurn && game.deckShuffled && players.length > 1;
   const canDrawCard = isPlayersTurn && game.deck.length;
   const canPlayCard =
     isPlayersTurn &&
