@@ -397,9 +397,13 @@
           const buttonElementLabel = buttonElement.textContent;
           buttonElement.setAttribute("disabled", "disabled");
 
+          const playSoundEffects = [
+            ...new Array(buttonElement.dataset.n || 1)
+          ].map(() => Sounds.play(buttonElement.dataset.soundEffect || "plop.m4a"));
+
           buttonElement.textContent = buttonElement.dataset.busyTitle || "Zpracovávám...";
           Promise.all([
-            Sounds.play(buttonElement.dataset.soundEffect || "plop.m4a"),
+            ...playSoundEffects,
             httpsCallable(fns, "gameMove")({
               moveType,
               gameId,
