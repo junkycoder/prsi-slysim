@@ -491,7 +491,7 @@
 
         if (
           game.lastMove &&
-          game.lastMove.type !== state.game?.lastMove.type &&
+          game.lastMove.type !== state.game?.lastMove?.type &&
           game.lastMove?.player.id !== user?.uid
         ) {
           setTimeout(() => {
