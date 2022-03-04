@@ -63,6 +63,8 @@ export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
     playedCards: [],
     outcome: null,
     moves: [],
+    lastMove: null,
+    drawCardsCount: 1,
   };
 }
 
@@ -83,6 +85,7 @@ export function playerGameCopy(
     drawCardsCount,
   }
 ) {
+  console.log(drawCardsCount)
   return {
     turn,
     status,
@@ -191,7 +194,6 @@ export function endTurn(game, player, { card, stood = false, color, drawn = 0 } 
   };
 
   game.drawCardsCount = 1;
-
   if (card?.value === drawCardValue && !game.lastMove.drawn) {
     game.drawCardsCount =
       [...game.playedCards]
