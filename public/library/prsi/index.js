@@ -85,7 +85,7 @@ export function playerGameCopy(
     drawCardsCount,
   }
 ) {
-  console.log(drawCardsCount)
+
   return {
     turn,
     status,

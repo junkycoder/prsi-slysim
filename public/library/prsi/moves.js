@@ -2,7 +2,6 @@ import {
   GAME_STATUS,
   shuffleCards,
   getLastPlayedCard,
-  drawCardValue,
   endTurn,
 } from "./index.js";
 
