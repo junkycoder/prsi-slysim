@@ -162,6 +162,7 @@
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { onCurrentUserChanged } from "/user.js";
     import { getPlayer, changeColorCardValue } from "/library/prsi/index.js";
+    import * as moves from "/library/prsi/moves.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
       openingSelector: ".js-dialog-verify-self-open",
@@ -191,6 +192,14 @@
       labelledby: "sound-effects-dialog-title",
     });
     Sounds.setSoundsPath("/assets/")
+
+    const MOVE_EFFECTS = {
+      default: "deck.wav",
+      [moves.shuffleDeck.name]: "shuffle1.wav", // "shuffle2.wav",
+      [moves.play.name]: "play-card.wav",
+      [moves.dealCards.name]: "deal-cards.wav",
+      [moves.draw.name]: "draw.wav",
+    };
 
 
     for (let input of soundEffects.dialog.querySelectorAll(`input[type="checkbox"]`)) {
@@ -345,15 +354,8 @@
           Sounds.enable("rain.mp3", enabled, { autoplay: true, loop: true, gain: .4 });
           break;
         case "sounds":
-          Sounds.enableAll([
-            "shuffle1.wav",
-            "shuffle2.wav",
-            "play-card.wav",
-            "deal-cards.wav",
-            "deck.wav",
-            "draw.wav"
-          ], enabled);
-          if (enabled) Sounds.play("deck.wav");
+          Sounds.enableAll(Object.values(MOVE_EFFECTS), enabled);
+          if (enabled) Sounds.play(MOVE_EFFECTS.default);
           break;
         default:
           throw new Error("Unexpected name");
@@ -409,8 +411,8 @@
           buttonElement.setAttribute("disabled", "disabled");
 
           const playSoundEffects = [
-            ...new Array(buttonElement.dataset.n || 1)
-          ].map(() => Sounds.play(buttonElement.dataset.soundEffect || "plop.m4a"));
+            ...new Array(buttonElement.dataset.n || 0)
+          ].map(() => Sounds.play(MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default));
 
           buttonElement.textContent = buttonElement.dataset.busyTitle || "Zpracovávám...";
           Promise.all([
@@ -451,8 +453,6 @@
         },
         // ...
       };
-
-
 
       function emit(payload = {}) {
         state = deepMerge(state, payload);
@@ -498,6 +498,23 @@
           usedCopyQuery = queryToPlayerCopy;
           unsubcribePublicCopy();
           onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
+        }
+
+        if (game.lastMove !== state.game.lastMove) {
+          setTimeout(playPlayerMoveEffects(game), 10);
+        }
+      }
+
+      function playPlayerMoveEffects({ lastMove, players }) {
+        // TODO calculate 3d position of player
+        // const playerIndex = players.findIndex(player => player.id === lastMove.player.id);
+        // const playersCount = players.length;
+        const sound = MOVE_EFFECTS[lastMove.type] || MOVE_EFFECTS.default;
+
+        if (lastMove.drawn) {
+          [...new Array(lastMove.drawn)].forEach(() => Sounds.play(sound));
+        } else {
+          Sounds.play(sound);
         }
       }
 

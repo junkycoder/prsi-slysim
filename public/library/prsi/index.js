@@ -193,6 +193,7 @@ export function endTurn(
 
   game.lastMove = {
     player,
+    type: endTurn.caller.name,
     card,
     color,
     stood,

@@ -208,7 +208,6 @@ export function content(
               @click=${handleYourMove}
               name=${moves.shuffleDeck.name}
               ?disabled=${!canShuffleDeck}
-              data-sound-effect="shuffle1.wav"
               data-busy-title="Míchám..."
               data-allow-many="true"
               aria-label=${ifelse(
@@ -223,7 +222,6 @@ export function content(
               @click=${handleYourMove}
               name=${moves.dealCards.name}
               ?disabled=${!canDealCards}
-              data-sound-effect="deal-cards.wav"
               data-busy-title="Rozdávám..."
               aria-label=${ifelse(
                 isPlayersTurn,
@@ -247,7 +245,6 @@ export function content(
               @click=${handleYourMove}
               name=${moves.draw.name}
               data-n=${game.drawCardsCount}
-              data-sound-effect="draw.wav"
               data-busy-title="Lížu..."
               aria-label=${ifelse(
                 isPlayersTurn,
@@ -266,7 +263,6 @@ export function content(
               ?disabled=${!canStay}
               @click=${handleYourMove}
               name=${moves.stay.name}
-              data-sound-effect=""
               data-busy-title="Stojím..."
               aria-label=${unless(
                 isPlayersTurn,
@@ -284,7 +280,6 @@ export function content(
               ?disabled=${!canFlipPlayedCardsToDeck}
               @click=${handleYourMove}
               name=${moves.flipPlayedCardsToDeck.name}
-              data-sound-effect="deck.wav"
               data-busy-title="Otáčím..."
               aria-label=${ifelse(
                 isPlayersTurn,
@@ -344,7 +339,6 @@ export function content(
               @click=${handleYourMove}
               ?disabled=${!canPlayCard}
               name=${moves.play.name}
-              data-sound-effect="play-card.wav"
               data-busy-title="Táhnu..."
               aria-label=${ifelse(
                 isPlayersTurn,
