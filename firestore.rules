@@ -10,34 +10,5 @@ service cloud.firestore {
       allow read: if perspective == 'public' || (verified(request) && perspective == request.auth.uid);
     }
 
-    // match /games/{game} {
-    //   // Only server can access all game fata
-    //   allow read: if false;
-    //   allow list: if false;
-    //   allow create: if false
-    //   allow update: if false;
-    //   allow delete: if false;
-    // }
-
-    // match /games-public/{game} {
-    //   // Allow spectators to read public data
-    //   allow read: if true;
-    // }
-
-    // match /users/{user}/games/{game} {
-    //   // User can list and read his game copies
-    //   allow read: if user == request.auth.uid;
-    //   allow list: if user == request.auth.uid;
-
-    //   // Only backends can create new game
-    //   allow create: if false;
-
-    //   // Only backend can update the game
-    //   allow update: if false;
-
-    //   // Only backend can delete the game
-    //   allow delete: if false;
-    // }
-
   }
 }
