@@ -476,9 +476,10 @@
       const queryToPublicCopy = `play/public/game/${gameId}`;
       const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
 
-      getDoc(doc(db, queryToPublicCopy)).then((doc) => {
-        emit({ game: doc.data() });
-      });
+      window.addEventListener("focus", () => {
+        getDoc(doc(db, queryToPublicCopy)).then(handleSnapshot);
+      })
+
 
       // Firstly using public copy, then, once user joins the game we start using private copy
       let usedCopyQuery = queryToPublicCopy;
@@ -494,7 +495,7 @@
         ) {
           setTimeout(() => {
             playPlayerMoveEffects(game);
-          }, 10);
+          }, 300);
         }
 
         emit({ game });
@@ -519,9 +520,11 @@
         });
 
         if (lastMove.drawn) {
-          [...new Array(lastMove.drawn)].forEach(() => Sounds.play(sound), {
+          Promise.all([
+            ...new Array(lastMove.drawn)
+          ].map(() => Sounds.play(sound), {
             position,
-          });
+          }));
         } else {
           Sounds.play(sound, { position });
         }
