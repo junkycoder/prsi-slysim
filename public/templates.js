@@ -1,4 +1,5 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
+import * as moves from "/library/prsi/moves.js";
 import {
   cardColors,
   changeColorCardValue,
@@ -204,7 +205,7 @@ export function content(
           html`
             <button
               @click=${handleYourMove}
-              name="shuffle"
+              name=${moves.shuffleDeck.name}
               ?disabled=${!canShuffleDeck}
               data-sound-effect="shuffle1.wav"
               data-busy-title="Míchám..."
@@ -219,7 +220,7 @@ export function content(
             </button>
             <button
               @click=${handleYourMove}
-              name="deal"
+              name=${moves.dealCards.name}
               ?disabled=${!canDealCards}
               data-sound-effect="deal-cards.wav"
               data-busy-title="Rozdávám..."
@@ -243,7 +244,7 @@ export function content(
             <button
               ?disabled=${!canDrawCard}
               @click=${handleYourMove}
-              name="draw"
+              name=${moves.draw.name}
               data-n=${game.drawCardsCount}
               data-sound-effect="draw.wav"
               data-busy-title="Lížu..."
@@ -263,7 +264,7 @@ export function content(
             <button
               ?disabled=${!canStay}
               @click=${handleYourMove}
-              name="draw"
+              name=${moves.stay.name}
               data-sound-effect=""
               data-busy-title="Stojím..."
               aria-label=${unless(
@@ -281,7 +282,7 @@ export function content(
             <button
               ?disabled=${!canFlipPlayedCardsToDeck}
               @click=${handleYourMove}
-              name="flip"
+              name=${moves.flipPlayedCardsToDeck.name}
               data-sound-effect="deck.wav"
               data-busy-title="Otáčím..."
               aria-label=${ifelse(
@@ -341,7 +342,7 @@ export function content(
             <button
               @click=${handleYourMove}
               ?disabled=${!canPlayCard}
-              name="play"
+              name=${moves.play.name}
               data-sound-effect="play-card.wav"
               data-busy-title="Táhnu..."
               aria-label=${ifelse(

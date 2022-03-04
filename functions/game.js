@@ -177,27 +177,13 @@ export const move = functions
           );
         }
 
-        switch (moveType) {
-          case "shuffle":
-            moves.shuffleDeck(game, player);
-            break;
-          case "deal":
-            moves.dealCards(game, player);
-            break;
-          case "draw":
-            moves.draw(game, player);
-            break;
-          case "play":
-            moves.play(game, player, card, color);
-            break;
-          case "flip":
-            moves.flipPlayedCardsToDeck(game, player);
-            break;
-          default:
-            throw new functions.https.HttpsError(
-              "invalid-argument",
-              "Neznámý tah."
-            );
+        if (moves[moveType]) {
+          moves[moveType](game, player, card, color);
+        } else {
+          throw new functions.https.HttpsError(
+            "invalid-argument",
+            "Neplatný typ tahu."
+          );
         }
 
         const moveRecord = {
