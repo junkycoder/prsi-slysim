@@ -463,7 +463,6 @@
 
       function emit(payload = {}) {
         state = deepMerge(state, payload);
-        console.log(JSON.stringify(state, null, 2));
 
         render(
           templates.header(state, handlers),
