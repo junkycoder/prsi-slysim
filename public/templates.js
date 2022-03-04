@@ -3,7 +3,15 @@ import {
   cardColors,
   changeColorCardValue,
   stayCardValue,
+  GAME_STATUS,
 } from "/library/prsi/index.js";
+
+export const game_title_line = (game) => {
+  if (game.status === GAME_STATUS.OVER) {
+    return "Konec hry";
+  }
+  return game.status ? "Hra probíhá" : "Nová hra";
+};
 
 export const game_summary_line = (game) => {
   let line = "";
@@ -15,6 +23,9 @@ export const game_summary_line = (game) => {
     }
   } else {
     line += `Je ${game.turn}. kolo.`;
+    if (game.status === GAME_STATUS.OVER) {
+      line += ` Zvítězil hráč ${game.outcome.winner.name}.`;
+    }
   }
 
   return line;
@@ -23,16 +34,13 @@ export const game_summary_line = (game) => {
 export function header({ game = {} } = {}) {
   return html`
     <header>
-      <h1>${game.status ? "Hra probíhá" : "Nová hra"}</h1>
+      <h1>${game_title_line(game)}</h1>
       <p>${game_summary_line(game)}</p>
     </header>
   `;
 }
 
 const noop = () => {};
-
-// const getGameUser = (userId, list = []) =>
-//  list.find((user) => userId && user.id === userId);
 
 const ifelse = (condition, then = "", elze = "") => (condition ? then : elze);
 const unless = (negacondition, then = "") => ifelse(!negacondition, then);

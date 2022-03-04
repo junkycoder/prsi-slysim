@@ -9,6 +9,7 @@ export const name = "Prší";
 export const GAME_STATUS = {
   NOT_STARTED: 0,
   STARTED: 1,
+  OVER: 2,
 };
 
 export const reversedCard = { color: null, value: null };
