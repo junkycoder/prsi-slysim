@@ -3,6 +3,7 @@ import {
   shuffleCards,
   getLastPlayedCard,
   isWinner,
+  drawCardValue,
 } from "./index.js";
 
 /**
@@ -11,7 +12,7 @@ import {
  * @param {Player} player
  * @param {Object} options
  */
-function endTurn(game, player, { card, stood = false, color } = {}) {
+function endTurn(game, player, { card, stood = false, color, drawn = 0 } = {}) {
   game.previousPlayer = player;
   const playerIndex = game.players.findIndex(({ id }) => id === player.id);
   game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
@@ -38,6 +39,23 @@ function endTurn(game, player, { card, stood = false, color } = {}) {
   }
 
   game.turn++;
+
+  game.lastMove = {
+    player,
+    card,
+    color,
+    stood,
+    drawn,
+  };
+
+  game.drawCardsCount = 1;
+
+  if (card.value === drawCardValue && !game.lastMove.drawn) {
+    drawCardsCount =
+      [...game.playedCards]
+        .reverse()
+        .filter((card) => card.value === drawCardValue).length * 2;
+  }
 
   if (isWinner(player)) {
     game.outcome = { winner: player };
@@ -132,13 +150,13 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
   endTurn(game, player, { card, color });
 }
 
-export function draw(game, player, n = 1) {
-  if (game.deck.length < n) {
+export function draw(game, player) {
+  if (game.deck.length < game.drawCardValue) {
     throw new Error("Not enough cards in deck");
   }
 
   // toddo: check if player can draw and how many cards he has to draw
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < game.drawCardValue; i++) {
     const card = game.deck.shift();
     // game.currentPlayer.cards.push(card);
     game.players.find(({ id }) => player.id === id).cards.push(card);
@@ -146,7 +164,7 @@ export function draw(game, player, n = 1) {
 
   console.log(`${game.turn}. ${player.name} drew ${n} cards`);
 
-  endTurn(game, player);
+  endTurn(game, player, { drawn: game.drawCardValue });
 }
 
 export function stay(game, player) {

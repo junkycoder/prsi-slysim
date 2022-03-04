@@ -362,7 +362,6 @@
       }
 
       let state = {
-        title: "Nová hra",
         game: undefined,
         user: user?.toJSON(),
         selectedCard: undefined,
@@ -405,7 +404,7 @@
               moveType,
               gameId,
               card: state.selectedCard,
-              color: state.selectedColor
+              color: state.selectedColor,
             }),
           ]).catch(error => {
             console.error(error);

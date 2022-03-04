@@ -28,6 +28,7 @@ export const cardValues = [
 export const cardColors = ["kule", "zelený", "srdce", "žaludy"];
 export const changeColorCardValue = "svršek";
 export const stayCardValue = "eso";
+export const drawCardValue = "sedmička";
 
 export const cards = new Map();
 
@@ -77,7 +78,7 @@ export function playerGameCopy(
     deck,
     deckShuffled,
     playedCards,
-    moves,
+    lastMove,
   }
 ) {
   return {
@@ -104,7 +105,7 @@ export function playerGameCopy(
       ...playedCards.slice(0, -2).map(() => reversedCard),
       ...playedCards.slice(-2),
     ],
-    moves,
+    lastMove,
   };
 }
 
