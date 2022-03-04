@@ -193,7 +193,10 @@ export function endTurn(
   game.turn++;
 
   game.lastMove = {
-    player,
+    player: {
+      id: player.id,
+      name: player.name,
+    },
     type: moveType,
     card,
     color,
