@@ -92,6 +92,7 @@ export const deepMerge = (target, source) => {
       target[key] = sourceValue;
     } else if (
       targetValue &&
+      sourceValue &&
       typeof targetValue === "object" &&
       typeof sourceValue === "object"
     ) {

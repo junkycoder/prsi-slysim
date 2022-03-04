@@ -499,7 +499,11 @@
           }, 300);
         }
 
-        emit({ game });
+        try {
+          emit({ game });
+        } catch (e) {
+          debugger;
+        }
 
         if (
           user?.uid &&
