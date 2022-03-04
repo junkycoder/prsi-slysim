@@ -13,6 +13,24 @@ export function shuffleDeck(game, player) {
     throw new Error("Game has already started");
   }
 
+  if (game.status === GAME_STATUS.OVER) {
+    game.status = GAME_STATUS.NOT_STARTED;
+    game.turn = 0;
+
+    game.players = [
+      game.outcome.winner,
+      ...game.players.filter(({ id }) => id !== game.outcome.winner.id),
+    ];
+
+    for (let player of game.players) {
+      game.deck.push(...player.cards);
+      player.cards = [];
+    }
+
+    game.lastMove = null;
+    console.log(`${game.turn}. Game state renewed`);
+  }
+
   game.deck = shuffleCards(game.deck);
   game.deckShuffled = true;
 
