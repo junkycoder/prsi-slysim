@@ -40,9 +40,9 @@ export function dealCards(game, player) {
   if (firstCard.value === "svršek") {
     const { color } = game.deck[game.deck.length - 1];
     console.log(`Used last deck card color "${color}"`);
-    endTurn(game, player, { card: firstCard, color });
+    endTurn(game, player, dealCards.name, { card: firstCard, color });
   } else {
-    endTurn(game, player);
+    endTurn(game, player, dealCards.name);
   }
 }
 
@@ -90,7 +90,7 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
     color ? `with color "${color}"` : ""
   );
 
-  endTurn(game, player, { card, color });
+  endTurn(game, player, play.name, { card, color });
 }
 
 export function draw(game, player) {
@@ -109,11 +109,11 @@ export function draw(game, player) {
 
   console.log(`${game.turn}. ${player.name} drew ${n} cards`);
 
-  endTurn(game, player, { drawn: n });
+  endTurn(game, player, draw.name, { drawn: n });
 }
 
 export function stay(game, player) {
-  endTurn(game, player, { stood: true });
+  endTurn(game, player, stay.name, { stood: true });
 
   console.log(`${game.turn}. ${player.name} staying`);
 }
@@ -128,5 +128,5 @@ export function flipPlayedCardsToDeck(game, player) {
 
 export function leave() {
   throw new Error("Not implemented");
-  // endTurn(game, player);
+  // endTurn(game, player, leave.name);
 }

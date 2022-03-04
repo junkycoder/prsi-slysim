@@ -465,7 +465,7 @@
           templates.content(state, handlers),
           contentElement,
         );
-        console.info("STATE UPDATE", state);
+        window.debug = state;
       }
 
 
@@ -476,13 +476,13 @@
       const queryToPublicCopy = `play/public/game/${gameId}`;
       const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
 
-      window.addEventListener("focus", () => {
-        getDoc(doc(db, queryToPublicCopy)).then(handleSnapshot);
-      })
-
 
       // Firstly using public copy, then, once user joins the game we start using private copy
       let usedCopyQuery = queryToPublicCopy;
+
+      window.addEventListener("focus", () => {
+        getDoc(doc(db, usedCopyQuery)).then(handleSnapshot);
+      })
 
       const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
 
@@ -490,7 +490,8 @@
         const game = d.data();
 
         if (
-          game.lastMove !== state.game.lastMove &&
+          game.lastMove &&
+          game.lastMove.type !== state.game?.lastMove.type &&
           game.lastMove?.player.id !== user?.uid
         ) {
           setTimeout(() => {

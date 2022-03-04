@@ -162,6 +162,7 @@ export * as autopilot from "./autoplay.js";
 export function endTurn(
   game,
   player,
+  moveType,
   { card = null, stood = false, color = null, drawn = 0 } = {}
 ) {
   game.previousPlayer = player;
@@ -191,20 +192,9 @@ export function endTurn(
 
   game.turn++;
 
-  let callerName;
-  try {
-    throw new Error();
-  } catch (e) {
-    var re = /(\w+)@|at (\w+) \(/g,
-      st = e.stack,
-      m;
-    re.exec(st), (m = re.exec(st));
-    callerName = m[1] || m[2];
-  }
-
   game.lastMove = {
     player,
-    type: callerName,
+    type: moveType,
     card,
     color,
     stood,

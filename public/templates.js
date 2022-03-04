@@ -118,7 +118,7 @@ export function content(
     game.status &&
     isUserPlaying &&
     (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
-  const showCardColorSelect = selectedCard?.value === changeColorCardValue;
+  const showCardColorSelect = isPlayersTurn && selectedCard?.value === changeColorCardValue;
   const showPlayersCards = game.status && isUserPlaying;
   const showFlipPlayedCardsToDeck =
     game.status && isUserPlaying && !game.deck.length;
