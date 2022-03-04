@@ -25,7 +25,7 @@ export const game_summary_line = (game) => {
   } else {
     line += `Je ${game.turn}. kolo.`;
     if (game.status === GAME_STATUS.OVER) {
-      line += ` Zvítězil hráč ${game.outcome.winner.name}.`;
+      line += ` Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
     }
   }
 
@@ -119,8 +119,7 @@ export function content(
     isUserPlaying &&
     (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
   const showCardColorSelect =
-    (isPlayersTurn && selectedCard?.value === changeColorCardValue) ||
-    game.lastMove?.color;
+    (isPlayersTurn && selectedCard?.value === changeColorCardValue);
   const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
   const showFlipPlayedCardsToDeck =
     isPlayersTurn && isUserPlaying && !game.deck.length;
@@ -133,8 +132,8 @@ export function content(
   const showVerfySelf = !isUserVerified && !isUserPlaying;
   const showJoinGame = !isUserPlaying;
 
-  const canJoinGame = isUserVerified && !game.status;
-  const canShuffleDeck = isPlayersTurn && !game.status;
+  const canJoinGame = isUserVerified && [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
+  const canShuffleDeck = isPlayersTurn && [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const canDealCards = isPlayersTurn && game.deckShuffled && players.length > 1;
   const canDrawCard = isPlayersTurn && game.deck.length;
   const canPlayCard =
@@ -218,7 +217,7 @@ export function content(
               aria-label=${ifelse(
                 isPlayersTurn,
                 "Zamíchat karty",
-                `Na tahu je ${currentPlayer?.name}`
+                `Zamíchat balíček karet nejde, na tahu je ${currentPlayer?.name}`
               )}
             >
               Zamíchat balíček karet
@@ -232,8 +231,8 @@ export function content(
                 isPlayersTurn,
                 ifelse(
                   !game.deckShuffled,
-                  "Nejprve je potřeba balíček zamíchat",
-                  ifelse(players.length > 1, "Rozdat karty", "Nedostatek hráčů")
+                  "Rozdat karty vnejde, nejprve je potřeba balíček zamíchat",
+                  ifelse(players.length > 1, "Rozdat karty", "Rozdat karty nejde, nedostatek hráčů")
                 ),
                 `Na tahu je ${currentPlayer?.name}`
               )}
@@ -253,8 +252,8 @@ export function content(
               data-busy-title="Lížu..."
               aria-label=${ifelse(
                 isPlayersTurn,
-                unless(game.deck?.length, "Balíček je prázdný"),
-                `Na tahu je ${currentPlayer?.name}`
+                unless(game.deck?.length, "Líznout si, balíček je prázdný"),
+                `Líznout si nejde, na tahu je ${currentPlayer?.name}`
               )}
             >
               ${`Líznout si ${game.drawCardsCount}`}
@@ -271,7 +270,7 @@ export function content(
               data-busy-title="Stojím..."
               aria-label=${unless(
                 isPlayersTurn,
-                `Na tahu je ${currentPlayer?.name}`
+                `Stát nejde, na tahu je ${currentPlayer?.name}`
               )}
             >
               Stát
@@ -290,9 +289,9 @@ export function content(
                 isPlayersTurn,
                 unless(
                   game.playedCards?.length > 1,
-                  "Nejsou odehrané žádné karty"
+                  "Otočit odehrané karty nejde, nejsou odehrané žádné karty"
                 ),
-                `Na tahu je ${currentPlayer?.name}`
+                `Otočit odehrané karty nejde, na tahu je ${currentPlayer?.name}`
               )}
             >
               Otočit odehrané karty
