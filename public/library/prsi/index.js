@@ -90,13 +90,15 @@ export function playerGameCopy(
     turn,
     status,
     settings,
-    currentPlayer: !currentPlayer ? null : ({
-      ...currentPlayer,
-      cards:
-        currentPlayer.id === playerId
-          ? currentPlayer.cards
-          : currentPlayer.cards.map((card) => reversedCard),
-    }),
+    currentPlayer: !currentPlayer
+      ? null
+      : {
+          ...currentPlayer,
+          cards:
+            currentPlayer.id === playerId
+              ? currentPlayer.cards
+              : currentPlayer.cards.map((card) => reversedCard),
+        },
     currentColor,
     outcome,
     players: players.map(({ id, cards, ...player }) => ({
@@ -136,10 +138,10 @@ export function addPlayer(game, { id, name, cards = [] }) {
 
 export function getPlayer(game, id) {
   const player = game.players.find((player) => player.id == id);
-
-  return {
-    ...player,
-  };
+  if (!player) {
+    return null;
+  }
+  return { ...player };
 }
 
 export function getLastPlayedCard(game) {
@@ -157,7 +159,11 @@ export * as autopilot from "./autoplay.js";
  * @param {Player} player
  * @param {Object} options
  */
-export function endTurn(game, player, { card = null, stood = false, color = null, drawn = 0 } = {}) {
+export function endTurn(
+  game,
+  player,
+  { card = null, stood = false, color = null, drawn = 0 } = {}
+) {
   game.previousPlayer = player;
   const playerIndex = game.players.findIndex(({ id }) => id === player.id);
   game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
