@@ -1,4 +1,6 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
+// import { repeat } from "https://unpkg.com/lit-html/directives/repeat?module";
+
 import * as moves from "/library/prsi/moves.js";
 import {
   cardColors,
@@ -99,7 +101,7 @@ export const table_card_line = ({ card, color }) => {
 export function content(
   { game = {}, user, selectedCard, selectedColor } = {},
   {
-    handleYourMove = noop,
+    handleMove = noop,
     handlePlayerCardSelect = noop,
     handleCardColorSelect = noop,
     handleLeaveGame = noop,
@@ -119,7 +121,7 @@ export function content(
     isUserPlaying &&
     (cardOnTable?.value !== stayCardValue || game.lastMove?.stood);
   const showCardColorSelect =
-    (isPlayersTurn && selectedCard?.value === changeColorCardValue);
+    isPlayersTurn && selectedCard?.value === changeColorCardValue;
   const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
   const showFlipPlayedCardsToDeck =
     isPlayersTurn && isUserPlaying && !game.deck.length;
@@ -128,12 +130,18 @@ export function content(
     isUserPlaying &&
     cardOnTable?.value === stayCardValue &&
     !game.lastMove?.stood;
-  const showShuffleDeck = isUserPlaying && [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
+  const showShuffleDeck =
+    isUserPlaying &&
+    [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const showVerfySelf = !isUserVerified && !isUserPlaying;
   const showJoinGame = !isUserPlaying;
 
-  const canJoinGame = isUserVerified && [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
-  const canShuffleDeck = isPlayersTurn && [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
+  const canJoinGame =
+    isUserVerified &&
+    [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
+  const canShuffleDeck =
+    isPlayersTurn &&
+    [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const canDealCards = isPlayersTurn && game.deckShuffled && players.length > 1;
   const canDrawCard = isPlayersTurn && game.deck.length;
   const canPlayCard =
@@ -209,11 +217,12 @@ export function content(
           showShuffleDeck,
           html`
             <button
-              @click=${handleYourMove}
+              @click=${handleMove}
               name=${moves.shuffleDeck.name}
               ?disabled=${!canShuffleDeck}
               data-busy-title="Míchám..."
               data-allow-many="true"
+              data-n=${game.settings?.dealedCards}
               aria-label=${ifelse(
                 isPlayersTurn,
                 "Zamíchat karty",
@@ -223,7 +232,7 @@ export function content(
               Zamíchat balíček karet
             </button>
             <button
-              @click=${handleYourMove}
+              @click=${handleMove}
               name=${moves.dealCards.name}
               ?disabled=${!canDealCards}
               data-busy-title="Rozdávám..."
@@ -232,7 +241,11 @@ export function content(
                 ifelse(
                   !game.deckShuffled,
                   "Rozdat karty vnejde, nejprve je potřeba balíček zamíchat",
-                  ifelse(players.length > 1, "Rozdat karty", "Rozdat karty nejde, nedostatek hráčů")
+                  ifelse(
+                    players.length > 1,
+                    "Rozdat karty",
+                    "Rozdat karty nejde, nedostatek hráčů"
+                  )
                 ),
                 `Na tahu je ${currentPlayer?.name}`
               )}
@@ -246,7 +259,7 @@ export function content(
           html`
             <button
               ?disabled=${!canDrawCard}
-              @click=${handleYourMove}
+              @click=${handleMove}
               name=${moves.draw.name}
               data-n=${game.drawCardsCount}
               data-busy-title="Lížu..."
@@ -265,7 +278,7 @@ export function content(
           html`
             <button
               ?disabled=${!canStay}
-              @click=${handleYourMove}
+              @click=${handleMove}
               name=${moves.stay.name}
               data-busy-title="Stojím..."
               aria-label=${unless(
@@ -282,7 +295,7 @@ export function content(
           html`
             <button
               ?disabled=${!canFlipPlayedCardsToDeck}
-              @click=${handleYourMove}
+              @click=${handleMove}
               name=${moves.flipPlayedCardsToDeck.name}
               data-busy-title="Otáčím..."
               aria-label=${ifelse(
@@ -301,46 +314,45 @@ export function content(
         ${ifelse(
           showPlayersCards,
           html`
-            <select
-              name="card"
-              @change=${handlePlayerCardSelect}
-              aria-label="Vaše karty"
-            >
+            <div class="flex horizontal-scroll" aria-label="Vaše karty">
               ${userPlayer?.cards.map(
                 ({ id, value, color }) => html`
-                  <option ?selected=${selectedCard?.id} value="${id}">
-                    ${value}–${color}
-                  </option>
+                  <label class="flex">
+                    <input
+                      ?checked=${id === selectedCard?.id}
+                      type="radio"
+                      value="${id}"
+                      name="play"
+                      @change=${handlePlayerCardSelect}
+                    />
+                    ${`${value}–${color}`}
+                  </label>
                 `
               )}
-              <option disabled selected>
-                ${ifelse(
-                  !userPlayer?.cards.length,
-                  "žádné karty v ruce",
-                  "Zvolte kartu"
-                )}
-              </option>
-            </select>
+            </div>
             ${ifelse(
               showCardColorSelect,
               html`
-                <select
-                  name="color"
-                  @change=${handleCardColorSelect}
-                  aria-label="Změna barvy"
-                >
+                <div class="flex horizontal-scroll" aria-label="Změna barvy">
                   ${cardColors.map(
                     (color) => html`
-                      <option ?selected=${color === selectedCard?.color}>
+                      <label class="flex">
+                        <input
+                          ?checked=${color === selectedCard?.color}
+                          type="radio"
+                          value="${color}"
+                          name="color"
+                          @click=${handleCardColorSelect}
+                        />
                         ${color}
-                      </option>
+                      </label>
                     `
                   )}
-                </select>
+                </div>
               `
             )}
             <button
-              @click=${handleYourMove}
+              @click=${handleMove}
               ?disabled=${!canPlayCard}
               name=${moves.play.name}
               data-busy-title="Táhnu..."
@@ -348,10 +360,10 @@ export function content(
                 isPlayersTurn,
                 ifelse(
                   selectedCard,
-                  "Hrát kartu",
-                  "Nejprve je potřeba vybrat kartu"
+                  `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
+                  "Před tahem vyberte kartu"
                 ),
-                `Na tahu je ${currentPlayer?.name}`
+                `Táhnout kartu nelze, na tahu je ${currentPlayer?.name}`
               )}
             >
               Táhnout kartu

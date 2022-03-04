@@ -44,7 +44,7 @@ console.assert(
   Game.reversedCard.color
 );
 
-const g = Game.createNewGame({ maxPlayers: 3, dealCardsCount: 4 });
+const g = Game.createNewGame({ maxPlayers: 3, dealedCards: 4 });
 
 console.assert(g.started === false, "g.started === false", g.started);
 console.assert(

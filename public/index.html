@@ -156,7 +156,7 @@
     import { playerNameStoredLocally } from "/storage.js";
     import { fns } from "/application.js";
     import { render } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
-    import * as templates from "/templates.js?2";
+    import * as templates from "/templates.js";
     import Sounds, { toPositionInCircle } from "/sounds.js";
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -401,7 +401,7 @@
               .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
           }
         },
-        handleYourMove(event) {
+        handleMove(event) {
           const urlParams = new URLSearchParams(window.location.search);
           const gameId = urlParams.get("game");
 
@@ -438,12 +438,15 @@
         handlePlayerCardSelect(event) {
           const cardId = event.target.value;
           const player = getPlayer(state.game, user.uid);
-          const card = player.cards.find(card => card.id === cardId)
+          const { value, color, id } = player.cards.find(card => card.id === cardId)
 
-          if (card.value === changeColorCardValue) {
-            emit({ selectedCard: card, selectedColor: card.color });
+          if (value === changeColorCardValue) {
+            emit({
+              selectedCard: { value, color, id },
+              selectedColor: color
+            });
           } else {
-            emit({ selectedCard: card });
+            emit({ selectedCard: { value, color, id } });
           }
 
         },
@@ -469,22 +472,23 @@
       }
 
 
-      onCurrentUserChanged((user) => {
-        emit({ user: user?.toJSON() });
+      onCurrentUserChanged((u) => {
+        user = u; // this is dark function param overwrite
+        emit({ user: u?.toJSON() });
       });
 
-      const queryToPublicCopy = `play/public/game/${gameId}`;
-      const queryToPlayerCopy = `play/${user?.uid}/game/${gameId}`;
+      const queryToPublicCopy = () => `play/public/game/${gameId}`;
+      const queryToPlayerCopy = () => `play/${user?.uid}/game/${gameId}`;
 
 
       // Firstly using public copy, then, once user joins the game we start using private copy
-      let usedCopyQuery = queryToPublicCopy;
+      let usedCopyQuery = queryToPublicCopy();
 
       window.addEventListener("focus", () => {
         getDoc(doc(db, usedCopyQuery)).then(handleSnapshot);
       })
 
-      const unsubcribePublicCopy = onSnapshot(doc(db, queryToPublicCopy), handleSnapshot);
+      const unsubcribePublicCopy = onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
 
       function handleSnapshot(d) {
         const game = d.data();
@@ -499,37 +503,44 @@
           }, 300);
         }
 
-        try {
-          emit({ game });
-        } catch (e) {
-          debugger;
-        }
 
         if (
           user?.uid &&
-          usedCopyQuery === queryToPublicCopy &&
+          usedCopyQuery === queryToPublicCopy() &&
           getPlayer(game, user?.uid)
         ) {
-          usedCopyQuery = queryToPlayerCopy;
+          usedCopyQuery = queryToPlayerCopy();
+          console.info("Switching to private copy", usedCopyQuery);
           unsubcribePublicCopy();
           onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
+        } else {
+          try {
+            emit({ game });
+          } catch (e) {
+            debugger;
+          }
         }
       }
 
-      function playPlayerMoveEffects({ lastMove, players }) {
-
+      function playPlayerMoveEffects({ lastMove, players, settings }) {
         const sound = MOVE_EFFECTS[lastMove.type] || MOVE_EFFECTS.default;
         const position = toPositionInCircle({
           index: players.findIndex(player => player.id === lastMove.player.id),
           length: players.length,
         });
 
-        if (lastMove.drawn) {
+        if (lastMove.type === moves.shuffleDeck.name) {
+          [
+            ...new Array(settings.dealCards)
+          ].map(() => Sounds.play(sound, {
+            position,
+          }))
+        } else if (lastMove.drawn) {
           Promise.all([
             ...new Array(lastMove.drawn)
-          ].map(() => Sounds.play(sound), {
+          ].map(() => Sounds.play(sound, {
             position,
-          }));
+          })));
         } else {
           Sounds.play(sound, { position });
         }
