@@ -4,6 +4,12 @@
  * Prepare for godd old school object mutations.
  */
 
+import {
+  STAY as STAY_MOVE,
+  DRAW as DRAW_MOVE,
+  PLAY as PLAY_MOVE,
+} from "./moves.js";
+
 export const name = "Prší";
 
 export const GAME_STATUS = {
@@ -61,10 +67,10 @@ export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
     deck: shuffleCards(),
     deckShuffled: false, // it is shuffled but we need user to to it as well
     playedCards: [],
-    outcome: null,
+    outcome: null, // like who won
     moves: [],
     lastMove: null,
-    drawCardsCount: 1,
+    drawCount: 1, // how many cards to draw if needed to draw
   };
 }
 
@@ -82,7 +88,7 @@ export function playerGameCopy(
     deckShuffled,
     playedCards,
     lastMove,
-    drawCardsCount,
+    drawCount,
   }
 ) {
   return {
@@ -112,7 +118,7 @@ export function playerGameCopy(
       ...playedCards.slice(-2),
     ],
     lastMove,
-    drawCardsCount,
+    drawCount,
   };
 }
 
@@ -143,7 +149,7 @@ export function getPlayer(game, id) {
   return { ...player };
 }
 
-export function getLastPlayedCard(game) {
+export function getLastPlayedCardReference(game) {
   return game.playedCards[game.playedCards.length - 1];
 }
 
@@ -162,46 +168,13 @@ export function endTurn(
   game,
   player,
   moveType,
-  { card = null, stood = false, color = null, drawn = 0 } = {}
+  { card = null, color = null, drawn = 0 } = {}
 ) {
+  game.turn++;
+
   game.previousPlayer = player;
   const playerIndex = game.players.findIndex(({ id }) => id === player.id);
   game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
-
-  const lastPlayedCard = getLastPlayedCard(game);
-
-  if (color) {
-    if (card.value === "svršek") {
-      game.currentColor = color;
-    } else {
-      throw new Error("Player can only use svršek card to change color");
-    }
-  }
-
-  if (
-    card &&
-    card.value !== "svršek" &&
-    card.value !== lastPlayedCard.value &&
-    card.color !== game.currentColor
-  ) {
-    throw new Error(
-      `Player ${player.id} tried to play "${card.value} ${card.color}" but last played card was "${lastPlayedCard.value} ${lastPlayedCard.color}"`
-    );
-  }
-
-  console.info(
-    `${game.turn}. ${[
-      player.name,
-      moveType,
-      card?.id,
-      color,
-      drawn,
-    ]
-      .filter(Boolean)
-      .join(" ")}`
-  );
-
-  game.turn++;
 
   game.lastMove = {
     player: {
@@ -211,21 +184,39 @@ export function endTurn(
     type: moveType,
     card,
     color,
-    stood,
     drawn,
   };
 
-  game.drawCardsCount = 1;
-  if (card?.value === DRAW_CARD_VALUE && !game.lastMove.drawn) {
-    game.drawCardsCount =
-      [...game.playedCards]
-        .reverse()
-        .filter((card) => card.value === DRAW_CARD_VALUE).length * 2;
-  }
+  game.moves.push(game.lastMove);
+
+  console.info(
+    [
+      `${game.turn}.`,
+      [game.playedCards.length, game.deck.length].join("/"),
+      player.name,
+      `(${player.cards.length})`,
+      moveType,
+      card?.id,
+      color,
+      drawn,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
+  const totalCards =
+    game.deck.length +
+    game.playedCards.length +
+    game.players.reduce((sum, { cards }) => sum + cards.length, 0);
+
+  console.assert(
+    totalCards === CARDS.size,
+    "Počet karet v balíčku nesedí: " + `${totalCards}/${CARDS.size}`
+  );
 
   if (isWinner(player)) {
     game.outcome = { winner: player };
-    console.log("GAME OVER:\n", game.outcome);
+    console.info("GAME OVER 🎉\n", JSON.stringify(game.outcome, null, 2));
     game.status = GAME_STATUS.OVER;
   }
 }

@@ -186,16 +186,6 @@ export const move = functions
           );
         }
 
-        const moveRecord = {
-          type: moveType,
-          playerName: player.name,
-          playerId: player.id,
-          turn: game.turn,
-        };
-        if (card) moveRecord.card = card;
-        if (color) moveRecord.color = color;
-        game.moves.push(moveRecord);
-
         batch.update(ref, game, { merge: true });
       });
     } catch (error) {

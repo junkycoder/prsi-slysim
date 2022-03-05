@@ -1,7 +1,13 @@
 import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
 import { repeat } from "https://unpkg.com/lit-html/directives/repeat?module";
 
-import * as moves from "/library/prsi/moves.js";
+import {
+  SHUFFLE as SHUFFLE_MOVE,
+  STAY as STAY_MOVE,
+  DRAW as DRAW_MOVE,
+  PLAY as PLAY_MOVE,
+  FLIP_PLAYED_CARDS_TO_DECK as FLIP_PLAYED_CARDS_TO_DECK_MOVE,
+} from "./moves.js";
 import {
   CARD_COLORS,
   CHANGE_CARD_VALUE,
@@ -119,7 +125,7 @@ export function content(
   const showDrawCard =
     game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
-    (cardOnTable?.value !== STAY_CARD_VALUE || game.lastMove?.stood);
+    (cardOnTable?.value !== STAY_CARD_VALUE || cardOnTable.cold);
   const showCARD_COLORSelect =
     isPlayersTurn && selectedCard?.value === CHANGE_CARD_VALUE;
   const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
@@ -129,7 +135,7 @@ export function content(
     game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
     cardOnTable?.value === STAY_CARD_VALUE &&
-    !game.lastMove?.stood;
+    cardOnTable.cold !== true;
   const showShuffleDeck =
     isUserPlaying &&
     [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
@@ -149,7 +155,7 @@ export function content(
     selectedCard &&
     (cardOnTable.value !== STAY_CARD_VALUE ||
       selectedCard.value === STAY_CARD_VALUE ||
-      game.lastMove?.stood);
+      cardOnTable.cold);
   const canStay = isPlayersTurn && cardOnTable?.value === STAY_CARD_VALUE;
   const canFlipPlayedCardsToDeck =
     isPlayersTurn && game.playedCards?.length > 2;
@@ -279,7 +285,7 @@ export function content(
           html`
             <button
               @click=${handleMove}
-              name=${moves.shuffleDeck.name}
+              name=${SHUFFLE_MOVE}
               ?disabled=${!canShuffleDeck}
               data-busy-title="Míchám..."
               data-allow-many="true"
@@ -293,7 +299,7 @@ export function content(
             </button>
             <button
               @click=${handleMove}
-              name=${moves.dealCards.name}
+              name=${DEAL_MOVE}
               ?disabled=${!canDealCards}
               data-n=${game.settings?.dealedCards}
               data-busy-title="Rozdávám..."
@@ -321,8 +327,8 @@ export function content(
             <button
               ?disabled=${!canDrawCard}
               @click=${handleMove}
-              name=${moves.draw.name}
-              data-n=${game.drawCardsCount}
+              name=${DRAW_MOVE}
+              data-n=${game.drawCount}
               data-busy-title="Lížu..."
               aria-label=${ifelse(
                 isPlayersTurn,
@@ -330,7 +336,7 @@ export function content(
                 `Líznout si nejde, na tahu je ${currentPlayer?.name}`
               )}
             >
-              ${`Líznout si ${game.drawCardsCount}`}
+              ${`Líznout si ${game.drawCount}`}
             </button>
           `
         )}
@@ -340,7 +346,7 @@ export function content(
             <button
               ?disabled=${!canStay}
               @click=${handleMove}
-              name=${moves.stay.name}
+              name=${STAY_MOVE}
               data-busy-title="Stojím..."
               aria-label=${unless(
                 isPlayersTurn,
@@ -357,7 +363,7 @@ export function content(
             <button
               ?disabled=${!canFlipPlayedCardsToDeck}
               @click=${handleMove}
-              name=${moves.flipPlayedCardsToDeck.name}
+              name=${FLIP_PLAYED_CARDS_TO_DECK_MOVE}
               data-busy-title="Otáčím..."
               aria-label=${ifelse(
                 isPlayersTurn,

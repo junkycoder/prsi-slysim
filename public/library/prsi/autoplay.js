@@ -19,11 +19,14 @@ export function autoplay(game) {
 
   let cardToPlay;
 
-  if (lastPlayedCard.value === DRAW_CARD_VALUE && !game.lastMove?.drawn) {
+  if (
+    lastPlayedCard.value === DRAW_CARD_VALUE &&
+    lastPlayedCard.cold !== true
+  ) {
     cardToPlay = sameValueCards.find(({ value }) => value === DRAW_CARD_VALUE);
   } else if (
     lastPlayedCard.value === STAY_CARD_VALUE &&
-    !game.lastMove?.stood
+    lastPlayedCard.cold !== true
   ) {
     cardToPlay = sameValueCards.find(({ value }) => value === STAY_CARD_VALUE);
   } else if (sameValueCards.length) {
@@ -42,14 +45,18 @@ export function autoplay(game) {
     }
   } else if (
     lastPlayedCard.value === STAY_CARD_VALUE &&
-    !game.lastMove?.stood
+    lastPlayedCard.cold !== true
   ) {
     moves.stay(game, player);
   } else {
-    if (game.deck.length < game.drawCardsCount) {
+    if (game.drawCount > game.deck.length) {
       moves.flipPlayedCardsToDeck(game, player);
     }
     moves.draw(game, player);
+  }
+
+  if (game.turn > 666) {
+    throw new Error("Too many turns");
   }
 }
 

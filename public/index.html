@@ -161,7 +161,12 @@
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
     import { getPlayer, CHANGE_CARD_VALUE } from "/library/prsi/index.js";
-    import * as moves from "/library/prsi/moves.js";
+    import {
+      SHUFFLE as SHUFFLE_MOVE,
+      DRAW as DRAW_MOVE,
+      PLAY as PLAY_MOVE,
+      DEAL as DEAL_MOVE,
+    } from "/library/prsi/moves.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
       openingSelector: ".js-dialog-verify-self-open",
@@ -194,10 +199,10 @@
 
     const MOVE_EFFECTS = {
       default: "deck.wav",
-      [moves.shuffleDeck.name]: "shuffle1.wav", // "shuffle2.wav",
-      [moves.play.name]: "play-card.wav",
-      [moves.dealCards.name]: "deal-cards.wav",
-      [moves.draw.name]: "draw.wav",
+      [SHUFFLE_MOVE]: "shuffle1.wav", // "shuffle2.wav",
+      [PLAY_MOVE]: "play-card.wav",
+      [DEAL_MOVE]: "deal-cards.wav",
+      [DRAW_MOVE]: "draw.wav",
     };
 
 
@@ -239,7 +244,6 @@
 
 
     function handleUserVerifyChange(user) {
-      console.log("handleUserVerifyChange", user);
       const isUserVerified = (user || undefined)?.emailVerified;
       const { href: link } = window.location;
 
@@ -354,7 +358,7 @@
           if (enabled) Sounds.play(MOVE_EFFECTS.default);
           break;
         default:
-          throw new Error("Unexpected name");
+          throw new Error("Unexpected sound effect name");
       }
     }
 
@@ -521,11 +525,11 @@
           length: players.length,
         });
 
-        if (lastMove.type === moves.shuffleDeck.name) {
+        if (lastMove.type === SHUFFLE_MOVE) {
           Sounds.playTimes(sound, settings.dealCards, {
             position,
           });
-        } else if (lastMove.type === moves.draw.name) {
+        } else if (lastMove.type === DRAW_MOVE) {
           Sounds.playTimes(sound, lastMove.drawn, {
             position,
           });

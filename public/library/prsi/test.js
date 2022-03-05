@@ -46,7 +46,11 @@ console.assert(
 
 const g = Game.createNewGame({ maxPlayers: 3, dealedCards: 4 });
 
-console.assert(g.started === false, "g.started === false", g.started);
+console.assert(
+  g.status === Game.GAME_STATUS.NOT_STARTED,
+  "g.status === Game.GAME_STATUS.NOT_STARTED",
+  g.status
+);
 console.assert(
   g.players.length === 0,
   "g.players.length === 0",
@@ -86,9 +90,14 @@ console.assert(
   g.currentPlayer.id
 );
 
-
 Game.moves.shuffleDeck(g, p);
 Game.moves.dealCards(g, p);
+
+console.assert(
+  g.status === Game.GAME_STATUS.STARTED,
+  "g.status === Game.GAME_STATUS.STARTED",
+  g.status
+);
 
 console.assert(
   g.deck.length === 32 - 4 * 3 - 1,

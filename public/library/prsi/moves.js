@@ -1,13 +1,14 @@
 import {
   GAME_STATUS,
   shuffleCards,
-  getLastPlayedCard,
+  getLastPlayedCardReference,
   endTurn,
   STAY_CARD_VALUE,
   CHANGE_CARD_VALUE,
   DRAW_CARD_VALUE,
 } from "./index.js";
 
+export const SHUFFLE = shuffleDeck.name;
 export function shuffleDeck(game, player) {
   if (game.status === GAME_STATUS.STARTED) {
     throw new Error("Game has already started");
@@ -17,23 +18,26 @@ export function shuffleDeck(game, player) {
     game.status = GAME_STATUS.NOT_STARTED;
     game.turn = 0;
 
-    game.players = [
-      game.outcome.winner,
-      ...game.players.filter(({ id }) => id !== game.outcome.winner.id),
-    ];
-
     for (let player of game.players) {
       game.deck.push(...player.cards);
       player.cards = [];
     }
 
+    game.deck.push(...game.playedCards);
     game.lastMove = null;
+
+    for (let card of game.deck) {
+      card.cold = false;
+    }
   }
 
   game.deck = shuffleCards(game.deck);
   game.deckShuffled = true;
+
+  console.info("Decks shuffled");
 }
 
+export const DEAL = dealCards.name;
 export function dealCards(game, player) {
   const { settings, players } = game;
 
@@ -56,12 +60,17 @@ export function dealCards(game, player) {
   } else {
     endTurn(game, player, dealCards.name);
   }
+
+  if (firstCard.value === DRAW_CARD_VALUE) {
+    game.drawCount = 2;
+  }
 }
 
+export const PLAY = play.name;
 export function play(game, { id: playerId }, { id: cardId }, color) {
   const player = game.players.find(({ id }) => id === playerId);
   const card = player.cards.find((card) => card.id === cardId);
-  const lastPlayedCard = getLastPlayedCard(game);
+  const lastPlayedCard = getLastPlayedCardReference(game);
 
   if (!card) {
     throw new Error(
@@ -73,7 +82,7 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
   }
   if (
     lastPlayedCard.value === STAY_CARD_VALUE &&
-    !game.lastMove?.stood &&
+    lastPlayedCard.cold !== true &&
     card.value !== STAY_CARD_VALUE
   ) {
     throw new Error("Only card you can play is " + STAY_CARD_VALUE);
@@ -81,14 +90,11 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
 
   if (
     lastPlayedCard.value === DRAW_CARD_VALUE &&
-    !game.lastMove?.drawn &&
+    lastPlayedCard.cold !== true &&
     card.value !== DRAW_CARD_VALUE
   ) {
     throw new Error("Only card you can play is " + DRAW_CARD_VALUE);
   }
-
-  player.cards = player.cards.filter((c) => c.id !== card.id);
-  game.playedCards.push(card);
 
   if (card.value === CHANGE_CARD_VALUE) {
     if (color) {
@@ -100,42 +106,64 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
     game.currentColor = card.color;
   }
 
+  game.playedCards.push(card);
+  player.cards = player.cards.filter(({ id }) => id !== card.id);
+
+  const hotDrawCards = game.playedCards.filter(
+    ({ cold, value }) => !cold && value === DRAW_CARD_VALUE
+  );
+
+  if (card.value === DRAW_CARD_VALUE) {
+    game.drawCount = hotDrawCards.length * 2;
+  } else {
+    game.drawCount = 1;
+  }
+
   endTurn(game, player, play.name, { card, color });
 }
 
+export const DRAW = draw.name;
 export function draw(game, player) {
-  const n = game.drawCardsCount;
+  const n = game.drawCount;
 
   if (game.deck.length < n) {
     throw new Error("Not enough cards in deck");
   }
 
-  // toddo: check if player can draw and how many cards he has to draw
   for (let i = 0; i < n; i++) {
     const card = game.deck.shift();
-    // game.currentPlayer.cards.push(card);
     game.players.find(({ id }) => player.id === id).cards.push(card);
   }
 
+  game.drawCount = 1;
+  getLastPlayedCardReference(game).cold = true;
   endTurn(game, player, draw.name, { drawn: n });
 }
 
+export const STAY = stay.name;
 export function stay(game, player) {
-  if (
-    getLastPlayedCard(game).value !== STAY_CARD_VALUE &&
-    !game.lastMove?.stood
-  ) {
-    throw new Error("You can't stay twice");
+  const lastPlayedCard = getLastPlayedCardReference(game);
+
+  if (lastPlayedCard.value !== STAY_CARD_VALUE) {
+    throw new Error("Only card you can play is " + STAY_CARD_VALUE);
+  } else if (lastPlayedCard.cold) {
+    throw new Error("This card has been played already");
   }
-  endTurn(game, player, stay.name, { stood: true });
+
+  lastPlayedCard.cold = true;
+  endTurn(game, player, stay.name);
 }
 
+export const FLIP_PLAYED_CARDS_TO_DECK = flipPlayedCardsToDeck.name;
 export function flipPlayedCardsToDeck(game, player) {
-  const lastPlayedCard = game.playedCards.pop();
-  game.deck = [...game.playedCards].reverse();
-  game.playedCards = [lastPlayedCard];
+  game.deck.push(...game.playedCards);
+  game.playedCards = [game.deck.pop()];
+
+  game.deckShuffled = false;
+  console.info(`Played cards flipped to deck by ${player.name}`);
 }
 
+export const LEAVE = leave.name;
 export function leave() {
   throw new Error("Not implemented");
   // endTurn(game, player, leave.name);
