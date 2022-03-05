@@ -170,12 +170,6 @@ export function endTurn(
   moveType,
   { card = null, color = null, drawn = 0 } = {}
 ) {
-  game.turn++;
-
-  game.previousPlayer = player;
-  const playerIndex = game.players.findIndex(({ id }) => id === player.id);
-  game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
-
   game.lastMove = {
     player: {
       id: player.id,
@@ -218,5 +212,10 @@ export function endTurn(
     game.outcome = { winner: player };
     console.info("GAME OVER 🎉\n", JSON.stringify(game.outcome, null, 2));
     game.status = GAME_STATUS.OVER;
+  } else {
+    game.turn++;
+    game.previousPlayer = player;
+    const playerIndex = game.players.findIndex(({ id }) => id === player.id);
+    game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
   }
 }
