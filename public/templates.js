@@ -1,4 +1,7 @@
-import { html, nothing } from "https://unpkg.com/lit-html@2.2.0/lit-html.js?module";
+import {
+  html,
+  nothing,
+} from "https://unpkg.com/lit-html@2.2.0/lit-html.js?module";
 import { repeat } from "https://unpkg.com/lit-html@2.2.0/directives/repeat?module";
 
 import {
@@ -124,11 +127,11 @@ export function content(
   const [cardOnTable] = game.playedCards?.slice(-1) || [];
 
   // consider to move this shit to the prsi module
-  const showDrawCard =
+  const showDraw =
     game.status === GAME_STATUS.STARTED &&
     isUserPlaying &&
     (cardOnTable?.value !== STAY_CARD_VALUE || cardOnTable.cold);
-  const showCARD_COLORSelect =
+  const showCardColorSelect =
     isPlayersTurn && selectedCard?.value === CHANGE_CARD_VALUE;
   const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
   const showFlipPlayedCardsToDeck =
@@ -151,7 +154,7 @@ export function content(
     isPlayersTurn &&
     [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const canDealCards = isPlayersTurn && game.deckShuffled && players.length > 1;
-  const canDrawCard = isPlayersTurn && game.deck.length;
+  const canDraw = isPlayersTurn && game.deck.length > 0;
   const canPlayCard =
     isPlayersTurn &&
     selectedCard &&
@@ -159,8 +162,9 @@ export function content(
       selectedCard.value === STAY_CARD_VALUE ||
       cardOnTable.cold);
   const canStay = isPlayersTurn && cardOnTable?.value === STAY_CARD_VALUE;
-  const canFlipPlayedCardsToDeck =
-    isPlayersTurn && game.playedCards?.length > 2;
+  const canFlipPlayedCardsToDeck = isPlayersTurn;
+
+  console.log({ showDraw, canDraw });
 
   return html`
     <main>
@@ -216,7 +220,7 @@ export function content(
                )}
              </div>
              ${ifelse(
-               showCARD_COLORSelect,
+               showCardColorSelect,
                html`
                  <div class="flex horizontal-scroll" aria-label="Změna barvy">
                    ${CARD_COLORS.map(
@@ -303,8 +307,8 @@ export function content(
               @click=${handleMove}
               name=${DEAL_MOVE}
               ?disabled=${!canDealCards}
-              data-n=${game.settings?.dealedCards}
               data-busy-title="Rozdávám..."
+              data-n=${players.length * game.settings.dealCards}
               aria-label=${ifelse(
                 isPlayersTurn,
                 ifelse(
@@ -324,14 +328,12 @@ export function content(
           `
         )}
         ${ifelse(
-          showDrawCard,
+          showDraw,
           html`
             <button
-              ?disabled=${!canDrawCard}
+              ?disabled=${!canDraw}
               @click=${handleMove}
               name=${DRAW_MOVE}
-              data-n=${game.drawCount}
-              data-busy-title="Lížu..."
               aria-label=${ifelse(
                 isPlayersTurn,
                 unless(game.deck?.length, "Líznout si, balíček je prázdný"),

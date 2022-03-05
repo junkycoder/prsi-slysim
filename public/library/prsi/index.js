@@ -53,13 +53,13 @@ for (let color of CARD_COLORS) {
 export const shuffleCards = (cards = CARDS) =>
   [...cards.values()].sort(() => Math.random() - 0.5);
 
-export function createNewGame({ maxPlayers = 4, dealedCards = 4 } = {}) {
+export function createNewGame({ maxPlayers = 4, dealCards = 4 } = {}) {
   return {
     turn: 0,
     status: GAME_STATUS.NOT_STARTED,
     settings: {
       maxPlayers,
-      dealedCards,
+      dealCards,
     },
     players: [],
     currentPlayer: null,

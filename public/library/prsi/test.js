@@ -44,7 +44,7 @@ console.assert(
   Game.REVERSED_CARD.color
 );
 
-const g = Game.createNewGame({ maxPlayers: 3, dealedCards: 4 });
+const g = Game.createNewGame({ maxPlayers: 3, dealCards: 4 });
 
 console.assert(
   g.status === Game.GAME_STATUS.NOT_STARTED,

@@ -13,7 +13,7 @@ import {
  */
 export const create = functions
   .region("europe-west1")
-  .https.onCall(async ({ maxPlayers = 6, dealedCards = 4 }, context) => {
+  .https.onCall(async ({ maxPlayers = 6, dealCards = 4 }, context) => {
     if (!context.auth || !context.auth.token || !context.auth.token.email) {
       throw new functions.https.HttpsError(
         "permission-denied",
@@ -28,7 +28,7 @@ export const create = functions
       );
     }
 
-    if (!dealedCards || dealedCards < 1 || dealedCards > 6) {
+    if (!dealCards || dealCards < 1 || dealCards > 6) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Zadejte počet karet v rozmezí 1 až 6."
@@ -42,7 +42,7 @@ export const create = functions
 
     const game = createNewGame({
       maxPlayers: Number(maxPlayers),
-      dealedCards: Number(dealedCards),
+      dealCards: Number(dealCards),
     });
 
     const meta = {

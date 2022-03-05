@@ -41,7 +41,7 @@ export const DEAL = dealCards.name;
 export function dealCards(game, player) {
   const { settings, players } = game;
 
-  for (let i = 0; i < settings.dealedCards; i++) {
+  for (let i = 0; i < settings.dealCards; i++) {
     for (let j = 0; j < players.length; j++) {
       players[j].cards.push(game.deck.shift());
     }
@@ -114,14 +114,12 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
   game.playedCards.push(card);
   player.cards = player.cards.filter(({ id }) => id !== card.id);
 
-  const hotDrawCards = game.playedCards.filter(
-    ({ cold, value }) => !cold && value === DRAW_CARD_VALUE
-  );
-
   if (card.value === DRAW_CARD_VALUE) {
-    game.drawCount = hotDrawCards.length * 2;
-  } else {
-    game.drawCount = 1;
+    if (lastPlayedCard.value === DRAW_CARD_VALUE) {
+      game.drawCount += 2;
+    } else {
+      game.drawCount = 2;
+    }
   }
 
   endTurn(game, player, play.name, { card, color });
