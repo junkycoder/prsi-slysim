@@ -308,7 +308,7 @@ export function content(
               name=${DEAL_MOVE}
               ?disabled=${!canDealCards}
               data-busy-title="Rozdávám..."
-              data-n=${players.length * game.settings.dealCards}
+              data-n=${players.length * (game.settings?.dealCards || 1)}
               aria-label=${ifelse(
                 isPlayersTurn,
                 ifelse(
@@ -334,6 +334,8 @@ export function content(
               ?disabled=${!canDraw}
               @click=${handleMove}
               name=${DRAW_MOVE}
+              data-busy-title="Lížu..."
+              data-n=${game.drawCount || 1}
               aria-label=${ifelse(
                 isPlayersTurn,
                 unless(game.deck?.length, "Líznout si, balíček je prázdný"),
