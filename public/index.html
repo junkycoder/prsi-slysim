@@ -150,7 +150,7 @@
     import { auth } from "/application.js";
     import { sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
     import { authCompleteEmailStoredLocally } from "/storage.js";
-    import { isVerifyLink, useVerifyLink, currentUser } from "/user.js";
+    import { isVerifyLink, useVerifyLink, watchUser } from "/user.js";
     import { formDataToPayload, deepMerge } from "/library.js";
     import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-functions.js";
     import { playerNameStoredLocally } from "/storage.js";
@@ -160,7 +160,6 @@
     import Sounds, { toPositionInCircle } from "/sounds.js";
     import { db } from "/application.js";
     import { doc, onSnapshot, addDoc, collection, getDoc, } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-    import { onCurrentUserChanged } from "/user.js";
     import { getPlayer, CHANGE_CARD_VALUE } from "/library/prsi/index.js";
     import * as moves from "/library/prsi/moves.js";
 
@@ -209,19 +208,6 @@
       );
     }
 
-    currentUser().then(handleUserVerifyChange).then((user) => {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has("game")) {
-        handleGamePlay({ gameId: urlParams.get("game"), user }); // 👌 Running Game ENTRYPOINT
-      }
-    }).catch(error => {
-      console.error(error);
-      if (confirm(`Chyba nastala: ${error.message}. Zkusit načíst stránku znovu?`)) {
-        window.location.reload();
-      }
-    });
-
-
     const joinGame = new Dialog(".js-dialog-join-game", {
       openingSelector: ".js-dialog-join-game-open",
       closingSelector: ".js-dialog-join-game-close",
@@ -240,7 +226,20 @@
     );
 
 
+    USER: {
+      watchUser(handleUserVerifyChange);
+    }
+
+    GAME: {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("game")) {
+        handleGamePlay(urlParams.get("game")); // Existing game ENTRY POINT
+      }
+    }
+
+
     function handleUserVerifyChange(user) {
+      console.log("handleUserVerifyChange", user);
       const isUserVerified = (user || undefined)?.emailVerified;
       const { href: link } = window.location;
 
@@ -271,8 +270,6 @@
         if (isUserVerified) trigger.removeAttribute("aria-hidden");
         else trigger.setAttribute("aria-hidden", "true");
       }
-
-      return user;
     };
 
     async function handleVerifySelfSubmit(event) {
@@ -327,9 +324,8 @@
           alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
         } else {
           history.pushState({}, "New Game", `/?game=${gameId}`);
+          handleGamePlay(gameId); // 👌 New Game ENTRYPOINT
           createGame.close();
-          const user = await currentUser();
-          handleGamePlay({ gameId, user }); // 👌 New Game ENTRYPOINT
         }
       } catch ({ message, code }) {
         if (code === "functions/permission-denied") {
@@ -362,7 +358,7 @@
       }
     }
 
-    function handleGamePlay({ gameId, user }) {
+    function handleGamePlay(gameId) {
       const [
         headerElement,
         contentElement
@@ -376,10 +372,14 @@
 
       let state = {
         game: undefined,
-        user: user?.toJSON(),
+        user: null,
         selectedCard: undefined,
         selectedColor: undefined,
       };
+
+      watchUser((u) => {
+        emit({ user: u?.toJSON() });
+      });
 
       const handlers = {
         handleLeaveGame() {
@@ -441,7 +441,7 @@
         },
         handlePlayerCardSelect(event) {
           const cardId = event.target.value;
-          const player = getPlayer(state.game, user.uid);
+          const player = getPlayer(state.game, state.user.uid);
           const { value, color, id } = player.cards.find(card => card.id === cardId)
 
           if (value === CHANGE_CARD_VALUE) {
@@ -476,14 +476,8 @@
       }
 
 
-      onCurrentUserChanged((u) => {
-        user = u; // this is dark function param overwrite
-        emit({ user: u?.toJSON() });
-      });
-
       const queryToPublicCopy = () => `play/public/game/${gameId}`;
-      const queryToPlayerCopy = () => `play/${user?.uid}/game/${gameId}`;
-
+      const queryToPlayerCopy = () => `play/${state.user?.uid}/game/${gameId}`;
 
       // Firstly using public copy, then, once user joins the game we start using private copy
       let usedCopyQuery = queryToPublicCopy();
@@ -495,7 +489,7 @@
         if (
           game.lastMove &&
           game.lastMove.type !== state.game?.lastMove?.type &&
-          game.lastMove?.player.id !== user?.uid
+          game.lastMove?.player.id !== state.user?.uid
         ) {
           setTimeout(() => {
             playPlayerMoveEffects(game.lastMove, game.players, game.settings);
@@ -503,9 +497,9 @@
         }
 
         if (
-          user?.uid &&
+          state.user?.uid &&
           usedCopyQuery === queryToPublicCopy() &&
-          getPlayer(game, user?.uid)
+          getPlayer(game, state.user?.uid)
         ) {
           usedCopyQuery = queryToPlayerCopy();
           console.info("Switching to private copy", usedCopyQuery);
