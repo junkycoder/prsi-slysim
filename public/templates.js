@@ -283,7 +283,6 @@ export function content(
               ?disabled=${!canShuffleDeck}
               data-busy-title="Míchám..."
               data-allow-many="true"
-              data-n=${game.settings?.dealedCards}
               aria-label=${ifelse(
                 isPlayersTurn,
                 "Zamíchat karty",
@@ -296,6 +295,7 @@ export function content(
               @click=${handleMove}
               name=${moves.dealCards.name}
               ?disabled=${!canDealCards}
+              data-n=${game.settings?.dealedCards}
               data-busy-title="Rozdávám..."
               aria-label=${ifelse(
                 isPlayersTurn,
