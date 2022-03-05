@@ -102,6 +102,11 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
     } else {
       throw new Error("Color is required");
     }
+  } else if (
+    card.value !== lastPlayedCard.value &&
+    card.color !== game.currentColor
+  ) {
+    throw new Error("You can only play same color or same value card");
   } else {
     game.currentColor = card.color;
   }

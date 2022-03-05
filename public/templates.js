@@ -3,11 +3,13 @@ import { repeat } from "https://unpkg.com/lit-html/directives/repeat?module";
 
 import {
   SHUFFLE as SHUFFLE_MOVE,
+  DEAL as DEAL_MOVE,
   STAY as STAY_MOVE,
   DRAW as DRAW_MOVE,
   PLAY as PLAY_MOVE,
   FLIP_PLAYED_CARDS_TO_DECK as FLIP_PLAYED_CARDS_TO_DECK_MOVE,
-} from "./moves.js";
+} from "/library/prsi/moves.js";
+
 import {
   CARD_COLORS,
   CHANGE_CARD_VALUE,
@@ -237,7 +239,7 @@ export function content(
              <button
                @click=${handleMove}
                ?disabled=${!canPlayCard}
-               name=${moves.play.name}
+               name=${PLAY_MOVE}
                data-busy-title="Táhnu..."
                aria-label=${ifelse(
                  isPlayersTurn,
