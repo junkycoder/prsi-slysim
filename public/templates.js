@@ -1,5 +1,5 @@
-import { html } from "https://unpkg.com/lit-html@2.1.1/lit-html.js?module";
-import { repeat } from "https://unpkg.com/lit-html/directives/repeat?module";
+import { html, nothing } from "https://unpkg.com/lit-html@2.2.0/lit-html.js?module";
+import { repeat } from "https://unpkg.com/lit-html@2.2.0/directives/repeat?module";
 
 import {
   SHUFFLE as SHUFFLE_MOVE,
@@ -53,8 +53,8 @@ export function header({ game = {} } = {}) {
 
 const noop = () => {};
 
-const ifelse = (condition, then = "", elze = "") => (condition ? then : elze);
-const unless = (negacondition, then = "") => ifelse(!negacondition, then);
+const ifelse = (condition, then, elze = nothing) => (condition ? then : elze);
+const unless = (negacondition, then) => ifelse(!negacondition, then);
 
 export const players_summary_line = ({ players = [] }) => {
   if (!players.length) {
