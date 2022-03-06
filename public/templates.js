@@ -39,7 +39,7 @@ export const game_summary_line = (game) => {
     }
   } else {
     if (game.status === GAME_STATUS.OVER) {
-      line += ` Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
+      line += `Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
     }
     line += ` Je ${game.turn}. kolo.`;
   }
@@ -61,11 +61,7 @@ const noop = () => {};
 const ifelse = (condition, then, elze = nothing) => (condition ? then : elze);
 const unless = (negacondition, then) => ifelse(!negacondition, then);
 
-export const players_summary_line = ({
-  outcome,
-  currentPlayer,
-  players = [],
-}) => {
+export const players_summary_line = ({ currentPlayer, players = [] }) => {
   if (!players.length) {
     return `U stolu zatím nikdo nesedí.`;
   }
@@ -173,29 +169,24 @@ export function content(
 
   return html`
     <main>
-      ${unless(
-        game.outcome,
-        html`
-          <section>
-            <p>${players_summary_line(game)}</p>
-            <figure>
-              ${ifelse(
-                cardOnTable,
-                table_card_line({ card: cardOnTable, color: game.currentColor }),
-                "Na stole není vyložená žádná karta."
-              )}
-            </figure>
-            <figure>
-            ${ifelse(
-              game.deck?.length,
-              `Balíček karet (${game.deck?.length}) ${
-                game.deckShuffled ? "" : "není zamíchaný"
-              }`,
-              `Balíček tu ${!cardOnTable ? "také " : ""} není.`
-            )}
-          </section>
-      `
-      )}
+      <section>
+        <p>${players_summary_line(game)}</p>
+        <figure>
+          ${ifelse(
+            cardOnTable,
+            table_card_line({ card: cardOnTable, color: game.currentColor }),
+            "Na stole není vyložená žádná karta."
+          )}
+        </figure>
+        <figure>
+        ${ifelse(
+          game.deck?.length,
+          `Balíček karet (${game.deck?.length}) ${
+            game.deckShuffled ? "" : "není zamíchaný"
+          }`,
+          `Balíček tu ${!cardOnTable ? "také " : ""} není.`
+        )}
+      </section>
 
       <section>
         <h2>Ve tvých rukách</h2>
