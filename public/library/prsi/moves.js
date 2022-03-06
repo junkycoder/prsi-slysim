@@ -6,6 +6,7 @@ import {
   STAY_CARD_VALUE,
   CHANGE_CARD_VALUE,
   DRAW_CARD_VALUE,
+  CARDS
 } from "./index.js";
 
 export const SHUFFLE = shuffleDeck.name;
