@@ -202,6 +202,27 @@ export const leave = functions
 export const move = functions
   .region("europe-west1")
   .https.onCall(async ({ moveType, gameId, card, color }, context) => {
+    if (!context.auth || !context.auth.token || !context.auth.token.email) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Zapojit se do hry může pouze ověřený uživatel."
+      );
+    }
+
+    if (!gameId) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Chybí game ID!"
+      );
+    }
+
+    if (!moveType) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Zadejte typ tahu."
+      );
+    }
+
     const db = admin.firestore();
     const ref = db.doc(`play/private/game/${gameId}`);
 
