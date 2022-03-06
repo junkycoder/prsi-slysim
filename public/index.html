@@ -551,6 +551,10 @@
       const urlParams = new URLSearchParams(window.location.search);
       const gameId = urlParams.get("game");
 
+      for (let trigger of joinGame.openingTriggers) {
+        trigger.setAttribute("disabled", "disabled");
+      }
+
       const submitButton = joinGame.dialog.querySelector("button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
