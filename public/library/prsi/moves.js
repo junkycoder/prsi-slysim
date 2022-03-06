@@ -17,23 +17,19 @@ export function shuffleDeck(game, player) {
   if (game.status === GAME_STATUS.OVER) {
     game.status = GAME_STATUS.NOT_STARTED;
     game.turn = 0;
+    game.playedCards = [];
 
     for (let player of game.players) {
-      game.deck.push(...player.cards);
       player.cards = [];
     }
 
-    game.deck.push(...game.playedCards);
+    game.deck = shuffleCards(CARDS);
     game.lastMove = null;
-
-    for (let card of game.deck) {
-      card.cold = false;
-    }
+  } else {
+    game.deck = shuffleCards(game.deck);
   }
 
-  game.deck = shuffleCards(game.deck);
   game.deckShuffled = true;
-
   console.info("Decks shuffled");
 }
 
