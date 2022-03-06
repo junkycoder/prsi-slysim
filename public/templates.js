@@ -38,10 +38,10 @@ export const game_summary_line = (game) => {
       line += ` Čeká se na alespoň jednoho spoluhráče..`;
     }
   } else {
-    line += `Je ${game.turn}. kolo.`;
     if (game.status === GAME_STATUS.OVER) {
       line += ` Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
     }
+    line += ` Je ${game.turn}. kolo.`;
   }
 
   return line;
@@ -61,7 +61,11 @@ const noop = () => {};
 const ifelse = (condition, then, elze = nothing) => (condition ? then : elze);
 const unless = (negacondition, then) => ifelse(!negacondition, then);
 
-export const players_summary_line = ({ currentPlayer, players = [] }) => {
+export const players_summary_line = ({
+  outcome,
+  currentPlayer,
+  players = [],
+}) => {
   if (!players.length) {
     return `U stolu zatím nikdo nesedí.`;
   }
@@ -169,88 +173,93 @@ export function content(
 
   return html`
     <main>
-      <section>
-        <p>${players_summary_line(game)}</p>
-        <figure>
-          ${ifelse(
-            cardOnTable,
-            table_card_line({ card: cardOnTable, color: game.currentColor }),
-            "Na stole není vyložená žádná karta."
-          )}
-        </figure>
-        <figure>
-        ${ifelse(
-          game.deck?.length,
-          `Balíček karet (${game.deck?.length}) ${
-            game.deckShuffled ? "" : "není zamíchaný"
-          }`,
-          `Balíček tu ${!cardOnTable ? "také " : ""} není.`
-        )}
-      </section>
+      ${unless(
+        game.outcome,
+        html`
+          <section>
+            <p>${players_summary_line(game)}</p>
+            <figure>
+              ${ifelse(
+                cardOnTable,
+                table_card_line({ card: cardOnTable, color: game.currentColor }),
+                "Na stole není vyložená žádná karta."
+              )}
+            </figure>
+            <figure>
+            ${ifelse(
+              game.deck?.length,
+              `Balíček karet (${game.deck?.length}) ${
+                game.deckShuffled ? "" : "není zamíchaný"
+              }`,
+              `Balíček tu ${!cardOnTable ? "také " : ""} není.`
+            )}
+          </section>
+      `
+      )}
 
       <section>
-        <h2>Tvé karty a možnosti</h2>
-         ${ifelse(
-           showPlayersCards,
-           html`
-             <div class="flex horizontal-scroll" aria-label="Vaše karty">
-               ${repeat(
-                 userPlayer?.cards,
-                 ({ id }) => id,
-                 ({ id, value, color }) => html`
-                   <label class="flex">
-                     <input
-                       ?checked=${id === selectedCard?.id}
-                       type="radio"
-                       value="${id}"
-                       name="play"
-                       @change=${handlePlayerCardSelect}
-                     />
-                     ${`${value}–${color}`}
-                   </label>
-                 `
-               )}
-             </div>
-             ${ifelse(
-               showCardColorSelect,
-               html`
-                 <div class="flex horizontal-scroll" aria-label="Změna barvy">
-                   ${CARD_COLORS.map(
-                     (color) => html`
-                       <label class="flex">
-                         <input
-                           ?checked=${color === selectedCard?.color}
-                           type="radio"
-                           value="${color}"
-                           name="color"
-                           @click=${handleCardColorSelect}
-                         />
-                         ${color}
-                       </label>
-                     `
-                   )}
-                 </div>
-               `
-             )}
-             <button
-               @click=${handleMove}
-               ?disabled=${!canPlayCard}
-               name=${PLAY_MOVE}
-               data-busy-title="Táhnu..."
-               aria-label=${ifelse(
-                 isPlayersTurn,
-                 ifelse(
-                   selectedCard,
-                   `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
-                   "Před tahem vyberte kartu"
-                 ),
-                 `Táhnout kartu nelze, na tahu je ${currentPlayer?.name}`
-               )}
-             >
-               Táhnout kartu
-             </button>
-           `
-         )}
+        <h2>Ve tvých rukách</h2>
+        ${ifelse(
+          showPlayersCards,
+          html`
+            <div class="flex horizontal-scroll" aria-label="Vaše karty">
+              ${repeat(
+                userPlayer?.cards,
+                ({ id }) => id,
+                ({ id, value, color }) => html`
+                  <label class="flex">
+                    <input
+                      ?checked=${id === selectedCard?.id}
+                      type="radio"
+                      value="${id}"
+                      name="play"
+                      @change=${handlePlayerCardSelect}
+                    />
+                    ${`${value}–${color}`}
+                  </label>
+                `
+              )}
+            </div>
+            ${ifelse(
+              showCardColorSelect,
+              html`
+                <div class="flex horizontal-scroll" aria-label="Změna barvy">
+                  ${CARD_COLORS.map(
+                    (color) => html`
+                      <label class="flex">
+                        <input
+                          ?checked=${color === selectedCard?.color}
+                          type="radio"
+                          value="${color}"
+                          name="color"
+                          @click=${handleCardColorSelect}
+                        />
+                        ${color}
+                      </label>
+                    `
+                  )}
+                </div>
+              `
+            )}
+            <button
+              @click=${handleMove}
+              ?disabled=${!canPlayCard}
+              name=${PLAY_MOVE}
+              data-busy-title="Táhnu..."
+              aria-label=${ifelse(
+                isPlayersTurn,
+                ifelse(
+                  selectedCard,
+                  `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
+                  "Před tahem vyberte kartu"
+                ),
+                `Táhnout kartu nelze, na tahu je ${currentPlayer?.name}`
+              )}
+            >
+              Táhnout kartu
+            </button>
+          `
+        )}
         ${ifelse(
           showJoinGame,
           html`
@@ -376,20 +385,22 @@ export function content(
             </button>
           `
         )}
-      <button
-        @click=${handleShareGame}
-        type=${game.status ? "button" : "submit"}
-      >
-        Sdílet odkaz na hru
-      </button>
+        <button
+          @click=${handleShareGame}
+          type=${game.status ? "button" : "submit"}
+        >
+          Sdílet odkaz na hru
+        </button>
 
-      ${unless(
-        game.status,
-        html`<p>Doporučujeme hrát na klidném místě a se sluchátky na uších.</p>`
-      )}
-      <button class="js-dialog-sound-effects-open" type="button">
-        Nastavit zvukové efekty
-      </button>
+        ${unless(
+          game.status,
+          html`<p>
+            Doporučujeme hrát na klidném místě a se sluchátky na uších.
+          </p>`
+        )}
+        <button class="js-dialog-sound-effects-open" type="button">
+          Nastavit zvukové efekty
+        </button>
         <button @click=${handleLeaveGame} type="button">Odejít</button>
       </section>
     </main>

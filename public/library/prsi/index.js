@@ -224,6 +224,11 @@ export function endTurn(
     game.outcome = { winner: player };
     console.info("GAME OVER 🎉\n", JSON.stringify(game.outcome, null, 2));
     game.status = GAME_STATUS.OVER;
+
+    if (player.cpu) {
+      // Make current player first human so he can start new game
+      game.currentPlayer = game.players.find(({ cpu }) => !cpu);
+    }
   } else {
     game.turn++;
     game.previousPlayer = player;
