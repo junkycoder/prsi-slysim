@@ -77,57 +77,6 @@ export const create = functions
   );
 
 /**
- * Trigger function that keeps game copies in sync.
- */
-export const copyPlayerGame = functions
-  .region("europe-west1")
-  .firestore.document("play/private/game/{gameId}")
-  .onWrite(async (change, context) => {
-    const db = admin.firestore();
-    const game = change.after.data();
-    const batch = db.batch();
-
-    for (const player of game.players.filter(({ cpu }) => !cpu)) {
-      batch.set(
-        db.collection(`play/${player.id}/game`).doc(game.id),
-        playerGameCopy(player.id, game)
-      );
-    }
-
-    batch.set(
-      db.collection(`play/public/game`).doc(game.id),
-      playerGameCopy(null, game)
-    );
-
-    await batch.commit();
-  });
-
-/**
- * Trigger function that makes CPU players moves.
- */
-export const makeCpuMove = functions
-  .region("europe-west1")
-  .firestore.document("play/private/game/{gameId}")
-  .onWrite(async (change, context) => {
-    const db = admin.firestore();
-    const batch = db.batch();
-    const game = change.after.data();
-    const ref = db.collection(`play/private/game`).doc(game.id);
-
-    if (game?.status !== GAME_STATUS.STARTED) return;
-    if (!game?.currentPlayer?.cpu) return;
-    if (game.turn === change.before.data().turn) return;
-
-    autopilot.autoplay(game);
-
-    batch.update(ref, game, {
-      merge: true,
-    });
-
-    await batch.commit();
-  });
-
-/**
  * Callable function to add a player to an existing game.
  */
 export const join = functions
@@ -259,3 +208,57 @@ export const move = functions
     // How to allow every move, but force player to take it back if invalid?
     return { error: null };
   });
+
+/**
+ * Triggers putting every thing togheter
+ */
+export const triggers = functions
+  .region("europe-west1")
+  .firestore.document("play/private/game/{gameId}")
+  .onWrite(async (change, context) => {
+    const db = admin.firestore();
+    const game = change.after.data();
+    const batch = db.batch();
+
+    if (game) {
+      await makeGameCopies(game, { db, batch });
+
+      if (game.turn > change.before.data().turn) {
+        await makeCpuMove(game, { db, batch }); // witch can produce another call of this trigger 😈
+      }
+    }
+
+    await batch.commit();
+  });
+
+/**
+ * 1. function that keeps game copies in sync.
+ */
+async function makeGameCopies(game, { db, batch }) {
+  for (const player of game.players.filter(({ cpu }) => !cpu)) {
+    batch.set(
+      db.collection(`play/${player.id}/game`).doc(game.id),
+      playerGameCopy(player.id, game)
+    );
+  }
+
+  batch.set(
+    db.collection(`play/public/game`).doc(game.id),
+    playerGameCopy(null, game)
+  );
+}
+
+/**
+ * 2. function that makes cpu moves.
+ */
+async function makeCpuMove(game, { db, batch }) {
+  if (game?.status !== GAME_STATUS.STARTED) return;
+  if (!game?.currentPlayer?.cpu) return;
+
+  autopilot.autoplay(game);
+
+  const ref = db.collection(`play/private/game`).doc(game.id);
+  batch.update(ref, game, {
+    merge: true,
+  });
+}

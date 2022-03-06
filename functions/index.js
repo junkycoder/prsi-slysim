@@ -7,12 +7,9 @@ import admin from "firebase-admin";
 admin.initializeApp();
 
 export {
-  // callable
   create as createGame,
   join as joinGame,
   move as gameMove,
-  // triggers
-  copyPlayerGame,
-  makeCpuMove,
+  triggers
 } from "./game.js";
 export { userAuthenticated } from "./user.js";
