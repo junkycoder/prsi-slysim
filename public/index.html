@@ -85,6 +85,10 @@
           <input type="number" name="max-players" min="2" max="8" value="4" />
         </label>
         <label>
+          <span>Počet CPU</span>
+          <input type="number" name="cpu-players" min="0" max="2" value="0" />
+        </label>
+        <label>
           <span>Počet rozdaných karet</span>
           <input type="number" name="dealed-cards" min="1" max="6" value="4" />
         </label>
@@ -363,6 +367,7 @@
     }
 
     function handleGamePlay(gameId) {
+      console.info("Game play", gameId);
       const [
         headerElement,
         contentElement

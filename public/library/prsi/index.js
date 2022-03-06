@@ -53,13 +53,18 @@ for (let color of CARD_COLORS) {
 export const shuffleCards = (cards = CARDS) =>
   [...cards.values()].sort(() => Math.random() - 0.5);
 
-export function createNewGame({ maxPlayers = 4, dealCards = 4 } = {}) {
-  return {
+export function createNewGame({
+  maxPlayers = 4,
+  dealCards = 4,
+  cpuPlayers = 0,
+} = {}) {
+  const game = {
     turn: 0,
     status: GAME_STATUS.NOT_STARTED,
     settings: {
       maxPlayers,
       dealCards,
+      cpuPlayers,
     },
     players: [],
     currentPlayer: null,
@@ -72,6 +77,12 @@ export function createNewGame({ maxPlayers = 4, dealCards = 4 } = {}) {
     lastMove: null,
     drawCount: 1, // how many cards to draw if needed to draw
   };
+
+  for (let x = 1; x <= cpuPlayers; x++) {
+    addPlayer(game, { id: `cpu-${x}`, name: `CPU ${x}`, cpu: true });
+  }
+
+  return game;
 }
 
 export function playerGameCopy(
@@ -122,15 +133,16 @@ export function playerGameCopy(
   };
 }
 
-export function addPlayer(game, { id, name, cards = [] }) {
+export function addPlayer(game, { id, name, cards = [], cpu = false }) {
   if (game.players.find((player) => player.id === id)) {
+    console.info(`Player with id ${id} already present in game`);
     return true;
   }
 
   const currentPlayersCount = game.players.length;
-  const newPlayer = { id, name, cards };
+  const newPlayer = { id, name, cards, cpu };
 
-  if (!currentPlayersCount) {
+  if (!game.currentPlayer && !cpu) {
     game.currentPlayer = newPlayer;
   }
 

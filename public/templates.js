@@ -2,7 +2,9 @@ import {
   html,
   nothing,
 } from "https://unpkg.com/lit-html@2.2.0/lit-html.js?module";
-import { repeat } from "https://unpkg.com/lit-html@2.2.0/directives/repeat?module";
+
+import { repeat } from "https://unpkg.com/lit-html@2.2.0/directives/repeat.js?module";
+// import { choosed } from "https://unpkg.com/lit-html@2.2.0/directives/choose.js?module";
 
 import {
   SHUFFLE as SHUFFLE_MOVE,
@@ -59,7 +61,7 @@ const noop = () => {};
 const ifelse = (condition, then, elze = nothing) => (condition ? then : elze);
 const unless = (negacondition, then) => ifelse(!negacondition, then);
 
-export const players_summary_line = ({ players = [] }) => {
+export const players_summary_line = ({ currentPlayer, players = [] }) => {
   if (!players.length) {
     return `U stolu zatím nikdo nesedí.`;
   }
@@ -68,30 +70,25 @@ export const players_summary_line = ({ players = [] }) => {
 
   line += players
     .slice(0, -1)
-    .map(({ name }) => name)
+    .map(({ name, cards }) =>
+      !cards.length ? name : `${name} (${cards.length})`
+    )
     .join(", ");
 
+  const lastPayer = players.slice(-1)[0];
+
   if (players.length > 1) {
-    line += ` a ${players.slice(-1)[0].name}.`;
-  } else {
-    line += `${players.slice(-1)[0].name}.`;
+    line += " a ";
   }
 
-  return line;
-};
+  line += !lastPayer.cards.length
+    ? `${lastPayer.name}.`
+    : `${lastPayer.name} (${lastPayer.cards.length}).`;
 
-export const player_line = ({ player, userPlayer, currentPlayer }) => {
-  let line = player.name;
-  if (userPlayer?.id && player.id === userPlayer.id) {
-    line += " (to jsi ty)";
+  if (currentPlayer) {
+    line += ` Na tahu je ${currentPlayer.name}.`;
   }
-  if (player.id === currentPlayer.id) {
-    line += " je na tahu";
-  }
-  if (player.cards?.length) {
-    line += `, karet: ${player.cards.length}`;
-  }
-  if (line === player.name) return "";
+
   return line;
 };
 
@@ -125,6 +122,10 @@ export function content(
   const isUserPlaying = Boolean(userPlayer);
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
   const [cardOnTable] = game.playedCards?.slice(-1) || [];
+
+  if (game.status === undefined) {
+    return nothing;
+  }
 
   // consider to move this shit to the prsi module
   const showDraw =
@@ -164,21 +165,12 @@ export function content(
   const canStay = isPlayersTurn && cardOnTable?.value === STAY_CARD_VALUE;
   const canFlipPlayedCardsToDeck = isPlayersTurn;
 
-  console.log({ showDraw, canDraw });
+  console.log({ showDraw, canDraw }, game.drawCount);
 
   return html`
     <main>
       <section>
-        <h2>${`Hráči (${players?.length || 0})`}</h2>
         <p>${players_summary_line(game)}</p>
-        ${players.map(
-          (player) => html`
-            <figure>
-              ${player_line({ player, userPlayer, currentPlayer })}
-            </figure>
-          `
-        )}
-        <h2>Stůl</h2>
         <figure>
           ${ifelse(
             cardOnTable,
@@ -308,7 +300,7 @@ export function content(
               name=${DEAL_MOVE}
               ?disabled=${!canDealCards}
               data-busy-title="Rozdávám..."
-              data-n=${players.length * (game.settings?.dealCards || 1)}
+              data-n=${players.length * (game.settings?.dealCards / 2 || 1)}
               aria-label=${ifelse(
                 isPlayersTurn,
                 ifelse(

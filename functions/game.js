@@ -6,6 +6,8 @@ import {
   playerGameCopy,
   moves,
   getPlayer,
+  autopilot,
+  GAME_STATUS,
 } from "prsi";
 
 /**
@@ -13,57 +15,70 @@ import {
  */
 export const create = functions
   .region("europe-west1")
-  .https.onCall(async ({ maxPlayers = 6, dealCards = 4 }, context) => {
-    if (!context.auth || !context.auth.token || !context.auth.token.email) {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "Založit hru může pouze ověřený uživatel."
-      );
+  .https.onCall(
+    async ({ maxPlayers = 6, dealCards = 4, cpuPlayers = 0 }, context) => {
+      if (!context.auth || !context.auth.token || !context.auth.token.email) {
+        throw new functions.https.HttpsError(
+          "permission-denied",
+          "Založit hru může pouze ověřený uživatel."
+        );
+      }
+
+      if (!maxPlayers || maxPlayers < 2 || maxPlayers > 8) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "Zadejte počet hráčů v rozmezí 2 až 8."
+        );
+      }
+
+      if (!dealCards || dealCards < 1 || dealCards > 6) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "Zadejte počet karet v rozmezí 1 až 6."
+        );
+      }
+
+      if (cpuPlayers && Number(cpuPlayers) > 2) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "Zadejte počet CPU hráčů v rozmezí 0 až 2."
+        );
+      }
+
+      const db = admin.firestore();
+      const refPrivate = db.collection("play/private/game").doc();
+      const refPublic = db.collection("play/public/game").doc(refPrivate.id);
+      const batch = db.batch();
+
+      const game = createNewGame({
+        maxPlayers: Number(maxPlayers),
+        dealCards: Number(dealCards),
+        cpuPlayers: Number(cpuPlayers),
+      });
+
+      const meta = {
+        id: refPrivate.id,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdBy: context.auth.uid,
+      };
+
+      batch.set(refPrivate, {
+        ...game,
+        ...meta,
+      });
+
+      const copy = playerGameCopy(null, game);
+      batch.set(refPublic, copy);
+
+      await batch.commit();
+
+      return { ...copy, ...meta };
     }
+  );
 
-    if (!maxPlayers || maxPlayers < 2 || maxPlayers > 8) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Zadejte počet hráčů v rozmezí 2 až 8."
-      );
-    }
-
-    if (!dealCards || dealCards < 1 || dealCards > 6) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Zadejte počet karet v rozmezí 1 až 6."
-      );
-    }
-
-    const db = admin.firestore();
-    const refPrivate = db.collection("play/private/game").doc();
-    const refPublic = db.collection("play/public/game").doc(refPrivate.id);
-    const batch = db.batch();
-
-    const game = createNewGame({
-      maxPlayers: Number(maxPlayers),
-      dealCards: Number(dealCards),
-    });
-
-    const meta = {
-      id: refPrivate.id,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdBy: context.auth.uid,
-    };
-
-    batch.set(refPrivate, {
-      ...game,
-      ...meta,
-    });
-
-    const copy = playerGameCopy(null, game);
-    batch.set(refPublic, copy);
-
-    await batch.commit();
-
-    return { ...copy, ...meta };
-  });
-
+/**
+ * Trigger function that keeps game copies in sync.
+ */
 export const copyPlayerGame = functions
   .region("europe-west1")
   .firestore.document("play/private/game/{gameId}")
@@ -72,17 +87,42 @@ export const copyPlayerGame = functions
     const game = change.after.data();
     const batch = db.batch();
 
-    batch.set(
-      db.collection(`play/public/game`).doc(game.id),
-      playerGameCopy(null, game)
-    );
-
-    for (const player of game.players) {
+    for (const player of game.players.filter(({ cpu }) => !cpu)) {
       batch.set(
         db.collection(`play/${player.id}/game`).doc(game.id),
         playerGameCopy(player.id, game)
       );
     }
+
+    batch.set(
+      db.collection(`play/public/game`).doc(game.id),
+      playerGameCopy(null, game)
+    );
+
+    await batch.commit();
+  });
+
+/**
+ * Trigger function that makes CPU players moves.
+ */
+export const makeCpuMove = functions
+  .region("europe-west1")
+  .firestore.document("play/private/game/{gameId}")
+  .onWrite(async (change, context) => {
+    const db = admin.firestore();
+    const batch = db.batch();
+    const game = change.after.data();
+    const ref = db.collection(`play/private/game`).doc(game.id);
+
+    if (game?.status !== GAME_STATUS.STARTED) return;
+    if (!game?.currentPlayer?.cpu) return;
+    if (game.turn === change.before.data().turn) return;
+
+    autopilot.autoplay(game);
+
+    batch.update(ref, game, {
+      merge: true,
+    });
 
     await batch.commit();
   });
@@ -170,7 +210,7 @@ export const move = functions
         const game = (await batch.get(ref)).data();
         const player = getPlayer(game, context.auth.uid);
 
-        if(player.id !== game.currentPlayer.id) {
+        if (player.id !== game.currentPlayer.id) {
           throw new functions.https.HttpsError(
             "invalid-argument",
             "Nejste na tahu."
