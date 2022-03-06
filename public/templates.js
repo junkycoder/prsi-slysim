@@ -165,8 +165,6 @@ export function content(
   const canStay = isPlayersTurn && cardOnTable?.value === STAY_CARD_VALUE;
   const canFlipPlayedCardsToDeck = isPlayersTurn;
 
-  console.log({ showDraw, canDraw }, game.drawCount);
-
   return html`
     <main>
       <section>
@@ -334,7 +332,7 @@ export function content(
                 `Líznout si nejde, na tahu je ${currentPlayer?.name}`
               )}
             >
-              ${`Líznout si ${game.drawCount}`}
+              ${`Líznout si`}
             </button>
           `
         )}
