@@ -24,24 +24,32 @@ if (args.doc) {
 }
 
 if (args.users) {
-  listAllUsers();
+  const users = await listAllUsers();
+  for (let { email, id } of users) {
+    const gamesCount = await userGamesCount(id);
+    console.log(email, gamesCount);
+  }
 }
 
-function listAllUsers(nextPageToken) {
-  // List batch of users, 1000 at a time.
-  getAuth()
-    .listUsers(1000, nextPageToken)
-    .then((listUsersResult) => {
-      listUsersResult.users.forEach((userRecord) => {
-        const {email} = userRecord.toJSON();
-        console.log(email)
-      });
-      if (listUsersResult.pageToken) {
-        // List next batch of users.
-        listAllUsers(listUsersResult.pageToken);
-      }
-    })
-    .catch((error) => {
-      console.log("Error listing users:", error);
-    });
+async function userGamesCount(userId) {
+  const page = await db.collection(`play/${userId}/game`).limit(1000).get();
+  const count = page.docs.length;
+
+  return count;
+}
+
+async function listAllUsers(nextPageToken) {
+  const list = [];
+  const page = await getAuth().listUsers(1000, nextPageToken);
+
+  for (let user of page.users) {
+    const { email, uid } = user.toJSON();
+    list.push({ email, id: uid });
+  }
+
+  if (page.pageToken) {
+    list.push(...(await listAllUsers(page.pageToken)));
+  }
+
+  return list;
 }
