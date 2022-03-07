@@ -395,3 +395,30 @@ export function content(
     </main>
   `;
 }
+
+export function moveMessage(game, user) {
+  const { type, player, drawn, card } = game.lastMove;
+  const playerName = player.name || player.id;
+
+  let message = "";
+
+  message = `${playerName}`;
+
+  if (drawn) {
+    message += ` si ${drawn}krát líznul.`;
+  } else if (card) {
+    message += ` táhnul ${card.value} ${card.color}`;
+    if (card.value === CHANGE_CARD_VALUE) {
+      message += ` a změnil barvu na ${game.currentColor}`;
+    }
+    message += `.`;
+  } else if (type === STAY_MOVE) {
+    message += " stojí.";
+  }
+
+  if (game.currentPlayer.id === user.uid) {
+    message += " Jsi na tahu.";
+  }
+
+  return message;
+}
