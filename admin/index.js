@@ -2,6 +2,7 @@ import { initializeApp, applicationDefault } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import minimist from "minimist";
+import { moves } from "prsi";
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS = "./service-account.json";
 
@@ -13,7 +14,7 @@ initializeApp({
 const db = getFirestore();
 
 const args = minimist(process.argv.slice(2), {
-  string: ["doc"],
+  string: ["doc", "replay"],
   boolean: ["users"],
   // default: { emulation: false },
 });
@@ -29,6 +30,17 @@ if (args.users) {
     const gamesCount = await userGamesCount(id);
     console.log(email, gamesCount);
   }
+}
+
+if (args.replay) {
+  if (!args.replay) {
+    throw "Missing replay argument";
+  }
+  const doc = await db.doc(`play/private/game/${args.replay}`).get();
+  const game = doc.data();
+  console.warn(
+    "Těžšký přehrát hru, když nevim jak byl zamíchanej balíček. Znám jen všechny tahy a co zbylo."
+  );
 }
 
 async function userGamesCount(userId) {
