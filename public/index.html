@@ -228,6 +228,7 @@
       DRAW as DRAW_MOVE,
       PLAY as PLAY_MOVE,
       DEAL as DEAL_MOVE,
+      STAY as STAY_MOVE,
     } from "/library/prsi/moves.js";
 
     const verifySelf = new Dialog(".js-dialog-verify-self", {
@@ -554,10 +555,19 @@
         const game = d.data();
 
         // Uplne inak todleto, predbiha se to, neni to spolehlivy a tak.
+        // if (
+        //   game.lastMove &&
+        //   game.lastMove.type !== state.game?.lastMove?.type &&
+        //   game.lastMove?.player.id !== state.user?.uid
+        // ) {
         if (
-          game.lastMove &&
-          game.lastMove.type !== state.game?.lastMove?.type &&
-          game.lastMove?.player.id !== state.user?.uid
+          state.game && // je to update stavu hry
+          game.lastMove.player.id !== state.user?.uid && // nejsem to já
+          (
+            // a neni to stejný tah jako předchozí
+            game.lastMove.player.id !== state.game.lastMove.player.id ||
+            game.lastMove.type !== state.game.lastMove.type
+          )
         ) {
           setTimeout(() => {
             showMoveMessage(game);
@@ -648,8 +658,8 @@
       submitButton.textContent = 'Přisedám...';
 
       if (!gameId) {
+        console.error("Game ID not found");
         if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
-          console.error("Game ID not found");
           window.location.href = "/";
         }
         return;
