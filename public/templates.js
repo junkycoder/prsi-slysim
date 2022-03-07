@@ -191,7 +191,7 @@ export function content(
         ${ifelse(
           showPlayersCards,
           html`
-            <div class="flex horizontal-scroll" aria-label="Vaše karty">
+            <div class="flex horizontal-scroll">
               ${repeat(
                 userPlayer?.cards,
                 ({ id }) => id,
@@ -221,7 +221,7 @@ export function content(
                           type="radio"
                           value="${color}"
                           name="color"
-                          @click=${handleCardColorSelect}
+                          @change=${handleCardColorSelect}
                         />
                         ${color}
                       </label>

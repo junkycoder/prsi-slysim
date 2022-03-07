@@ -511,7 +511,8 @@
         handlePlayerCardSelect(event) {
           const cardId = event.target.value;
           const player = getPlayer(state.game, state.user.uid);
-          const { value, color, id } = player.cards.find(card => card.id === cardId)
+          const { value, color, id } = player.cards.find(card => card.id === cardId);
+          const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
 
           if (value === CHANGE_CARD_VALUE) {
             emit({
@@ -521,11 +522,13 @@
           } else {
             emit({ selectedCard: { value, color, id } });
           }
-
+          makeMoveButtonElement.focus();
         },
         handleCardColorSelect(event) {
+          const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
           const color = event.target.value;
           emit({ selectedColor: color });
+          makeMoveButtonElement.focus();
         },
         // ...
       };
@@ -562,7 +565,7 @@
         //   game.lastMove?.player.id !== state.user?.uid
         // ) {
         if (
-          state.game && // je to update stavu hry
+          state.game && game.lastMove && // je to update stavu hry
           game.lastMove.player.id !== state.user?.uid && // nejsem to já
           (
             // a neni to stejný tah jako předchozí
