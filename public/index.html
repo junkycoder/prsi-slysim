@@ -599,10 +599,6 @@
 
         let message = "";
 
-        if (game.currentPlayer.id === state.user.uid) {
-          message += "Jsi na tahu. ";
-        }
-
         message = `${playerName}`;
 
         if (drawn) {
@@ -615,6 +611,10 @@
           message += `.`;
         } else if (type === STAY_MOVE) {
           message += " stojí.";
+        }
+
+        if (game.currentPlayer.id === state.user.uid) {
+          message += "Jsi na tahu. ";
         }
 
         alerto(message);
