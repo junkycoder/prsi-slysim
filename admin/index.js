@@ -24,5 +24,24 @@ if (args.doc) {
 }
 
 if (args.users) {
-  // getAuth
+  listAllUsers();
+}
+
+function listAllUsers(nextPageToken) {
+  // List batch of users, 1000 at a time.
+  getAuth()
+    .listUsers(1000, nextPageToken)
+    .then((listUsersResult) => {
+      listUsersResult.users.forEach((userRecord) => {
+        const {email} = userRecord.toJSON();
+        console.log(email)
+      });
+      if (listUsersResult.pageToken) {
+        // List next batch of users.
+        listAllUsers(listUsersResult.pageToken);
+      }
+    })
+    .catch((error) => {
+      console.log("Error listing users:", error);
+    });
 }
