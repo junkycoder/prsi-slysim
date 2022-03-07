@@ -15,7 +15,7 @@ const db = getFirestore();
 
 const args = minimist(process.argv.slice(2), {
   string: ["doc", "replay"],
-  boolean: ["users"],
+  boolean: ["users", "games"],
   // default: { emulation: false },
 });
 
@@ -32,6 +32,13 @@ if (args.users) {
   }
 }
 
+if (args.games) {
+  const games = await listAllGames();
+  for (let { id, players = [], moves = [] } of games) {
+    console.log(id, moves.length, players.map(({ name }) => name).join(", "));
+  }
+}
+
 if (args.replay) {
   if (!args.replay) {
     throw "Missing replay argument";
@@ -41,6 +48,13 @@ if (args.replay) {
   console.warn(
     "Těžšký přehrát hru, když nevim jak byl zamíchanej balíček. Znám jen všechny tahy a co zbylo."
   );
+}
+
+async function listAllGames(nextPageToken) {
+  const page = await db.collection(`play/private/game`).limit(1000).orderBy("createdAt").get();
+  const data = page.docs.map(doc => doc.data());
+
+  return data;
 }
 
 async function userGamesCount(userId) {
