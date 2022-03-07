@@ -14,8 +14,8 @@ initializeApp({
 const db = getFirestore();
 
 const args = minimist(process.argv.slice(2), {
-  string: ["doc", "replay"],
-  boolean: ["users", "games"],
+  string: ["doc", "replay", "id"],
+  boolean: ["users", "games", "check-copies"],
   // default: { emulation: false },
 });
 
@@ -40,9 +40,6 @@ if (args.games) {
 }
 
 if (args.replay) {
-  if (!args.replay) {
-    throw "Missing replay argument";
-  }
   const doc = await db.doc(`play/private/game/${args.replay}`).get();
   const game = doc.data();
   console.warn(
@@ -50,9 +47,36 @@ if (args.replay) {
   );
 }
 
+if (args["check-copies"]) {
+  if (!args.id) {
+    throw new Error("--id of game is required");
+  }
+
+  const report = ({ exists }, { path }) => `${exists ? "👌" : "👎"} ${path}`;
+
+  let query = db.doc(`play/private/game/${args.id}`);
+
+  const game = await query.get();
+  if (game.exists) console.log(report(game, query));
+
+  const { players } = game.data();
+
+  for (query of [
+    db.doc(`play/public/game/${args.id}`),
+    ...players.map((player) => db.doc(`play/${player.id}/game/${args.id}`)),
+  ]) {
+    const doc = await query.get();
+    console.log(report(doc, query));
+  }
+}
+
 async function listAllGames(nextPageToken) {
-  const page = await db.collection(`play/private/game`).limit(1000).orderBy("createdAt").get();
-  const data = page.docs.map(doc => doc.data());
+  const page = await db
+    .collection(`play/prrivate/game`)
+    .limit(1000)
+    .orderBy("createdAt")
+    .get();
+  const data = page.docs.map((doc) => doc.data());
 
   return data;
 }
