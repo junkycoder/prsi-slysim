@@ -1,23 +1,28 @@
-import admin from "firebase-admin";
-import { createRequire } from "module";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 import minimist from "minimist";
 
-const require = createRequire(import.meta.url);
-const serviceAccount = require("./service-account.json");
+process.env.GOOGLE_APPLICATION_CREDENTIALS = "./service-account.json";
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+initializeApp({
+  credential: applicationDefault(),
+  projectId: "prsi-slysim",
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 
 const args = minimist(process.argv.slice(2), {
   string: ["doc"],
-  // boolean: [""],
+  boolean: ["users"],
   // default: { emulation: false },
 });
 
 if (args.doc) {
-  const data = (await db.doc(args.doc).get()).data();
-  console.log(JSON.stringify(data, null, 2));
+  const doc = await db.doc(args.doc).get();
+  console.log(JSON.stringify(doc.data(), null, 2));
+}
+
+if (args.users) {
+  // getAuth
 }
