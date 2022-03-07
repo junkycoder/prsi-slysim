@@ -14,8 +14,16 @@
 * [a11y-dialog-component](./public/library/a11y-dialog-component) - Accessible dialog component
 * [sounts](./public/library/sounds) - Sounds library
 
+### Database
+Firebase Firestore has wide yet simple schema: `play/${perspective}/game/${gameId}` where `perspective` is
+1. `private` - Complete yet private data
+2. `public` - Public copy of data without sensitive data
+3. `[userId]` - Copy of data including only user sensitive data and public data
+
+Check out out [Firestore Rules](./firestore.rules)
+
 ### Contributors
-<!-- table of five names -->
+
 | Name | Role |
 |------|------|
 | Daniel Hromada z [TopMonks](https://topmonks.com) | Vejvoj |
