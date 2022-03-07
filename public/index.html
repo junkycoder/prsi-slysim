@@ -43,12 +43,20 @@
 
     .los-alertos__alerto {
       border-radius: 1px;
-      background-color: black;
-      color: white;
-      border: 5px solid white;
       padding: 14px;
       transition: opacity 200ms ease-in-out;
       opacity: 0;
+      background-color: white;
+      color: black;
+      border: 5px solid black;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .los-alertos__alerto {
+        background-color: black;
+        color: white;
+        border-color: white;
+      }
     }
 
     .los-alertos__alerto--show {
