@@ -112,7 +112,7 @@ export function play(game, { id: playerId }, { id: cardId }, color) {
   player.cards = player.cards.filter(({ id }) => id !== card.id);
 
   if (card.value === DRAW_CARD_VALUE) {
-    if (lastPlayedCard.value === DRAW_CARD_VALUE) {
+    if (lastPlayedCard.value === DRAW_CARD_VALUE && lastPlayedCard.cold !== true) {
       game.drawCount += 2;
     } else {
       game.drawCount = 2;
