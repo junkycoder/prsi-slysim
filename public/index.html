@@ -28,6 +28,56 @@
       <p>Online hra prší pro více hráčů, vytvořená primárně pro uživatele se zrakovým handicapem.</p>
     </header>
   </div>
+  <div class="los-alertos"></div>
+  <style>
+    .los-alertos {
+      position: absolute;
+      top: 20px;
+      left: 24px;
+      right: 24px;
+      z-index: 420;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .los-alertos__alerto {
+      border-radius: 1px;
+      background-color: black;
+      color: white;
+      border: 5px solid white;
+      padding: 14px;
+      transition: opacity 200ms ease-in-out;
+      opacity: 0;
+    }
+
+    .los-alertos__alerto--show {
+      opacity: 1;
+    }
+  </style>
+  <script>
+    window.alerto = function alerto(message) {
+      const container = document.querySelector('.los-alertos');
+      const time = Date.now();
+      container.insertAdjacentHTML("afterbegin", `
+        <div data-time="${time}" class="los-alertos__alerto" role="alert">
+          ${message}
+        </div>
+      `);
+      const element = container.querySelector(`.los-alertos__alerto[data-time="${time}"]`);
+      const doRemove = () => {
+        element.classList.remove('los-alertos__alerto--show');
+        setInterval(() => {
+          element.remove();
+        }, 500);
+      }
+      element.addEventListener('click', doRemove);
+      setTimeout(doRemove, 4000);
+      setTimeout(() => {
+        element.classList.add('los-alertos__alerto--show');
+      }, 200);
+    }
+  </script>
   <div class="js-content">
     <main>
       <h2>Klasické prší</h2>
@@ -495,14 +545,16 @@
       function handleSnapshot(d) {
         const game = d.data();
 
+        // Uplne inak todleto, predbiha se to, neni to spolehlivy a tak.
         if (
           game.lastMove &&
           game.lastMove.type !== state.game?.lastMove?.type &&
           game.lastMove?.player.id !== state.user?.uid
         ) {
           setTimeout(() => {
+            showMoveMessage(game);
             playPlayerMoveEffects(game.lastMove, game.players, game.settings);
-          }, 300);
+          }, 0);
         }
 
         if (
@@ -521,6 +573,33 @@
             debugger;
           }
         }
+      }
+
+      function showMoveMessage(game) {
+        const { type, player, drawn, card } = game.lastMove;
+        const playerName = player.name || player.id;
+
+        let message = "";
+
+        if (game.currentPlayer.id === state.user.uid) {
+          message += "Jsi na tahu. ";
+        }
+
+        message = `${playerName}`;
+
+        if (drawn) {
+          message += ` si ${drawn}krát. líznul.`;
+        } else if (card) {
+          message += ` táhnul ${card.value} ${card.color}`;
+          if (card.value === CHANGE_CARD_VALUE) {
+            message += ` a změnil barvu na ${game.currentColor}`;
+          }
+          message += `.`;
+        } else if (type === STAY_MOVE) {
+          message += " stojí.";
+        }
+
+        alerto(message);
       }
 
       function playPlayerMoveEffects(lastMove, players = [], settings = {}) {
