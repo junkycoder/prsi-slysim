@@ -41,10 +41,12 @@ export const game_summary_line = (game) => {
     if (game.status === GAME_STATUS.OVER) {
       line += `Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
     }
-    line += ` Je ${game.turn}. kolo.`;
+    if (game.outcome) {
+      line += ` Je ${game.turn}. kolo.`;
+    }
   }
 
-  return line;
+  return line || nothing;
 };
 
 export function header({ game = {} } = {}) {
