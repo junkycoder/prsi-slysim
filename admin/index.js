@@ -72,7 +72,7 @@ if (args["check-copies"]) {
 
 async function listAllGames(nextPageToken) {
   const page = await db
-    .collection(`play/prrivate/game`)
+    .collection(`play/private/game`)
     .limit(1000)
     .orderBy("createdAt")
     .get();
