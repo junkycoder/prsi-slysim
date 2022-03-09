@@ -1,7 +1,7 @@
 /**
  * Czech version of Mau-mau game called Prší.
  *
- * Prepare for godd old school object mutations.
+ * Prepare for old school mutations.
  */
 
 import {

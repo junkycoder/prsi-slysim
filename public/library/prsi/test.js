@@ -126,14 +126,5 @@ try {
 
 while (g.outcome === null) {
   Game.autopilot.autoplay(g);
-  // logObj(g);
 }
 
-// const p3 = Game.getPlayer(g, "3");
-// const player3Moves = Game.makePlayerMoves(g, p3);
-
-// console.assert(
-//   g.currentPlayer.id === p3.id,
-//   "g.currentPlayer.id === p3.id",
-//   g.currentPlayer.id
-// );
