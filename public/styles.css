@@ -176,6 +176,10 @@ figure {
   }
 }
 
+.dimm {
+  font-size: 80%;
+  opacity: 80%;
+}
 
 .firebase-emulator-warning {
   display: none;

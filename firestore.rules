@@ -10,5 +10,8 @@ service cloud.firestore {
       allow read: if perspective == 'public' || (verified(request) && perspective == request.auth.uid);
     }
 
+  	match /public/{document=**} {
+    	allow read: if true;
+    }
   }
 }

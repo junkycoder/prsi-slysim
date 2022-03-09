@@ -90,7 +90,7 @@
     <main>
       <h2>Klasické prší</h2>
       <p>
-        <em>Prší slyšim</em> vám zprostředkuje zážitek z hraní běžné karetní hry
+        <em>Prší, slyšim!</em> vám zprostředkuje zážitek z hraní běžné karetní hry
         <a href="https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD" title="Wikipedie">prší</a>
         za použití obyčejného textu a akustických efektů.
       </p>
@@ -115,10 +115,35 @@
       <section id="who">
         <h2>Kdo to udělal?</h2>
         <p>
-        <a href="https://topmonks.com/" title="Software development partner for your business">TopMonks</a> &amp; <a
-          href="http://isymbio.cz/" title="SYMBIO Access devices">SYMBIO</a>.
+          <a href="https://topmonks.com/" title="Software development partner for your business">TopMonks</a> &amp; <a
+            href="http://isymbio.cz/" title="SYMBIO Access devices">SYMBIO</a>.
           Jmenovitě já (kód), Tomáš Fraňek (smysl), Veronika Hallerová (zvuk) a Bude Doplněno.
         </p>
+      </section>
+      <section id="stats">
+        <h2>Statistiky</h2>
+        <p>
+          K dnešnímu dni si 0 hráčů zahrálo 0 her,
+          proběhlo celkem ~0 tahů.
+        </p>
+        <p>
+          Nejvíce výher má na svém kontě Bude Doplněno,
+          je to nejlepší hráč na světe!
+        </p>
+        <script type="module">
+          const url = "https://firestore.googleapis.com/v1/projects/prsi-slysim/databases/(default)/documents/public/stats";
+          const [firstLine, secondLine] = document.querySelectorAll("#stats p");
+
+          fetch(url).then(r => r.json()).then(({ fields }) => {
+            const { users, games, moves, winner } = fields;
+            firstLine.textContent = `K dnešnímu dni si ${users.integerValue} uživatelů zahrálo ${games.integerValue} her, proběhlo celkem ~${moves.integerValue} tahů.`;
+            secondLine.textContent = `Nejvíce her má na svém kontě ${winner.stringValue}, je to nejdelší hráč na světě!`;
+          });
+        </script>
+      </section>
+      <section id="copy">
+        <p class="dimm" style="float: left">&copy; 02022.20</p>
+        <p class="dimm" style="float: right">🦠,🌪, 🌊, 🌋, 🇺🇦, ...</p>
       </section>
     </main>
   </div>
