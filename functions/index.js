@@ -17,7 +17,7 @@ export { userAuthenticated } from "./user.js";
 
 export const stats = functions
   .region("europe-west1")
-  .pubsub.schedule("every 5 minutes")
+  .pubsub.schedule("every 24 hours")
   .onRun(async () => {
     const db = admin.firestore();
     const { docs: games } = await db.collection("play/private/game").get();
