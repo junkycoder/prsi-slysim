@@ -135,9 +135,10 @@
           const [firstLine, secondLine] = document.querySelectorAll("#stats p");
 
           fetch(url).then(r => r.json()).then(({ fields }) => {
-            const { users, games, moves, winner } = fields;
-            firstLine.textContent = `K dnešnímu dni si ${users.integerValue} uživatelů zahrálo ${games.integerValue} her, proběhlo celkem ~${moves.integerValue} tahů.`;
-            secondLine.textContent = `Nejvíce her má na svém kontě ${winner.stringValue}, je to nejdelší hráč na světě!`;
+            const { players, games, moves, winner } = fields;
+            const score = winner.mapValue.fields;
+            firstLine.textContent = `K dnešnímu dni si ${players.integerValue} uživatelů zahrálo ${games.integerValue} her, proběhlo celkem ~${moves.integerValue} tahů.`;
+            secondLine.textContent = `Nejvíce her (${score.count.integerValue}) má na svém kontě ${score.name.stringValue}, je to nejdelší hráč na světě!`;
           });
         </script>
       </section>

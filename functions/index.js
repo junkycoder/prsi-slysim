@@ -28,7 +28,7 @@ export const stats = functions
       moves: 0,
     };
 
-    const names = {};
+    const leaderboard = {};
 
     for (let game of games) {
       const { players = [], moves = [] } = game.data();
@@ -36,13 +36,25 @@ export const stats = functions
       stats.moves += moves.length;
 
       for (let player of players.filter(({ cpu }) => !cpu)) {
-        const count = names[player.name] || 0;
-        names[player.name] = count + 1;
+        const score = leaderboard[player.id];
+        if (score) {
+          leaderboard[player.id] = {
+            name: player.name,
+            count: score.count + 1,
+          };
+        } else {
+          leaderboard[player.id] = {
+            name: player.name,
+            count: 1,
+          };
+        }
       }
     }
 
-    const [score] = Object.values(names).sort((a, b) => b - a);
-    stats.winner = Object.keys(names).find((key) => names[key] === score);
+    const [leader] = Object.values(leaderboard).sort(
+      (a, b) => b.count - a.count
+    );
+    stats.winner = leader;
 
     await db.doc("public/stats").set(stats, { merge: true });
     console.info("Stats updated", stats);
