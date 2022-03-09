@@ -1,4 +1,4 @@
-# Modul prší
+# Prší ESM module
 Karetní hra [Prší](https://cs.wikipedia.org/wiki/Pr%C5%A1%C3%AD) naimplementovaná v čistém JavaScriptu, bez dalších závislostí. 
 
 ## Použtí
