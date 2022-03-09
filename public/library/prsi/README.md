@@ -10,6 +10,8 @@ import {
   autopilot,
   getLastPlayedCardReference,
   playerGameCopy,
+  STAY_CARD_VALUE,
+  CHANGE_CARD_VALUE,
 } from "prsi"; // or https://unpkg.com/prsi
 
 // Game status is an object, mutaded bellow
@@ -36,22 +38,26 @@ moves.shuffleDeck(game, player1);
 moves.dealCards(game, player1);
 
 // 👇 returns card on table
-getLastPlayedCardReference(game)
+const lastCard = getLastPlayedCardReference(game)
 
-// 👇 Play card 
-moves.play(game, player2, {
-  type: moves.PLAY,
-  card: player2.cards[0],
-  color: autopilot.mostNumerousColor(
-    player2.cards
-  ),
-});
+if (lastCard.value === STAY_CARD_VALUE) {
+  moves.stay(game, player1);
+} else {
+  const [firstPlayerCard] = player2.cards;
+  
+  let color;
+  if (firstPlayerCard.value === CHANGE_CARD_VALUE) {
+    color = autopilot.mostNumerousColor(player2.cards);
+  } 
+  
+  moves.play(game, player2, firstPlayerCard, color);
+}
+
+
 
 // Make draw move 
 // 👇  (adds 1 card from deck to player)
-moves.play(game, player1, {
-  type: moves.DRAW
-});
+moves.draw(game, player1);
 
 // Autopilot can make moves for you, 
 // 👇 (so it's used in tests and as CPU players)
