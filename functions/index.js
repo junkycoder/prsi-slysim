@@ -32,7 +32,6 @@ export const stats = functions
 
     for (let game of games) {
       const { players = [], moves = [] } = game.data();
-      stats.players += players.length;
       stats.moves += moves.length;
 
       for (let player of players.filter(({ cpu }) => !cpu)) {
@@ -51,6 +50,7 @@ export const stats = functions
       }
     }
 
+    stats.players += Object.keys(leaderboard).length;
     const [leader] = Object.values(leaderboard).sort(
       (a, b) => b.count - a.count
     );
