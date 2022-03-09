@@ -10,7 +10,7 @@ import {
   autopilot,
   getLastPlayedCardReference,
   playerGameCopy,
-} from "prsi";
+} from "prsi"; // or https://unpkg.com/prsi
 
 // Game status is an object, mutaded bellow
 const game = createNewGame({
