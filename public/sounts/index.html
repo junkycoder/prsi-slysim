@@ -39,15 +39,14 @@
     <label>
       <span>Zvuk</span>
       <select name="sound">
-        <option>vyložení karty.wav</option>
-        <option>míchání karet.wav</option>
-        <option>míchání karet 2.wav</option>
-        <option>balíček karet na stůl.wav</option>
-        <option>sebrání karet ze stolu.wav</option>
+        <option>play-card.wav</option>
+        <option>shuffle1.wav</option>
+        <option>shuffle2.wav</option>
+        <option>deck.wav</option>
+        <option>draw.wav</option>
+        <option>deal-cards.wav</option>
         <option>prohrabování kartama.wav</option>
         <option>prohrabování kartama 2.wav</option>
-        <option>líznutí karty.wav</option>
-        <option>plop.m4a</option>
       </select>
     </label>
     <label>
@@ -210,15 +209,14 @@
       // listener.setOrientation(0, 0, -1, 0, 1, 0);
 
       const soundBuffers = {
-        "vyložení karty.wav": loadAudioBuffer(audioContext, "./assets/vyložení karty.wav"),
-        "míchání karet.wav": loadAudioBuffer(audioContext, "./assets/míchání karet.wav"),
-        "míchání karet 2.wav": loadAudioBuffer(audioContext, "./assets/míchání karet 2.wav"),
-        "balíček karet na stůl.wav": loadAudioBuffer(audioContext, "./assets/balíček karet na stůl.wav"),
-        "sebrání karet ze stolu.wav": loadAudioBuffer(audioContext, "./assets/sebrání karet ze stolu.wav"),
+        "play-card.wav": loadAudioBuffer(audioContext, "./assets/play-card.wav"),
+        "shuffle1.wav": loadAudioBuffer(audioContext, "./assets/shuffle1.wav"),
+        "shuffle2.wav": loadAudioBuffer(audioContext, "./assets/shuffle2.wav"),
+        "deck.wav": loadAudioBuffer(audioContext, "./assets/deck.wav"),
+        "draw.wav": loadAudioBuffer(audioContext, "./assets/draw.wav"),
+        "deal-cards.wav": loadAudioBuffer(audioContext, "./assets/deal-cards.wav"),
         "prohrabování kartama.wav": loadAudioBuffer(audioContext, "./assets/prohrabování kartama.wav"),
         "prohrabování kartama 2.wav": loadAudioBuffer(audioContext, "./assets/prohrabování kartama 2.wav"),
-        "líznutí karty.wav": loadAudioBuffer(audioContext, "./assets/líznutí karty.wav"),
-        "plop.m4a": loadAudioBuffer(audioContext, "./assets/plop.m4a"),
       }
 
       Promise.allSettled(Object.values(soundBuffers));
@@ -251,7 +249,7 @@
 
       async function playRain() {
         const rainSource = new SoundSource(audioContext.destination, { gain: .4 });
-        const rainBuffer = await loadAudioBuffer(audioContext, "./assets/light-rain-sound.mp3");
+        const rainBuffer = await loadAudioBuffer(audioContext, "./assets/rain.mp3");
         // source.setOrientation(0, -1, 0);
 
 

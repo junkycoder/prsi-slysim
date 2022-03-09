@@ -3,8 +3,16 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import minimist from "minimist";
 import { moves } from "prsi";
+import path from "path";
 
-process.env.GOOGLE_APPLICATION_CREDENTIALS = "./service-account.json";
+const dirname = new URL(import.meta.url).pathname
+  .split("/").slice(0, -1).join("/");
+
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(
+  dirname,
+  "./service-account.json"
+);
 
 initializeApp({
   credential: applicationDefault(),
