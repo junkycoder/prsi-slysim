@@ -323,12 +323,6 @@
       playerNameStoredLocally.write(value);
     });
 
-    joinGame.dialog.querySelector("form").addEventListener(
-      "submit",
-      handleJoinGameSubmit
-    );
-
-
     USER: {
       watchUser(handleUserVerifyChange);
     }
@@ -480,6 +474,17 @@
         selectedColor: undefined,
       };
 
+
+      joinGame.dialog.querySelector("form").addEventListener(
+        "submit",
+        async (event) => {
+          const game = await handleJoinGameSubmit(event);
+          if (game) {
+            emit({ game })
+          }
+        }
+      );
+
       watchUser((u) => {
         emit({ user: u?.toJSON() });
       });
@@ -525,22 +530,26 @@
             gameId,
             card: state.selectedCard,
             color: state.selectedColor,
-          }).catch(error => {
-            console.error(error);
-            alert("Špatný tah.");
-            buttonElement.removeAttribute("disabled");
-          }).finally(() => {
-            if (buttonElement.dataset.allowMany === "true") {
+          })
+            .then(({ data: { game } }) => {
+              emit({
+                game,
+                // cleanup ui controls
+                selectedCard: null,
+                selectedColor: null,
+              });
+            })
+            .catch(error => {
+              console.error(error);
+              alert("Špatný tah.");
               buttonElement.removeAttribute("disabled");
-            }
-            buttonElement.textContent = buttonElementLabel;
-          });
+            }).finally(() => {
+              if (buttonElement.dataset.allowMany === "true") {
+                buttonElement.removeAttribute("disabled");
+              }
+              buttonElement.textContent = buttonElementLabel;
+            });
 
-          // cleanup ui controls
-          emit({
-            selectedCard: null,
-            selectedColor: null,
-          });
         },
         handlePlayerCardSelect(event) {
           const cardId = event.target.value;
@@ -679,18 +688,19 @@
 
       const formData = new FormData(event.target);
       const playerName = formData.get("player-name");
-      const { data: { error } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
 
-      if (error) {
+      try {
+        const { data: { game } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
+        submitButton.removeAttribute("disabled");
+        submitButton.textContent = submitButtonLabel;
+        joinGame.close();
+        return game;
+      } catch (error) {
         if (error.code === "already-exists") {
           alert(`${playerName} již hraje v této hře.`);
         } else {
           alert(`Nastala chyba při připojování k hře: ${error.message}`);
         }
-      } else {
-        submitButton.removeAttribute("disabled");
-        submitButton.textContent = submitButtonLabel;
-        joinGame.close();
       }
     }
 

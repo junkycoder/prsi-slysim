@@ -106,36 +106,29 @@ export const join = functions
     const db = admin.firestore();
     const ref = db.collection("play/private/game").doc(gameId);
 
-    try {
-      await db.runTransaction(async (batch) => {
-        const game = (await batch.get(ref)).data();
-        const player = { id: context.auth.uid, name: playerName };
+    return await db.runTransaction(async (batch) => {
+      const game = (await batch.get(ref)).data();
+      const player = { id: context.auth.uid, name: playerName };
 
-        if (!game) {
-          throw new functions.https.HttpsError("not-found", "Hra neexistuje.");
-        }
+      if (!game) {
+        throw new functions.https.HttpsError("not-found", "Hra neexistuje.");
+      }
 
-        if (game.players.length >= game.settings.maxPlayers) {
-          throw new functions.https.HttpsError(
-            "invalid-argument",
-            "Hra je plná."
-          );
-        } else {
-          addPlayer(game, player);
-        }
+      if (game.players.length >= game.settings.maxPlayers) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "Hra je plná."
+        );
+      } else {
+        addPlayer(game, player);
+      }
 
-        batch.update(ref, game, { merge: true });
-      });
-    } catch (error) {
+      batch.update(ref, game, { merge: true });
+
       return {
-        error: {
-          code: error.code,
-          message: error.message,
-        },
+        game: playerGameCopy(context.auth.uid, game),
       };
-    }
-
-    return { error: null };
+    });
   });
 
 /**
@@ -176,7 +169,7 @@ export const move = functions
     const ref = db.doc(`play/private/game/${gameId}`);
 
     try {
-      await db.runTransaction(async (batch) => {
+      return await db.runTransaction(async (batch) => {
         const game = (await batch.get(ref)).data();
         const player = getPlayer(game, context.auth.uid);
 
@@ -197,6 +190,9 @@ export const move = functions
         }
 
         batch.update(ref, game, { merge: true });
+        return {
+          game: playerGameCopy(context.auth.uid, game),
+        };
       });
     } catch (error) {
       console.error(error);
@@ -205,8 +201,6 @@ export const move = functions
         error.message || "Chyba při provádění tahu."
       );
     }
-    // How to allow every move, but force player to take it back if invalid?
-    return { error: null };
   });
 
 /**
