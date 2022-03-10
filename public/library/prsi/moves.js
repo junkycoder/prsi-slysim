@@ -132,6 +132,7 @@ export function draw(game, player) {
 
   for (let i = 0; i < n; i++) {
     const card = game.deck.shift();
+    card.cold = false; // nice bug, special effect of drawn cards was not possible to use
     game.players.find(({ id }) => player.id === id).cards.push(card);
   }
 
