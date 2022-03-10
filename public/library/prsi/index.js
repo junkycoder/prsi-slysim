@@ -160,7 +160,7 @@ export function addPlayer(game, { id, name, cards = [], cpu = false }) {
 }
 
 export function getPlayer(game, id) {
-  const player = game.players.find((player) => player.id == id);
+  const player = game?.players.find((player) => player.id == id);
   if (!player) {
     return null;
   }
