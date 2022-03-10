@@ -3,10 +3,10 @@ import {
   shuffleCards,
   getLastPlayedCardReference,
   endTurn,
+  resetGame,
   STAY_CARD_VALUE,
   CHANGE_CARD_VALUE,
   DRAW_CARD_VALUE,
-  CARDS
 } from "./index.js";
 
 export const SHUFFLE = shuffleDeck.name;
@@ -16,16 +16,7 @@ export function shuffleDeck(game, player) {
   }
 
   if (game.status === GAME_STATUS.OVER) {
-    game.status = GAME_STATUS.NOT_STARTED;
-    game.turn = 0;
-    game.playedCards = [];
-
-    for (let player of game.players) {
-      player.cards = [];
-    }
-
-    game.deck = shuffleCards(CARDS);
-    game.lastMove = null;
+    resetGame(game);
   } else {
     game.deck = shuffleCards(game.deck);
   }

@@ -238,7 +238,6 @@ export function content(
               ?disabled=${!canPlayCard || busy === PLAY_MOVE}
               name=${PLAY_MOVE}
             >
-              ${console.log("selectedCard", selectedCard?.id)}
               ${ifelse(
                 isPlayersTurn,
                 ifelse(

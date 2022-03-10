@@ -236,3 +236,18 @@ export function endTurn(
     game.currentPlayer = game.players[(playerIndex + 1) % game.players.length];
   }
 }
+
+export function resetGame(game) {
+  game.status = GAME_STATUS.NOT_STARTED;
+  game.turn = 0;
+  game.playedCards = [];
+  game.outcome = null;
+  // TODO Make some outcome history? Like leaderboard or sometin?
+
+  for (let player of game.players) {
+    player.cards = [];
+  }
+
+  game.deck = shuffleCards(CARDS);
+  game.lastMove = null;
+}
