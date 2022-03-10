@@ -45,28 +45,27 @@ export const game_summary_line = (game) => {
 
 export function players_summary_line(game) {
   let line = "";
-  if ([GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status)) {
-    if (!game.players?.length) {
-      line += `U stolu zatím nikdo nesedí.`;
-    } else {
-      line += `U stolu sedí `;
-      line += game.players
-        .slice(0, -1)
-        .map(({ name }) => name)
-        .join(", ");
+  if (!game.players?.length) {
+    line += `U stolu nikdo nesedí.`;
+  } else {
+    line += `U stolu sedí `;
+    line += game.players
+      .slice(0, -1)
+      .map(({ name, cards = [] }) => `${name} - ${cards.length}`)
+      .join(", ");
 
-      const lastPayer = game.players.slice(-1)[0];
+    const lastPayer = game.players.slice(-1)[0];
 
-      if (game.players.length > 1) {
-        line += " a ";
-      }
-      line += lastPayer.name;
-      line += `.`;
+    if (game.players.length > 1) {
+      line += " a ";
     }
-    if ((game.players || []).length < 2) {
-      line += ` Čeká se na alespoň jednoho spoluhráče..`;
-    }
+    line += `${lastPayer.name} - ${lastPayer.cards.length}.`;
   }
+
+  if ((game.players || []).length < 2) {
+    line += ` Čeká se na alespoň jednoho spoluhráče..`;
+  }
+
   return line || nothing;
 }
 
