@@ -410,7 +410,7 @@ export function moveMessage(game, user) {
     message += " stojí";
   }
 
-  if (game.outcome) {
+  if (game.status === GAME_STATUS.OVER && game.outcome) {
     message += ` a vyhrává!`;
   } else if (game.currentPlayer.id === user.uid) {
     message += ". Jsi na tahu.";
