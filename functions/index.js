@@ -20,7 +20,10 @@ export const stats = functions
   .pubsub.schedule("every 24 hours")
   .onRun(async () => {
     const db = admin.firestore();
-    const { docs: games } = await db.collection("play/private/game").get();
+    const { docs: games } = await db
+      .collection("play/private/game")
+      .orderBy("createdAt", "desc")
+      .get();
     const stats = {
       games: games.length,
       players: 0,
