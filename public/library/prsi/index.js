@@ -10,8 +10,6 @@ import {
   PLAY as PLAY_MOVE,
 } from "./moves.js";
 
- import crypto from "crypto";
-
 export const name = "Prší";
 
 export const GAME_STATUS = {
@@ -62,8 +60,6 @@ export function createNewGame({
 } = {}) {
   const game = {
     turn: 0,
-    round: crypto.randomUUID(),
-    wins: [], // All outcomes of the game
     status: GAME_STATUS.NOT_STARTED,
     settings: {
       maxPlayers,
@@ -93,8 +89,6 @@ export function playerGameCopy(
   playerId,
   {
     turn,
-    round,
-    wins,
     status,
     settings,
     currentPlayer,
@@ -110,8 +104,6 @@ export function playerGameCopy(
 ) {
   return {
     turn,
-    round,
-    wins,
     status,
     settings,
     currentPlayer: !currentPlayer
@@ -199,7 +191,6 @@ export function endTurn(
     card,
     color,
     drawn,
-    round: game.round,
   };
 
   game.moves.push(game.lastMove);
@@ -230,11 +221,7 @@ export function endTurn(
   );
 
   if (isWinner(player)) {
-    game.outcome = {
-      winner: player,
-      turn: game.turn,
-      round: game.round,
-    };
+    game.outcome = { winner: player };
     console.info("GAME OVER 🎉\n", JSON.stringify(game.outcome, null, 2));
     game.status = GAME_STATUS.OVER;
 
@@ -253,10 +240,9 @@ export function endTurn(
 export function resetGame(game) {
   game.status = GAME_STATUS.NOT_STARTED;
   game.turn = 0;
-  game.round = crypto.randomUUID();
-  game.wins.push(game.outcome);
-  game.outcome = null;
   game.playedCards = [];
+  game.outcome = null;
+  // TODO Make some outcome history? Like leaderboard or sometin?
 
   for (let player of game.players) {
     player.cards = [];
