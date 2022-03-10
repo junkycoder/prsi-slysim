@@ -608,11 +608,12 @@
         //   game.lastMove?.player.id !== state.user?.uid
         // ) {
         if (
-          state.game && game.lastMove && // je to update stavu hry
+          state.game &&
+          game.lastMove && // je to update stavu hry
           game.lastMove.player.id !== state.user?.uid && // nejsem to já
           (
             // a neni to stejný tah jako předchozí
-            game.lastMove.player.id !== state.game.lastMove.player.id ||
+            game.lastMove.player.id !== state.game.lastMove?.player.id ||
             game.lastMove.type !== state.game.lastMove.type
           )
         ) {
