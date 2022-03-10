@@ -39,6 +39,7 @@ if (args.users) {
     const gamesCount = await userGamesCount(id);
     console.log(email, gamesCount);
   }
+  console.log(users.length);
 }
 
 if (args.games) {
@@ -46,6 +47,7 @@ if (args.games) {
   for (let { id, players = [], moves = [] } of games) {
     console.log(id, moves.length, players.map(({ name }) => name).join(", "));
   }
+  console.log(games.length);
 }
 
 if (args.replay) {
