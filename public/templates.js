@@ -284,7 +284,7 @@ export function content(
             <button
               @click=${handleMove}
               name=${SHUFFLE_MOVE}
-              ?disabled=${!canShuffleDeck}
+              ?disabled=${!canShuffleDeck || busy === SHUFFLE_MOVE}
             >
               ${ifelse(
                 busy === SHUFFLE_MOVE,
