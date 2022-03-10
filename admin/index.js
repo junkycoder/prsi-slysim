@@ -82,7 +82,7 @@ if (args["check-copies"]) {
 }
 
 if (args["update-stats"]) {
-  const { docs: games } = await db.collection("play/private/game").orderBy("createdAt", "desc").get();
+  const games = await listAllGames();
   const stats = {
     games: games.length,
     players: 0,
