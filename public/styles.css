@@ -184,3 +184,8 @@ figure {
 .firebase-emulator-warning {
   display: none;
 }
+
+/* Allow using button attributes form event.target */
+body main button * {
+  pointer-events: none;
+}

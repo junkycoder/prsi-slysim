@@ -515,16 +515,14 @@
 
           const buttonElement = event.target;
           const { name: moveType } = buttonElement;
-          const buttonElementLabel = buttonElement.textContent;
-          buttonElement.setAttribute("disabled", "disabled");
 
+          emit({ busy: moveType });
 
           Sounds.playTimes(
             MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default,
             buttonElement.dataset.n || 1
           );
 
-          buttonElement.textContent = buttonElement.dataset.busyTitle || "Zpracovávám...";
           httpsCallable(fns, "gameMove")({
             moveType,
             gameId,
@@ -541,13 +539,10 @@
             })
             .catch(error => {
               console.error(error);
+              // ‼️ even server error will tell it is wrong move.
               alert("Špatný tah.");
-              buttonElement.removeAttribute("disabled");
             }).finally(() => {
-              if (buttonElement.dataset.allowMany === "true") {
-                buttonElement.removeAttribute("disabled");
-              }
-              buttonElement.textContent = buttonElementLabel;
+              emit({ busy: null });
             });
 
         },
