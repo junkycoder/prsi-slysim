@@ -8,7 +8,11 @@ import {
   getPlayer,
   autopilot,
   GAME_STATUS,
+  setCrypto
 } from "prsi";
+
+import crypto from "crypto";
+setCrypto(crypto);
 
 /**
  * Callable function to create a new game.
@@ -217,7 +221,7 @@ export const triggers = functions
     if (game) {
       await makeGameCopies(game, { db, batch });
 
-      if (game.turn > change.before.data().turn) {
+      if (game.turn > change.before.data()?.turn) {
         await makeCpuMove(game, { db, batch }); // witch can produce another call of this trigger 😈
       }
     }

@@ -60,6 +60,8 @@ export function createNewGame({
 } = {}) {
   const game = {
     turn: 0,
+    round: generateUUID(),
+    wins: [], // All outcomes of the game
     status: GAME_STATUS.NOT_STARTED,
     settings: {
       maxPlayers,
@@ -191,6 +193,7 @@ export function endTurn(
     card,
     color,
     drawn,
+    round: game.round || "unknown",
   };
 
   game.moves.push(game.lastMove);
@@ -221,7 +224,11 @@ export function endTurn(
   );
 
   if (isWinner(player)) {
-    game.outcome = { winner: player };
+    game.outcome = {
+      winner: player,
+      turn: game.turn,
+      round: game.round || "unknown",
+    };
     console.info("GAME OVER 🎉\n", JSON.stringify(game.outcome, null, 2));
     game.status = GAME_STATUS.OVER;
 
@@ -240,9 +247,12 @@ export function endTurn(
 export function resetGame(game) {
   game.status = GAME_STATUS.NOT_STARTED;
   game.turn = 0;
-  game.playedCards = [];
+
+  game.round = generateUUID();
+  game.wins.push(game.outcome);
   game.outcome = null;
-  // TODO Make some outcome history? Like leaderboard or sometin?
+
+  game.playedCards = [];
 
   for (let player of game.players) {
     player.cards = [];
@@ -250,4 +260,30 @@ export function resetGame(game) {
 
   game.deck = shuffleCards(CARDS);
   game.lastMove = null;
+}
+
+// Krypto koutek
+
+let crypto = globalThis.crypto;
+
+export function setCrypto(lib) {
+  crypto = lib;
+}
+
+function generateUUID() {
+  if (!crypto) {
+    console.warn("Crypto library not set, using simple Math.random()");
+    return Math.random().toString(36).substr(2, 9);
+  }
+
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
+    (
+      c ^
+      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+    ).toString(16)
+  );
 }
