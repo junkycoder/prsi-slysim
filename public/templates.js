@@ -312,7 +312,7 @@ export function content(
                 )
               )}
             >
-              ${ifelse(busy === DEAL_MOVE, "Rozdávám...", "Rozdát karty")}
+              ${ifelse(busy === DEAL_MOVE, "Rozdávám...", "Rozdat karty")}
             </button>
           `
         )}
