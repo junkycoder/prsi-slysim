@@ -91,6 +91,8 @@ export function playerGameCopy(
   playerId,
   {
     turn,
+    round,
+    wins,
     status,
     settings,
     currentPlayer,
@@ -106,6 +108,8 @@ export function playerGameCopy(
 ) {
   return {
     turn,
+    round,
+    wins,
     status,
     settings,
     currentPlayer: !currentPlayer
