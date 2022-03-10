@@ -32,28 +32,50 @@ export const game_title_line = (game) => {
 export const game_summary_line = (game) => {
   let line = "";
 
-  if (!game.status) {
+  if (game.status === GAME_STATUS.NOT_STARTED) {
     line += `Hra ještě nezačala.`;
-    if ((game.players || []).length < 2) {
-      line += ` Čeká se na alespoň jednoho spoluhráče..`;
-    }
-  } else {
-    if (game.status === GAME_STATUS.OVER) {
-      line += `Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
-    }
-    if (game.outcome) {
-      line += ` Je ${game.turn}. kolo.`;
-    }
+  }
+
+  if (game.status === GAME_STATUS.OVER) {
+    line += `Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
   }
 
   return line || nothing;
 };
+
+export function players_summary_line(game) {
+  let line = "";
+  if ([GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status)) {
+    if (!game.players?.length) {
+      line += `U stolu zatím nikdo nesedí.`;
+    } else {
+      line += `U stolu sedí `;
+      line += game.players
+        .slice(0, -1)
+        .map(({ name }) => name)
+        .join(", ");
+
+      const lastPayer = game.players.slice(-1)[0];
+
+      if (game.players.length > 1) {
+        line += " a ";
+      }
+      line += lastPayer.name;
+      line += `.`;
+    }
+    if ((game.players || []).length < 2) {
+      line += ` Čeká se na alespoň jednoho spoluhráče..`;
+    }
+  }
+  return line || nothing;
+}
 
 export function header({ game = {} } = {}) {
   return html`
     <header>
       <h1>${game_title_line(game)}</h1>
       <p>${game_summary_line(game)}</p>
+      <p>${players_summary_line(game)}</p>
     </header>
   `;
 }
@@ -63,37 +85,6 @@ const noop = () => {};
 const ifelse = (condition, then, elze = nothing) => (condition ? then : elze);
 const unless = (negacondition, then) => ifelse(!negacondition, then);
 
-export const players_summary_line = ({ currentPlayer, players = [] }) => {
-  if (!players.length) {
-    return `U stolu zatím nikdo nesedí.`;
-  }
-
-  let line = `U stolu sedí `;
-
-  line += players
-    .slice(0, -1)
-    .map(({ name, cards }) =>
-      !cards.length ? name : `${name} (${cards.length})`
-    )
-    .join(", ");
-
-  const lastPayer = players.slice(-1)[0];
-
-  if (players.length > 1) {
-    line += " a ";
-  }
-
-  line += !lastPayer.cards.length
-    ? `${lastPayer.name}.`
-    : `${lastPayer.name} (${lastPayer.cards.length}).`;
-
-  if (currentPlayer) {
-    line += ` Na tahu je ${currentPlayer.name}.`;
-  }
-
-  return line;
-};
-
 export const table_card_line = ({ card, color }) => {
   let line = `${card?.value}–${card?.color}`;
   line = `Na stole je ${line}`;
@@ -102,9 +93,7 @@ export const table_card_line = ({ card, color }) => {
     line += ` a mění na ${color}`;
   }
 
-  // if (game.playedCards?.length - 1) {
-  //   line += `+ ${game.playedCards-1.length} odehraných`
-  // }
+  line += ".";
   return line;
 };
 
@@ -171,22 +160,35 @@ export function content(
   return html`
     <main>
       <section>
-        <p>${players_summary_line(game)}</p>
+        ${unless(
+          game.status !== GAME_STATUS.STARTED,
+          html`
+            <figure>
+              ${ifelse(
+                cardOnTable,
+                table_card_line({
+                  card: cardOnTable,
+                  color: game.currentColor,
+                }),
+                "Na stole není vyložená žádná karta."
+              )}
+            </figure>
+          `
+        )}
+
         <figure>
           ${ifelse(
-            cardOnTable,
-            table_card_line({ card: cardOnTable, color: game.currentColor }),
-            "Na stole není vyložená žádná karta."
+            currentPlayer,
+            ifelse(
+              [GAME_STATUS.OVER, GAME_STATUS.NOT_STARTED].includes(game.status),
+              `Karty ${game.deckShuffled ? "rozdává" : "míchá"} ${
+                currentPlayer?.name
+              }.`,
+              `Na tahu je ${currentPlayer?.name}.`
+            ),
+            "Zapojte se jako první hráč, budete míchat a rozdávát."
           )}
         </figure>
-        <figure>
-        ${ifelse(
-          game.deck?.length,
-          `Balíček karet (${game.deck?.length}) ${
-            game.deckShuffled ? "" : "není zamíchaný"
-          }`,
-          `Balíček tu ${!cardOnTable ? "také " : ""} není.`
-        )}
       </section>
 
       <section>
@@ -261,7 +263,11 @@ export function content(
                 "Hra již probíhá",
                 unless(isUserVerified, "Nejprve se potřebujete ověřit")
               )}
-              type=${ifelse(game.status, "button", "submit")}
+              type=${ifelse(
+                game.status === GAME_STATUS.STARTED,
+                "button",
+                "submit"
+              )}
             >
               Zapojit se do hry
             </button>
@@ -318,9 +324,10 @@ export function content(
               @click=${handleMove}
               name=${DRAW_MOVE}
               data-n=${game.drawCount || 1}
-              title=${unless(
+              title=${ifelse(
                 game.deck?.length < game.drawCount,
-                "Balíček je prázdný"
+                "Nedostatek karet v balíčku",
+                `V balíčku je ${game.deck.length} karet`
               )}
             >
               ${ifelse(
@@ -341,7 +348,7 @@ export function content(
               @click=${handleMove}
               name=${STAY_MOVE}
             >
-              ${ifelse(busy === STAY_MOVE, "Stojím...", "Stojím")}
+              ${ifelse(busy === STAY_MOVE, "Stojím...", "Stát")}
             </button>
           `
         )}
