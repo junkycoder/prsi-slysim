@@ -394,20 +394,22 @@ export function moveMessage(game, user) {
   message = `${playerName}`;
 
   if (drawn) {
-    message += ` si ${drawn}krát líznul.`;
+    message += ` si ${drawn}krát líznul`;
   } else if (card) {
     message += ` táhnul ${card.value} ${card.color}`;
     if (card.value === CHANGE_CARD_VALUE) {
       message += ` a změnil barvu na ${game.currentColor}`;
     }
-    message += `.`;
   } else if (type === STAY_MOVE) {
-    message += " stojí.";
+    message += " stojí";
   }
 
-  if (game.currentPlayer.id === user.uid) {
-    message += " Jsi na tahu.";
+  if (game.outcome) {
+    message += ` a vyhrává!`;
+  } else if (game.currentPlayer.id === user.uid) {
+    message += ". Jsi na tahu.";
+  } else {
+    message += `.`;
   }
-
   return message;
 }
