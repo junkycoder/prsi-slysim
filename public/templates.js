@@ -200,7 +200,7 @@ export function content(
                 userPlayer?.cards,
                 ({ id }) => id,
                 ({ id, value, color }) => html`
-                  <label class="hands__item hands__item--card">
+                  <label class="hands__item hands__item--card" aria-label="${value} ${color} hehe">
                     <input
                       ?checked=${id === selectedCard?.id}
                       type="radio"
@@ -208,8 +208,8 @@ export function content(
                       name="card"
                       @change=${handlePlayerCardSelect}
                     />
-                    <span aria-label="${value} ${color}">
-                      ${value}<br />${color}
+                    <span>
+                      ${`${value} ${color}`}
                     </span>
                   </label>
                 `
