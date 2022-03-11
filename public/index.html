@@ -375,7 +375,7 @@
       const submitButton = verifySelf.dialog.querySelector("form button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Odesílám...';
+      submitButton.textContent = 'Odesílám';
 
       try {
         const formData = new FormData(event.target);
@@ -409,7 +409,7 @@
       const submitButton = createGame.dialog.querySelector("button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Vytvářím hru...';
+      submitButton.textContent = 'Vytvářím hru';
 
       try {
         const formData = new FormData(event.target);
@@ -672,7 +672,7 @@
       const submitButton = joinGame.dialog.querySelector("button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Přisedám...';
+      submitButton.textContent = 'Přisedám';
 
       if (!gameId) {
         console.error("Game ID not found");
