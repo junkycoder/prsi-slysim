@@ -298,7 +298,7 @@ export function content(
             >
               ${ifelse(
                 busy === SHUFFLE_MOVE,
-                "Míchám...",
+                "Míchám",
                 "Zamíchat balíček karet"
               )}
             </button>
@@ -337,7 +337,7 @@ export function content(
             >
               ${ifelse(
                 busy === DRAW_MOVE,
-                "Lížu...",
+                "Lížu",
                 `Líznout si ${
                   game.drawCount > 1 ? game.drawCount + "krát" : ""
                 }`
@@ -368,7 +368,7 @@ export function content(
             >
               ${ifelse(
                 busy === FLIP_PLAYED_CARDS_TO_DECK_MOVE,
-                "Otáčím...",
+                "Otáčím",
                 "Otočit odehrané karty"
               )}
             </button>
