@@ -353,7 +353,7 @@ export function content(
               @click=${handleMove}
               name=${STAY_MOVE}
             >
-              ${ifelse(busy === STAY_MOVE, "Stojím...", "Stát")}
+              ${ifelse(busy === STAY_MOVE, "Stojím", "Stát")}
             </button>
           `
         )}
