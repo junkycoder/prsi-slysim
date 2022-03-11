@@ -24,7 +24,7 @@ const db = getFirestore();
 
 const args = minimist(process.argv.slice(2), {
   string: ["doc", "replay", "id"],
-  boolean: ["users", "games", "check-copies", "update-stats"],
+  boolean: ["users", "games", "check-copies", "update-stats", "delete-copies"],
   // default: { emulation: false },
 });
 
@@ -92,8 +92,7 @@ if (args["update-stats"]) {
 
   const leaderboard = {};
 
-  for (let game of games) {
-    const { players = [], moves = [] } = game.data();
+  for (let { players = [], moves = [] } of games) {
     stats.moves += moves.length;
 
     for (let player of players.filter(({ cpu }) => !cpu)) {
@@ -118,6 +117,24 @@ if (args["update-stats"]) {
 
   await db.doc("public/stats").set(stats, { merge: true });
   console.info("Stats updated", stats);
+}
+
+if (args["delete-copies"]) {
+  if (!args.id) {
+    throw new Error("--id of game is required");
+  }
+  const doc = await db.doc(`play/private/game/${args.id}`).get();
+  if (!doc.exists) {
+    throw new Error(`Game ${args.id} does not exist`);
+  }
+  const { players } = doc.data();
+  await Promise.all(
+    [...players.map(({ id }) => id), "public", "private"].map((perspective) => {
+      const path = `play/${perspective}/game/${args.id}`;
+      console.info(`Deleting ${path}`);
+      return db.doc(path).delete();
+    })
+  );
 }
 
 async function listAllGames(nextPageToken) {
