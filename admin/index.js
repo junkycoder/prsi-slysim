@@ -2,7 +2,6 @@ import { initializeApp, applicationDefault } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import minimist from "minimist";
-import { moves } from "prsi";
 import path from "path";
 
 const dirname = new URL(import.meta.url).pathname
@@ -135,6 +134,15 @@ if (args["delete-copies"]) {
       return db.doc(path).delete();
     })
   );
+}
+
+if (args["simple-stats"]) {
+  const users = await listAllUsers();
+  console.info(users.length, `users`);
+  const games = await listAllGames();
+  console.info(games.length, `games`);
+  const lastGameDate = games.splice(-1)[0].createdAt.toDate().toLocaleString();
+  console.info(`${lastGameDate} last`);
 }
 
 async function listAllGames(nextPageToken) {
