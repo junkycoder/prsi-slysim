@@ -145,6 +145,19 @@ if (args["simple-stats"]) {
   console.info(`${lastGameDate} last`);
 }
 
+if (args["fix-wins"]) {
+  const games = await listAllGames();
+  for (let { id, wins, round } of games) {
+    if (wins === undefined) {
+      const path = `play/private/game/${id}`;
+      await db.doc(path).update({ wins: [], round: "nah" });
+      console.log(path, "updated...");
+    } else {
+      console.log(id, wins.length, "👌", round);
+    }
+  }
+}
+
 async function listAllGames(nextPageToken) {
   const page = await db
     .collection(`play/private/game`)
