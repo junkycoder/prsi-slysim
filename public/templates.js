@@ -162,7 +162,7 @@ export function content(
         ${unless(
           game.status !== GAME_STATUS.STARTED,
           html`
-            <figure>
+            <p>
               ${ifelse(
                 cardOnTable,
                 table_card_line({
@@ -171,11 +171,11 @@ export function content(
                 }),
                 "Na stole není vyložená žádná karta."
               )}
-            </figure>
+            </p>
           `
         )}
 
-        <figure>
+        <p>
           ${ifelse(
             currentPlayer,
             ifelse(
@@ -187,7 +187,7 @@ export function content(
             ),
             "Zapojte se jako první hráč, budete míchat a rozdávát."
           )}
-        </figure>
+        </p>
       </section>
 
       <section>
