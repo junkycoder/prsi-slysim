@@ -22,7 +22,7 @@ export const stats = functions
     const db = admin.firestore();
     const { docs: games } = await db
       .collection("play/private/game")
-      .orderBy("createdAt", "desc")
+      .orderBy("createdAt", "asc")
       .get();
     const stats = {
       games: games.length,
@@ -60,5 +60,4 @@ export const stats = functions
     stats.winner = leader;
 
     await db.doc("public/stats").set(stats, { merge: true });
-    console.info("Stats updated", stats);
   });
