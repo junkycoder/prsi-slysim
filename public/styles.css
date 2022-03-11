@@ -116,23 +116,43 @@ figure {
   margin-left: 0;
 }
 
-.flex {
+.hands {
   display: flex;
+  text-align: center;
   flex-grow: 1;
-  align-items: center;
-}
-
-.horizontal-scroll {
   overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  padding: 8px 0 12px 0;
+  gap: 8px;
+  padding-bottom: 16px;
 }
-
-.horizontal-scroll .flex {
-  margin-right: 16px;
+.hands__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
-
+.hands__item--card {
+  min-width: calc(var(--viewport-width) / 5);
+  height: 102px;
+  border: 1px solid black;
+  border-radius: 1px;
+  padding: 8px;
+  line-height: 250%;
+}
+.hands__item--color {
+  flex: 1;
+ padding: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  .hands__item--card {
+    border-color: white;
+  }
+}
+.hands__item input {
+  display: none;
+}
+.hands__item input:checked + span {
+  font-weight: bold;
+}
 
 .dialog {
   position: fixed;

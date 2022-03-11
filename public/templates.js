@@ -195,20 +195,22 @@ export function content(
         ${ifelse(
           showPlayersCards,
           html`
-            <div class="flex horizontal-scroll">
+            <div class="hands">
               ${repeat(
                 userPlayer?.cards,
                 ({ id }) => id,
                 ({ id, value, color }) => html`
-                  <label class="flex">
+                  <label class="hands__item hands__item--card">
                     <input
                       ?checked=${id === selectedCard?.id}
                       type="radio"
                       value="${id}"
-                      name="play"
+                      name="card"
                       @change=${handlePlayerCardSelect}
                     />
-                    ${`${value}–${color}`}
+                    <span aria-label="${value} ${color}">
+                      ${value}<br />${color}
+                    </span>
                   </label>
                 `
               )}
@@ -216,10 +218,10 @@ export function content(
             ${ifelse(
               showCardColorSelect,
               html`
-                <div class="flex horizontal-scroll" aria-label="Změna barvy">
+                <div class="hands" aria-label="Změna barvy">
                   ${CARD_COLORS.map(
                     (color) => html`
-                      <label class="flex">
+                      <label class="hands__item hands__item--color">
                         <input
                           ?checked=${color === selectedCard?.color}
                           type="radio"
@@ -227,7 +229,7 @@ export function content(
                           name="color"
                           @change=${handleCardColorSelect}
                         />
-                        ${color}
+                        <span>${color}</span>
                       </label>
                     `
                   )}
@@ -243,7 +245,11 @@ export function content(
                 isPlayersTurn,
                 ifelse(
                   selectedCard,
-                  `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
+                  ifelse(
+                    selectedCard?.value === CHANGE_CARD_VALUE,
+                    `Táhnout ${selectedCard?.value}–${selectedCard?.color} a změnit barvu na ${selectedColor}`,
+                    `Táhnout ${selectedCard?.value}–${selectedCard?.color}`,
+                    ),
                   "Před tahem vyberte kartu"
                 ),
                 `Na tahu je ${currentPlayer?.name}`
