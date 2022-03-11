@@ -132,6 +132,7 @@ figure {
 }
 .hands__item--card {
   min-width: calc(var(--viewport-width) / 5);
+  max-width: calc(var(--viewport-width) / 5);
   height: 102px;
   border: 1px solid black;
   border-radius: 1px;
@@ -140,7 +141,7 @@ figure {
 }
 .hands__item--color {
   flex: 1;
- padding: 8px;
+  padding: 8px;
 }
 @media (prefers-color-scheme: dark) {
   .hands__item--card {
