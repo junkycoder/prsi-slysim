@@ -219,7 +219,7 @@ export const triggers = functions
     const batch = db.batch();
 
     if (game) {
-      await makeGameCopies(game, { db, batch });
+      makeGameCopies(game, { db, batch });
 
       if (game.turn > change.before.data()?.turn) {
         await makeCpuMove(game, { db, batch }); // witch can produce another call of this trigger 😈
@@ -232,7 +232,7 @@ export const triggers = functions
 /**
  * 1. function that keeps game copies in sync.
  */
-async function makeGameCopies(game, { db, batch }) {
+function makeGameCopies(game, { db, batch }) {
   for (const player of game.players.filter(({ cpu }) => !cpu)) {
     batch.set(
       db.collection(`play/${player.id}/game`).doc(game.id),
@@ -249,7 +249,7 @@ async function makeGameCopies(game, { db, batch }) {
 /**
  * 2. function that makes cpu moves.
  */
-async function makeCpuMove(game, { db, batch }) {
+function makeCpuMove(game, { db, batch }) {
   if (game?.status !== GAME_STATUS.STARTED) return;
   if (!game?.currentPlayer?.cpu) return;
 

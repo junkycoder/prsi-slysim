@@ -13,8 +13,6 @@ export {
   triggers,
 } from "./game.js";
 
-export { userAuthenticated } from "./user.js";
-
 export const stats = functions
   .region("europe-west1")
   .pubsub.schedule("every 60 minutes")
