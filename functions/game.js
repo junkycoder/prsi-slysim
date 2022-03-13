@@ -8,7 +8,7 @@ import {
   getPlayer,
   autopilot,
   GAME_STATUS,
-  setCrypto
+  setCrypto,
 } from "prsi";
 
 import crypto from "crypto";
@@ -128,6 +128,7 @@ export const join = functions
       }
 
       batch.update(ref, game, { merge: true });
+      makeGameCopies(game, { db, batch });
 
       return {
         game: playerGameCopy(context.auth.uid, game),
@@ -194,6 +195,8 @@ export const move = functions
         }
 
         batch.update(ref, game, { merge: true });
+        makeGameCopies(game, { batch, db });
+
         return {
           game: playerGameCopy(context.auth.uid, game),
         };
@@ -208,29 +211,38 @@ export const move = functions
   });
 
 /**
- * Triggers putting every thing togheter
+ * CPU moves
  */
-export const triggers = functions
+export const makeCpuMove = functions
   .region("europe-west1")
   .firestore.document("play/private/game/{gameId}")
-  .onWrite(async (change, context) => {
+  .onUpdate(async (change, context) => {
     const db = admin.firestore();
     const game = change.after.data();
     const batch = db.batch();
 
-    if (game) {
-      makeGameCopies(game, { db, batch });
-
-      if (game.turn > change.before.data()?.turn) {
-        await makeCpuMove(game, { db, batch }); // witch can produce another call of this trigger 😈
-      }
+    if (
+      !game ||
+      !game.currentPlayer?.cpu ||
+      game.turn <= change.before.data().turn
+    ) {
+      return;
     }
+
+    autopilot.autoplay(game);
+
+    const ref = db.collection(`play/private/game`).doc(game.id);
+    batch.update(ref, game, {
+      merge: true,
+    });
+
+    makeGameCopies(game, { batch, db });
 
     await batch.commit();
   });
 
 /**
- * 1. function that keeps game copies in sync.
+ * function that keeps game copies in sync.
  */
 function makeGameCopies(game, { db, batch }) {
   for (const player of game.players.filter(({ cpu }) => !cpu)) {
@@ -244,19 +256,4 @@ function makeGameCopies(game, { db, batch }) {
     db.collection(`play/public/game`).doc(game.id),
     playerGameCopy(null, game)
   );
-}
-
-/**
- * 2. function that makes cpu moves.
- */
-function makeCpuMove(game, { db, batch }) {
-  if (game?.status !== GAME_STATUS.STARTED) return;
-  if (!game?.currentPlayer?.cpu) return;
-
-  autopilot.autoplay(game);
-
-  const ref = db.collection(`play/private/game`).doc(game.id);
-  batch.update(ref, game, {
-    merge: true,
-  });
 }

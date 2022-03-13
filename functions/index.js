@@ -10,7 +10,7 @@ export {
   create as createGame,
   join as joinGame,
   move as gameMove,
-  triggers,
+  makeCpuMove
 } from "./game.js";
 
 export const stats = functions
