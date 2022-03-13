@@ -6,7 +6,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prší, slyším!</title>
-  <meta name="description" content="Prší, slyším! - Online hra prší pro více hráčů, vytvořená primárně pro uživatele se zrakovým handicapem.">
+  <meta name="description"
+    content="Prší, slyším! - Online hra prší pro více hráčů, vytvořená primárně pro uživatele se zrakovým handicapem.">
   <meta property="og:title" content="Zahraješ si prší?">
   <meta property="og:site_name" content="Prší, slyším!">
   <meta property="og:url" content="https://prsi-slysim.web.app/">
@@ -510,42 +511,42 @@
               .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
           }
         },
-        handleMove(event) {
+        async handleMove(event) {
           const urlParams = new URLSearchParams(window.location.search);
           const gameId = urlParams.get("game");
 
           const buttonElement = event.target;
           const { name: moveType } = buttonElement;
 
-          emit({ busy: moveType });
+          try {
+            emit({ busy: moveType });
 
-          Sounds.playTimes(
-            MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default,
-            buttonElement.dataset.n || 1
-          );
+            await Sounds.playTimes(
+              MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default,
+              buttonElement.dataset.n || 1
+            ).catch(O_o => console.error(O_o));
 
-          httpsCallable(fns, "gameMove")({
-            moveType,
-            gameId,
-            card: state.selectedCard,
-            color: state.selectedColor,
-          })
-            .then(({ data: { game } }) => {
-              emit({
-                game,
-                // cleanup ui controls
-                selectedCard: null,
-                selectedColor: null,
-              });
-            })
-            .catch(error => {
-              console.error(error);
-              // ‼️ even server error will tell it is wrong move.
-              alert("Špatný tah.");
-            }).finally(() => {
-              emit({ busy: null });
+            const { data: { game } } = await httpsCallable(fns, "gameMove")({
+              moveType,
+              gameId,
+              card: state.selectedCard,
+              color: state.selectedColor,
             });
 
+            emit({
+              game,
+              // cleanup ui controls
+              selectedCard: null,
+              selectedColor: null,
+            });
+
+          } catch (error) {
+            console.error(error);
+            // ‼️ even server error will tell it is wrong move.
+            alert("Špatný tah.");
+          } finally {
+            emit({ busy: null });
+          }
         },
         handlePlayerCardSelect(event) {
           const cardId = event.target.value;
