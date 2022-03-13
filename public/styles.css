@@ -244,10 +244,10 @@ body main button * {
 }
 
 .color-in-hands {
-  width: 60px;
+  height: 60px;
   box-sizing: border-box;
   transition: transform 200ms ease-in-out;
 }
 .color-in-hands--selected {
-  transform: scale(1.4);
+  transform: scale(1.5);
 }
