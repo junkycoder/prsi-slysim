@@ -105,10 +105,12 @@ export const table_card_line = ({ card, color }) => {
 };
 
 const getCardImageURL = ({ id } = {}) => {
-  if (!id) {
-    return ""; // reversed card img
-  }
+  if (!id) return ""; // reversed card img
   return `/assets/${id.normalize("NFKD").replace(/[^\w]/g, "")}.jpeg`;
+};
+const getColorImageURL = (color) => {
+  if (!color) return "";
+  return `/assets/${color.normalize("NFKD").replace(/[^\w]/g, "")}.png`;
 };
 
 export function content(
@@ -180,15 +182,27 @@ export function content(
       <section>
         ${ifelse(
           cardOnTable,
-          html`<img
-            class="card-on-table"
-            src="${getCardImageURL(cardOnTable)}"
-            aria-label="${table_card_line({
-              card: cardOnTable,
-              color: game.currentColor,
-            })}"
-          />`,
-          html`<p>Na stole není vyložená žádná karta.</p>`
+          html`
+            <div class="card-on-table">
+              <img
+                class="card-on-table__card"
+                src="${getCardImageURL(cardOnTable)}"
+                aria-label="${table_card_line({
+                  card: cardOnTable,
+                  color: game.currentColor,
+                })}"
+              />
+              ${ifelse(
+                cardOnTable?.value === CHANGE_CARD_VALUE && cardOnTable.color !== game.currentColor,
+                html`<img
+                  aria-hidden="true"
+                  class="card-on-table__color"
+                  src="${getColorImageURL(game.currentColor)}"
+                />`
+              )}
+            </div>
+          `,
+          html`<p>Na stole není vyložená žádná karta.</p> `
         )}
       </section>
 
@@ -202,10 +216,7 @@ export function content(
                 userPlayer?.cards,
                 ({ id }) => id,
                 ({ id, value, color }) => html`
-                  <label
-                    class="hands__item hands__item--card"
-                    aria-label="${value} ${color} hehe"
-                  >
+                  <label class="hands__item hands__item--card">
                     <input
                       ?checked=${id === selectedCard?.id}
                       type="radio"
@@ -213,7 +224,6 @@ export function content(
                       name="card"
                       @change=${handlePlayerCardSelect}
                     />
-
                     <img
                       class="${classMap({
                         "card-in-hands": true,
@@ -241,7 +251,15 @@ export function content(
                           name="color"
                           @change=${handleCardColorSelect}
                         />
-                        <span>${color}</span>
+                        <img
+                          class="${classMap({
+                            "color-in-hands": true,
+                            "color-in-hands--selected": color === selectedColor,
+                          })}"
+                          src="${getColorImageURL(color)}"
+                          alt="${color}"
+                          aria-label="${color}"
+                        />
                       </label>
                     `
                   )}

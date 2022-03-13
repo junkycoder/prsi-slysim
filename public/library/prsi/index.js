@@ -257,6 +257,7 @@ export function resetGame(game) {
   game.outcome = null;
 
   game.playedCards = [];
+  game.drawCount = 1;
 
   for (let player of game.players) {
     player.cards = [];
