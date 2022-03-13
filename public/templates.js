@@ -143,7 +143,7 @@ export function content(
   const showCardColorSelect = selectedCard?.value === CHANGE_CARD_VALUE;
   const showPlayersCards = game.status === GAME_STATUS.STARTED && isUserPlaying;
   const showFlipPlayedCardsToDeck =
-    isPlayersTurn && game.deck.length < game.drawCount;
+    game.status === GAME_STATUS.STARTED && isPlayersTurn && game.deck.length < game.drawCount;
   const showStay =
     game.status === GAME_STATUS.STARTED &&
     isPlayersTurn &&
