@@ -29,6 +29,13 @@ export const DEAL = dealCards.name;
 export function dealCards(game, player) {
   const { settings, players } = game;
 
+  if (game.status === GAME_STATUS.STARTED) {
+    throw new Error("Game has already started");
+  }
+  if (game.status === GAME_STATUS.OVER) {
+    throw new Error("Game is over");
+  }
+
   for (let i = 0; i < settings.dealCards; i++) {
     for (let j = 0; j < players.length; j++) {
       players[j].cards.push(game.deck.shift());
