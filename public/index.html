@@ -482,7 +482,9 @@
         async (event) => {
           const game = await handleJoinGameSubmit(event);
           if (game) {
-            emit({ game })
+            emit({ game });
+            Sounds.enableAll(Object.values(MOVE_EFFECTS), true);
+            Sounds.play(MOVE_EFFECTS.default);
           }
         }
       );
