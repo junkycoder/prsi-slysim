@@ -28,6 +28,13 @@ body {
   padding: 0 14px;
 }
 
+h1 {
+  margin-bottom: 16px;
+}
+h2 {
+  margin-bottom: 8px;
+}
+
 body, input:not([type="checkbox"]):not([type="radio"]), button, textarea, select, option {
   font-size: 18px;
   font-family: Verdana, sans-serif;
@@ -116,44 +123,6 @@ figure {
   margin-left: 0;
 }
 
-.hands {
-  display: flex;
-  text-align: center;
-  flex-grow: 1;
-  overflow-x: auto;
-  gap: 8px;
-  padding-bottom: 16px;
-}
-.hands__item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.hands__item--card {
-  min-width: calc(var(--viewport-width) / 5);
-  max-width: calc(var(--viewport-width) / 5);
-  height: 102px;
-  border: 1px solid black;
-  border-radius: 1px;
-  padding: 8px;
-  line-height: 250%;
-}
-.hands__item--color {
-  flex: 1;
-  padding: 8px;
-}
-@media (prefers-color-scheme: dark) {
-  .hands__item--card {
-    border-color: white;
-  }
-}
-.hands__item input {
-  display: none;
-}
-.hands__item input:checked + span {
-  font-weight: bold;
-}
 
 .dialog {
   position: fixed;
@@ -209,4 +178,57 @@ figure {
 /* Allow using button attributes form event.target */
 body main button * {
   pointer-events: none;
+}
+
+.card-on-table {
+  border-radius: 1px;
+  margin: 0 auto;
+  display: block;
+  width: 120px;
+  box-sizing: border-box;
+}
+.card-in-hands {
+  border-radius: 1px;
+  width: 80px;
+  height: 133px;
+  box-sizing: border-box;
+  transition: transform 200ms ease-in-out;
+}
+.card-in-hands--selected {
+  transform: scale(1.2);
+}
+
+.hands {
+  display: flex;
+  text-align: center;
+  flex-grow: 1;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+.hands__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+.hands__item--card {
+  width: 80px;
+  border-radius: 4px;
+  padding: 16px 6px;
+  line-height: 250%;
+}
+.hands__item--color {
+  flex: 1;
+  padding: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  .hands__item--card {
+  }
+}
+.hands__item input {
+  display: none;
+}
+.hands__item input:checked + span {
+  font-weight: bold;
 }

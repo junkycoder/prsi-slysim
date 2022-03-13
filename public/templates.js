@@ -5,6 +5,7 @@ import {
 
 import { repeat } from "https://unpkg.com/lit-html@2.2.0/directives/repeat.js?module";
 // import { choosed } from "https://unpkg.com/lit-html@2.2.0/directives/choose.js?module";
+import { classMap } from "https://unpkg.com/lit-html@2.2.0/directives/class-map.js?module";
 
 import {
   SHUFFLE as SHUFFLE_MOVE,
@@ -29,52 +30,59 @@ export const game_title_line = (game) => {
   return game.status ? "Hra probíhá" : "Nová hra";
 };
 
-export const game_summary_line = (game) => {
+export const game_summary_line = ({
+  status,
+  currentPlayer,
+  players,
+  outcome,
+  deckShuffled,
+}) => {
   let line = "";
 
-  if (game.status === GAME_STATUS.NOT_STARTED) {
+  if (status === GAME_STATUS.NOT_STARTED) {
     line += `Hra ještě nezačala.`;
   }
 
-  if (game.status === GAME_STATUS.OVER) {
-    line += `Zvítězil ${game.outcome.winner.name}, je to nejlepší hráč na světě!`;
-  }
-
-  return line || nothing;
-};
-
-export function players_summary_line(game) {
-  let line = "";
-  if (!game.players?.length) {
-    line += `U stolu nikdo nesedí.`;
+  if (status === GAME_STATUS.OVER) {
+    line += `Zvítězil ${outcome.winner.name}, je to nejlepší hráč na světě!`;
+  } else if (!players?.length) {
+    line += ` U stolu nikdo nesedí.`;
   } else {
-    line += `U stolu sedí `;
-    line += game.players
+    line += ` U stolu sedí `;
+    line += players
       .slice(0, -1)
       .map(({ name, cards = [] }) => `${name} (${cards.length})`)
       .join(", ");
 
-    const lastPayer = game.players.slice(-1)[0];
+    const lastPayer = players.slice(-1)[0];
 
-    if (game.players.length > 1) {
+    if (players.length > 1) {
       line += " a ";
     }
     line += `${lastPayer.name} (${lastPayer.cards.length}).`;
   }
 
-  if ((game.players || []).length < 2) {
+  if ((players || []).length < 2) {
     line += ` Čeká se na alespoň jednoho spoluhráče..`;
   }
 
+  if (currentPlayer) {
+    if ([GAME_STATUS.OVER, GAME_STATUS.NOT_STARTED].includes(status)) {
+      line += ` Karty ${deckShuffled ? "rozdává" : "míchá"} ${
+        currentPlayer?.name
+      }.`;
+    } else line += ` Na tahu je ${currentPlayer?.name}.`;
+  } else {
+    ("Zapojte se jako první hráč, budete míchat a rozdávát.");
+  }
   return line || nothing;
-}
+};
 
 export function header({ game = {} } = {}) {
   return html`
     <header>
       <h1>${game_title_line(game)}</h1>
       <p>${game_summary_line(game)}</p>
-      <p>${players_summary_line(game)}</p>
     </header>
   `;
 }
@@ -94,6 +102,13 @@ export const table_card_line = ({ card, color }) => {
 
   line += ".";
   return line;
+};
+
+const getCardImageURL = ({ id } = {}) => {
+  if (!id) {
+    return ""; // reversed card img
+  }
+  return `/assets/${id.normalize("NFKD").replace(/[^\w]/g, "")}.jpeg`;
 };
 
 export function content(
@@ -163,35 +178,18 @@ export function content(
   return html`
     <main>
       <section>
-        ${unless(
-          game.status !== GAME_STATUS.STARTED,
-          html`
-            <p>
-              ${ifelse(
-                cardOnTable,
-                table_card_line({
-                  card: cardOnTable,
-                  color: game.currentColor,
-                }),
-                "Na stole není vyložená žádná karta."
-              )}
-            </p>
-          `
+        ${ifelse(
+          cardOnTable,
+          html`<img
+            class="card-on-table"
+            src="${getCardImageURL(cardOnTable)}"
+            aria-label="${table_card_line({
+              card: cardOnTable,
+              color: game.currentColor,
+            })}"
+          />`,
+          html`<p>Na stole není vyložená žádná karta.</p>`
         )}
-
-        <p>
-          ${ifelse(
-            currentPlayer,
-            ifelse(
-              [GAME_STATUS.OVER, GAME_STATUS.NOT_STARTED].includes(game.status),
-              `Karty ${game.deckShuffled ? "rozdává" : "míchá"} ${
-                currentPlayer?.name
-              }.`,
-              `Na tahu je ${currentPlayer?.name}.`
-            ),
-            "Zapojte se jako první hráč, budete míchat a rozdávát."
-          )}
-        </p>
       </section>
 
       <section>
@@ -215,7 +213,16 @@ export function content(
                       name="card"
                       @change=${handlePlayerCardSelect}
                     />
-                    <span> ${`${value} ${color}`} </span>
+
+                    <img
+                      class="${classMap({
+                        "card-in-hands": true,
+                        "card-in-hands--selected": id === selectedCard?.id,
+                      })}"
+                      src="${getCardImageURL({ id })}"
+                      alt="${value} ${color}"
+                      aria-label="${value} ${color}"
+                    />
                   </label>
                 `
               )}
@@ -428,7 +435,7 @@ export function moveMessage(game, user) {
 
   if (game.status === GAME_STATUS.OVER && game.outcome) {
     message += ` a vyhrává!`;
-  } else if (game.currentPlayer.id === user.uid) {
+  } else if (user && game.currentPlayer.id === user.uid) {
     message += ". Jsi na tahu.";
   } else {
     message += `.`;
