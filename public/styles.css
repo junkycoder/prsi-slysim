@@ -192,7 +192,7 @@ body main button * {
 }
 .card-on-table__color {
   display: block;
-  height: 100px;
+  height: 130px;
   position: absolute;
   top: 0;
   left: 0;
@@ -244,10 +244,10 @@ body main button * {
 }
 
 .color-in-hands {
-  height: 60px;
+  width: 60px;
   box-sizing: border-box;
   transition: transform 200ms ease-in-out;
 }
 .color-in-hands--selected {
-  transform: scale(1.5);
+  transform: scale(1.4);
 }

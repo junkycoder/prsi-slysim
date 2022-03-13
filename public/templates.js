@@ -193,7 +193,7 @@ export function content(
                 })}"
               />
               ${ifelse(
-                cardOnTable?.value === CHANGE_CARD_VALUE && cardOnTable.color !== game.currentColor,
+                cardOnTable?.value === CHANGE_CARD_VALUE,
                 html`<img
                   aria-hidden="true"
                   class="card-on-table__color"
