@@ -3,6 +3,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import minimist from "minimist";
 import path from "path";
+import { GAME_STATUS } from "prsi";
 
 const dirname = new URL(import.meta.url).pathname
   .split("/")
@@ -52,9 +53,20 @@ if (args.games) {
 if (args.replay) {
   const doc = await db.doc(`play/private/game/${args.replay}`).get();
   const game = doc.data();
-  console.warn(
-    "Těžšký přehrát hru, když nevim jak byl zamíchanej balíček. Znám jen všechny tahy a co zbylo."
-  );
+
+  for (let move of game.moves) {
+    const { cards } =
+      game.players.find((player) => player.id === move.player.id) || {};
+
+    console.log(
+      move.player.name,
+      move.type,
+      move.drawn,
+      move.card?.id,
+      move.color,
+      cards?.length
+    );
+  }
 }
 
 if (args["check-copies"]) {
