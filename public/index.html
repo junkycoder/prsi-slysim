@@ -67,7 +67,7 @@
   </style>
   <script>
     window.alerto = function alerto(message) {
-      const container = document.querySelector('.los-alertos');
+      const container = document.querySelector(".los-alertos");
       const time = Date.now();
       container.insertAdjacentHTML("afterbegin", `
         <div data-time="${time}" class="los-alertos__alerto" role="alert">
@@ -76,15 +76,16 @@
       `);
       const element = container.querySelector(`.los-alertos__alerto[data-time="${time}"]`);
       const doRemove = () => {
-        element.classList.remove('los-alertos__alerto--show');
+        element.classList.remove("los-alertos__alerto--show");
         setInterval(() => {
+          element.setAttribute("aria-hidden", "true");
           element.remove();
         }, 500);
       }
-      element.addEventListener('click', doRemove);
+      element.addEventListener("click", doRemove);
       setTimeout(doRemove, 4000);
       setTimeout(() => {
-        element.classList.add('los-alertos__alerto--show');
+        element.classList.add("los-alertos__alerto--show");
       }, 200);
     }
   </script>
@@ -319,7 +320,7 @@
       labelledby: "join-game-dialog-title",
     });
 
-    const playerNameInput = joinGame.dialog.querySelector('form input[name="player-name"]');
+    const playerNameInput = joinGame.dialog.querySelector(`form input[name="player-name"]`);
     playerNameInput.value = playerNameStoredLocally.read();
     playerNameInput.addEventListener("change", ({ target: { value } }) => {
       playerNameStoredLocally.write(value);
@@ -377,7 +378,7 @@
       const submitButton = verifySelf.dialog.querySelector("form button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Odesílám';
+      submitButton.textContent = "Odesílám";
 
       try {
         const formData = new FormData(event.target);
@@ -411,7 +412,7 @@
       const submitButton = createGame.dialog.querySelector("button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Vytvářím hru';
+      submitButton.textContent = "Vytvářím hru";
 
       try {
         const formData = new FormData(event.target);
@@ -676,7 +677,7 @@
       const submitButton = joinGame.dialog.querySelector("button[type=submit]");
       const submitButtonLabel = submitButton.textContent;
       submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = 'Přisedám';
+      submitButton.textContent = "Přisedám";
 
       if (!gameId) {
         console.error("Game ID not found");
