@@ -7,7 +7,6 @@ import {
   moves,
   getPlayer,
   autopilot,
-  GAME_STATUS,
   setCrypto,
 } from "prsi";
 

@@ -99,12 +99,14 @@ if (args["update-stats"]) {
     players: 0,
     winner: "",
     moves: 0,
+    wins: 0,
   };
 
   const leaderboard = {};
 
-  for (let { players = [], moves = [] } of games) {
+  for (let { players = [], moves = [], wins =[] } of games) {
     stats.moves += moves.length;
+    stats.wins.push(...wins);
 
     for (let player of players.filter(({ cpu }) => !cpu)) {
       const score = leaderboard[player.id];
@@ -155,6 +157,8 @@ if (args["simple-stats"]) {
   console.info(games.length, `games`);
   const lastGameDate = games.splice(-1)[0].createdAt.toDate().toLocaleString();
   console.info(`${lastGameDate} last`);
+  const wins = games.map(({ wins }) => wins).flat();
+  console.log(wins.length, `wins`);
 }
 
 if (args["fix-wins"]) {
