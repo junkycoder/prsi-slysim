@@ -1,0 +1,19 @@
+{
+  "name": "prsi-slysim",
+  "version": "1.0.0",
+  "description": "Karetní hra prší se zaměřením na slyším",
+  "private": true,
+  "scripts": {
+    "start": "scripts/start.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/junkycoder/prsi-slysim.git"
+  },
+  "keywords": [],
+  "author": "junkycoder<hromada.dan@gmail.com>",
+  "bugs": {
+    "url": "https://github.com/junkycoder/prsi-slysim/issues"
+  },
+  "homepage": "https://prsi-slysim.web.app/"
+}
