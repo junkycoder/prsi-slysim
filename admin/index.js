@@ -34,18 +34,29 @@ if (args.doc) {
 }
 
 if (args.users) {
-  const users = await listAllUsers();
-  for (let { email, id } of users) {
+  const users = [];
+  for (let { email, id } of await listAllUsers()) {
     const gamesCount = await userGamesCount(id);
-    console.log(email, gamesCount);
+    users.push({ email, id, gamesCount });
   }
-  console.log(users.length);
+  for (let { email, id, gamesCount } of users.sort(
+    (a, b) => a.gamesCount - b.gamesCount
+  )) {
+    console.log(gamesCount, `${email} (${id})`);
+  }
+
+  console.log(users.length, "users in total");
 }
 
 if (args.games) {
   const games = await listAllGames();
-  for (let { id, players = [], moves = [] } of games) {
-    console.log(id, moves.length, players.map(({ name }) => name).join(", "));
+  for (let { createdAt, id, players = [], moves = [] } of games) {
+    console.log(
+      createdAt.toDate(),
+      id,
+      moves.length,
+      players.map(({ name }) => name).join(", ")
+    );
   }
   console.log(games.length);
 }
@@ -104,7 +115,7 @@ if (args["update-stats"]) {
 
   const leaderboard = {};
 
-  for (let { players = [], moves = [], wins =[] } of games) {
+  for (let { players = [], moves = [], wins = [] } of games) {
     stats.moves += moves.length;
     stats.wins.push(...wins);
 
