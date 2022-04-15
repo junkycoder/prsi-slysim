@@ -81,7 +81,7 @@ export function createNewGame({
   };
 
   for (let x = 1; x <= cpuPlayers; x++) {
-    addPlayer(game, { id: `cpu-${x}`, name: `CPU ${x}`, cpu: true });
+    addPlayer(game, { id: `cpu-${x}`, name: `Robot ${x}`, cpu: true });
   }
 
   return game;
