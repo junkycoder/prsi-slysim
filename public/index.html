@@ -33,7 +33,7 @@
   <div class="los-alertos"></div>
   <style>
     .los-alertos {
-      position: absolute;
+      position: fixed;
       top: 20px;
       left: 24px;
       right: 24px;
@@ -51,6 +51,8 @@
       background-color: white;
       color: black;
       border: 5px solid black;
+      overflow: hidden;
+      -webkit-overflow-scrolling: touch;
     }
 
     @media (prefers-color-scheme: dark) {
