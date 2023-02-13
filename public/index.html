@@ -21,6 +21,15 @@
     }
   </style>
   <link rel="stylesheet" href="/styles.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-970323658"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-970323658');
+  </script>
 </head>
 
 <body>
@@ -461,6 +470,10 @@
 
     function handleGamePlay(gameId) {
       console.info("Game play", gameId);
+      if (window.gtag) {
+        gtag('event', 'conversion', { 'send_to': 'AW-970323658/8y9YCJz96IsYEMrt184D' });
+      }
+
       const [
         headerElement,
         contentElement
