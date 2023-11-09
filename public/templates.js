@@ -160,9 +160,7 @@ export function content(
   const showVerfySelf = !isUserSigned && !isUserPlaying;
   const showJoinGame = !isUserPlaying;
 
-  const canJoinGame =
-    isUserSigned &&
-    [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
+  const canJoinGame = [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const canShuffleDeck =
     isPlayersTurn &&
     [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);

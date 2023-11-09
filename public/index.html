@@ -597,6 +597,15 @@
      const urlParams = new URLSearchParams(window.location.search);
      const gameId = urlParams.get("game");
 
+     const auth = getAuth();
+
+     if (!auth.currentUser) {
+       console.log("Signing in anonymously..");
+       await signInAnonymously(auth);
+     } else {
+       console.log("Already signed in as", auth.currentUser);
+     }
+
      for (let trigger of joinGame.openingTriggers) {
        trigger.setAttribute("disabled", "disabled");
      }
