@@ -125,7 +125,7 @@ export function content(
 ) {
   const { players = [], currentPlayer } = game;
   const userPlayer = players.find((player) => player.id === user?.uid);
-  const isUserVerified = (user || false) && user.emailVerified;
+  const isUserSigned = (user || false);
   const isUserPlaying = Boolean(userPlayer);
   const isPlayersTurn = isUserPlaying && userPlayer.id === currentPlayer.id;
   const [cardOnTable] = game.playedCards?.slice(-1) || [];
@@ -157,11 +157,11 @@ export function content(
     game.status === GAME_STATUS.NOT_STARTED &&
     isPlayersTurn &&
     game.deckShuffled;
-  const showVerfySelf = !isUserVerified && !isUserPlaying;
+  const showVerfySelf = !isUserSigned && !isUserPlaying;
   const showJoinGame = !isUserPlaying;
 
   const canJoinGame =
-    isUserVerified &&
+    isUserSigned &&
     [GAME_STATUS.NOT_STARTED, GAME_STATUS.OVER].includes(game.status);
   const canShuffleDeck =
     isPlayersTurn &&
@@ -292,7 +292,7 @@ export function content(
               title=${ifelse(
                 game.status,
                 "Hra již probíhá",
-                unless(isUserVerified, "Nejprve se potřebujete ověřit")
+                unless(isUserSigned, "Nejprve se potřebujete přihlásit.")
               )}
               type=${ifelse(
                 game.status === GAME_STATUS.STARTED,
@@ -309,9 +309,10 @@ export function content(
           html`
             ${unless(
               game.status,
-              html`<p>Pro zapojení do hry musíš být ověřený.</p>`
+              html`<p>Pro zapojení do hry musíš být přihlášený.</p>`
             )}
-            <button class="js-dialog-verify-self-open">Ověřit se</button>
+            <button class="js-dialog-verify-self-open">Přihlásit se e-mailem</button>
+            <button class="js-anonyme-self">Přihlásit se anonymně</button>
           `
         )}
         ${ifelse(

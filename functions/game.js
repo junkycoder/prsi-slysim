@@ -20,10 +20,10 @@ export const create = functions
   .region("europe-west1")
   .https.onCall(
     async ({ maxPlayers = 6, dealCards = 4, cpuPlayers = 0 }, context) => {
-      if (!context.auth || !context.auth.token || !context.auth.token.email) {
+      if (!context.auth || !context.auth.token) {
         throw new functions.https.HttpsError(
           "permission-denied",
-          "Založit hru může pouze ověřený uživatel."
+          "Založit hru může pouze přihlášený uživatel."
         );
       }
 
@@ -85,10 +85,10 @@ export const create = functions
 export const join = functions
   .region("europe-west1")
   .https.onCall(async ({ playerName, gameId }, context) => {
-    if (!context.auth || !context.auth.token || !context.auth.token.email) {
+    if (!context.auth || !context.auth.token) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Zapojit se do hry může pouze ověřený uživatel."
+        "Zapojit se do hry může pouze přihlášený uživatel."
       );
     }
 
@@ -148,10 +148,10 @@ export const leave = functions
 export const move = functions
   .region("europe-west1")
   .https.onCall(async ({ moveType, gameId, card, color }, context) => {
-    if (!context.auth || !context.auth.token || !context.auth.token.email) {
+    if (!context.auth || !context.auth.token) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Zapojit se do hry může pouze ověřený uživatel."
+        "Zapojit se do hry může pouze přihlášený uživatel."
       );
     }
 

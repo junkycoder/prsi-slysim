@@ -114,9 +114,10 @@
       <button class="js-dialog-sound-effects-open" type="button">Nastavit efekty</button>
       <section id="cta">
         <h2>Chci začít hrát</h2>
-        <p class="js-dialog-verify-self-open">Pouze ověření uživatelé se mouhou zapojit do hry.</p>
+        <p class="js-before-verifycation">Do hry se můžete zapojit jako <a href="#" class="js-dialog-verify-self-open">ověřený uživatel</a> soutěžící v celkového žebříčku, nebo jako <a href="#" class="js-anonyme-self">anonymní uživatel</a> bez účasti v žebříčku.</p>
         <p class="js-dialog-create-game-open" aria-hidden="true">Založte si svou vlastní hru.</p>
-        <button class="js-dialog-verify-self-open">Ověřit se</button>
+        <button class="js-dialog-verify-self-open">Ověřený</button>
+        <button class="js-anonyme-self">Anonymní</button>
         <button aria-hidden="true" class="js-dialog-create-game-open">Nová hra</button>
       </section>
       <section id="faq">
@@ -258,7 +259,7 @@
   <script type="module">
     import Dialog, { setDefaults as setDialogDefaults } from "/library/a11y-dialog-component/esm.js";
     import { auth } from "/application.js";
-    import { sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { sendSignInLinkToEmail, getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
     import { authCompleteEmailStoredLocally } from "/storage.js";
     import { isVerifyLink, useVerifyLink, watchUser } from "/user.js";
     import { formDataToPayload, deepMerge } from "/library.js";
@@ -289,6 +290,15 @@
       "submit",
       handleVerifySelfSubmit
     );
+
+    const anonymeSelf = document.querySelectorAll(".js-anonyme-self");
+    for (let trigger of anonymeSelf) {
+      document.addEventListener("click", (event) => {
+        if (event.target.matches(".js-anonyme-self")) {
+          handleAnonymeSelfClick(event);
+        }
+      });
+    }
 
     const createGame = new Dialog(".js-dialog-create-game", {
       openingSelector: ".js-dialog-create-game-open",
@@ -339,6 +349,7 @@
 
     USER: {
       watchUser(handleUserVerifyChange);
+      onAuthStateChanged(auth, handleUserVerifyChange);
     }
 
     GAME: {
@@ -349,376 +360,394 @@
     }
 
 
-    function handleUserVerifyChange(user) {
-      const isUserVerified = (user || undefined)?.emailVerified;
-      const { href: link } = window.location;
 
-      if (!isUserVerified && isVerifyLink(link)) {
-        let email = authCompleteEmailStoredLocally.read();
-        if (!email) {
-          alert(
-            "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
-          );
-          email = window.prompt(
-            `Pokud chcete pokračovat v tomto prohlžeči, vyplně svou email adresu znovu:`
-          );
-        }
+   async function handleAnonymeSelfClick(event) {
+     event.preventDefault();
+     const auth = getAuth();
+     try {
+       await signInAnonymously(auth);
+     } catch (error) {
+       alert(`Nepodařilo se přihlásit anonymně: ${error.message}`);
+       console.error(error);
+     }
+   }
 
-        useVerifyLink(link, email).then(({ user: u }) => {
-          const urlParams = new URLSearchParams(window.location.search);
-          history.pushState({}, "Verified", urlParams.has("game") ? `/?game=${urlParams.get("game")}` : "/");
-          handleUserVerifyChange(u);
-        });
-      }
+   function handleUserVerifyChange(user) {
+     const isUserSigned = Boolean(user || undefined);
+     const { href: link } = window.location;
+ 
+     if (!isUserSigned && isVerifyLink(link)) {
+       let email = authCompleteEmailStoredLocally.read();
+       if (!email) {
+         alert(
+           "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
+         );
+         email = window.prompt(
+           `Pokud chcete pokračovat v tomto prohlžeči, vyplně svou email adresu znovu:`
+         );
+       }
+ 
+       useVerifyLink(link, email).then(({ user: u }) => {
+         const urlParams = new URLSearchParams(window.location.search);
+         history.pushState({}, "Verified", urlParams.has("game") ? `/?game=${urlParams.get("game")}` : "/");
+         handleUserVerifyChange(u);
+       });
+     }
+ 
+     for (let trigger of verifySelf.openingTriggers) {
+       if (isUserSigned) trigger.setAttribute("aria-hidden", "true");
+       else trigger.removeAttribute("aria-hidden");
+     }
+ 
+     for (let trigger of createGame.openingTriggers) {
+       if (isUserSigned) trigger.removeAttribute("aria-hidden");
+       else trigger.setAttribute("aria-hidden", "true");
+     }
 
-      for (let trigger of verifySelf.openingTriggers) {
-        if (isUserVerified) trigger.setAttribute("aria-hidden", "true");
-        else trigger.removeAttribute("aria-hidden");
-      }
-
-      for (let trigger of createGame.openingTriggers) {
-        if (isUserVerified) trigger.removeAttribute("aria-hidden");
-        else trigger.setAttribute("aria-hidden", "true");
-      }
-    };
-
-    async function handleVerifySelfSubmit(event) {
-      event.preventDefault();
-      const { origin, search } = window.location;
-
-      const submitButton = verifySelf.dialog.querySelector("form button[type=submit]");
-      const submitButtonLabel = submitButton.textContent;
-      submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = "Odesílám";
-
-      try {
-        const formData = new FormData(event.target);
-        const urlParams = new URLSearchParams(window.location.search);
-        const email = formData.get("email");
-        const settings = {
-          url: `${origin}${urlParams.has("game") ? `?game=${urlParams.get("game")}` : ""}`,
-          handleCodeInApp: true,
-        };
-
-        await sendSignInLinkToEmail(auth, email, settings);
-        authCompleteEmailStoredLocally.write(email);
-
-        submitButton.textContent = "Odesláno";
-        alert(`Odesláno, pokračujte prosím do vaší ${email} schránky.\n\Tuto stránku můžete zavřít.`);
-        setTimeout(() => {
-          submitButton.textContent = submitButtonLabel;
-          submitButton.removeAttribute("disabled");
-        }, 5000);
-      } catch (fok) {
-        console.error(fok)
-        alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
-        submitButton.removeAttribute("disabled");
-        submitButton.textContent = submitButtonLabel;
-      }
-    }
-
-    async function handleCreateGameSubmit(event) {
-      event.preventDefault();
-
-      const submitButton = createGame.dialog.querySelector("button[type=submit]");
-      const submitButtonLabel = submitButton.textContent;
-      submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = "Vytvářím hru";
-
-      try {
-        const formData = new FormData(event.target);
-        const payload = formDataToPayload(formData);
-        const { data: { id: gameId } = {} } = await httpsCallable(fns, "createGame")(payload);
-
-        if (!gameId) {
-          alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
-        } else {
-          history.pushState({}, "New Game", `/?game=${gameId}`);
-          handleGamePlay(gameId); // 👌 New Game ENTRYPOINT
-          createGame.close();
-        }
-      } catch ({ message, code }) {
-        if (code === "functions/permission-denied") {
-          if (confirm("Zvláštní, ale na toto nemáte právo. Zkuste načíst stránku znovu.")) {
-            window.location.reload();
-          }
-        } else {
-          alert(`Nastala chyba při vytváření hry.\n${message}`);
-        }
-      } finally {
-        submitButton.removeAttribute("disabled");
-        submitButton.textContent = submitButtonLabel;
-      }
-    }
-
-    function handleSoundEffectsChange(event) {
-      event.preventDefault();
-      const { name, checked: enabled, type } = event.target;
-      if (type !== "checkbox") throw new Error("Unexpected target type");
-      switch (name) {
-        case "music":
-          Sounds.enable("rain.mp3", enabled, { autoplay: true, loop: true, gain: .4 });
-          break;
-        case "sounds":
-          Sounds.enableAll(Object.values(MOVE_EFFECTS), enabled);
-          if (enabled) Sounds.play(MOVE_EFFECTS.default);
-          break;
-        default:
-          throw new Error("Unexpected sound effect name");
-      }
-    }
-
-    function handleGamePlay(gameId) {
-      console.info("Game play", gameId);
-      if (window.gtag) {
-        gtag('event', 'conversion', { 'send_to': 'AW-970323658/8y9YCJz96IsYEMrt184D' });
-      }
-
-      const [
-        headerElement,
-        contentElement
-      ] = [".js-header", ".js-content"].map(s => document.querySelector(s));
-
-      clearStaticPage: {
-        headerElement.firstElementChild.remove();
-        contentElement.firstElementChild.remove();
-        window.scrollTo(0, 0);
-      }
-
-      let state = {
-        game: undefined,
-        user: null,
-        selectedCard: undefined,
-        selectedColor: undefined,
-      };
-
-
-      joinGame.dialog.querySelector("form").addEventListener(
-        "submit",
-        async (event) => {
-          const game = await handleJoinGameSubmit(event);
-          if (game) {
-            emit({ game });
-            Sounds.enableAll(Object.values(MOVE_EFFECTS), true);
-            Sounds.play(MOVE_EFFECTS.default);
-          }
-        }
-      );
-
-      watchUser((u) => {
-        emit({ user: u?.toJSON() });
-      });
-
-      const handlers = {
-        handleLeaveGame() {
-          window.location.href = "/";
-        },
-        handleShareGame(event) {
-          event.preventDefault();
-          const shateLink = window.location.href;
-          const shareText = `Hra je založená, stačí se připojit..`;
-
-          if (navigator.share) {
-            navigator.share({
-              text: shareText,
-              url: shateLink
-            });
-          } else {
-            navigator.clipboard
-              .writeText(`${shateLink} ${shareText}`)
-              .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
-          }
-        },
-        async handleMove(event) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const gameId = urlParams.get("game");
-
-          const buttonElement = event.target;
-          const { name: moveType } = buttonElement;
-
-          try {
-            emit({ busy: moveType });
-
-            await Sounds.playTimes(
-              MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default,
-              buttonElement.dataset.n || 1
-            ).catch(O_o => console.error(O_o));
-
-            const { data: { game } } = await httpsCallable(fns, "gameMove")({
-              moveType,
-              gameId,
-              card: state.selectedCard,
-              color: state.selectedColor,
-            });
-
-            emit({
-              game,
-              // cleanup ui controls
-              selectedCard: null,
-              selectedColor: null,
-            });
-
-          } catch (error) {
-            console.error(error);
-            // ‼️ even server error will tell it is wrong move.
-            alert("Špatný tah.");
-          } finally {
-            emit({ busy: null });
-          }
-        },
-        handlePlayerCardSelect(event) {
-          const cardId = event.target.value;
-          const player = getPlayer(state.game, state.user.uid);
-          const { value, color, id } = player.cards.find(card => card.id === cardId);
-          const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
-
-          if (value === CHANGE_CARD_VALUE) {
-            emit({
-              selectedCard: { value, color, id },
-              selectedColor: color
-            });
-          } else {
-            emit({ selectedCard: { value, color, id } });
-          }
-          makeMoveButtonElement.focus();
-        },
-        handleCardColorSelect(event) {
-          const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
-          const color = event.target.value;
-          emit({ selectedColor: color });
-          makeMoveButtonElement.focus();
-        },
-        // ...
-      };
-
-      function emit(payload = {}) {
-        state = deepMerge(state, payload);
-
-        render(
-          templates.header(state, handlers),
-          headerElement
-        );
-        render(
-          templates.content(state, handlers),
-          contentElement,
-        );
-        window.debug = state;
-      }
-
-
-      const queryToPublicCopy = () => `play/public/game/${gameId}`;
-      const queryToPlayerCopy = () => `play/${state.user?.uid}/game/${gameId}`;
-
-      // Firstly using public copy, then, once user joins the game we start using private copy
-      let usedCopyQuery = queryToPublicCopy();
-      const unsubcribePublicCopy = onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
-
-      function handleSnapshot(d) {
-        const game = d.data();
-
-        // Uplne inak todleto, predbiha se to, neni to spolehlivy a tak.
-        // if (
-        //   game.lastMove &&
-        //   game.lastMove.type !== state.game?.lastMove?.type &&
-        //   game.lastMove?.player.id !== state.user?.uid
-        // ) {
-        if (
-          state.game &&
-          game.lastMove && // je to update stavu hry
-          game.lastMove.player.id !== state.user?.uid && // nejsem to já
-          (
-            // a neni to stejný tah jako předchozí
-            game.lastMove.player.id !== state.game.lastMove?.player.id ||
-            game.lastMove.type !== state.game.lastMove.type
-          )
-        ) {
-          setTimeout(() => {
-            alerto(templates.moveMessage(game, state.user));
-            playPlayerMoveEffects(game.lastMove, game.players, game.settings);
-          }, 0);
-        }
-
-        if (
-          state.user?.uid &&
-          usedCopyQuery === queryToPublicCopy() &&
-          getPlayer(game, state.user?.uid)
-        ) {
-          usedCopyQuery = queryToPlayerCopy();
-          console.info("Switching to private copy", usedCopyQuery);
-          unsubcribePublicCopy();
-          onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
-        } else {
-          try {
-            emit({ game });
-          } catch (e) {
-            debugger;
-          }
-        }
-      }
-
-
-      function playPlayerMoveEffects(lastMove, players = [], settings = {}) {
-        const sound = MOVE_EFFECTS[lastMove.type] || MOVE_EFFECTS.default;
-        const position = toPositionInCircle({
-          index: players.findIndex(player => player.id === lastMove.player.id),
-          length: players.length,
-        });
-
-        if (lastMove.type === SHUFFLE_MOVE) {
-          Sounds.playTimes(sound, settings.dealCards, {
-            position,
-          });
-        } else if (lastMove.type === DRAW_MOVE) {
-          Sounds.playTimes(sound, lastMove.drawn, {
-            position,
-          });
-        } else {
-          Sounds.play(sound, { position });
-        }
-      }
-
-    }
-
-    async function handleJoinGameSubmit(event) {
-      console.warn("TODO: allow only one same player name in the game, remove playerId from public game events then")
-      event.preventDefault();
-      const urlParams = new URLSearchParams(window.location.search);
-      const gameId = urlParams.get("game");
-
-      for (let trigger of joinGame.openingTriggers) {
-        trigger.setAttribute("disabled", "disabled");
-      }
-
-      const submitButton = joinGame.dialog.querySelector("button[type=submit]");
-      const submitButtonLabel = submitButton.textContent;
-      submitButton.setAttribute("disabled", "disabled");
-      submitButton.textContent = "Přisedám";
-
-      if (!gameId) {
-        console.error("Game ID not found");
-        if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
-          window.location.href = "/";
-        }
-        return;
-      }
-
-      const formData = new FormData(event.target);
-      const playerName = formData.get("player-name");
-
-      try {
-        const { data: { game } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
-        submitButton.removeAttribute("disabled");
-        submitButton.textContent = submitButtonLabel;
-        joinGame.close();
-        return game;
-      } catch (error) {
-        if (error.code === "already-exists") {
-          alert(`${playerName} již hraje v této hře.`);
-        } else {
-          alert(`Nastala chyba při připojování k hře: ${error.message}`);
-        }
-      }
-    }
+     document.querySelector(".js-before-verifycation")?.setAttribute("aria-hidden", isUserSigned);
+     for (let trigger of anonymeSelf) {
+       if (isUserSigned) trigger.setAttribute("aria-hidden", "true");
+       else trigger.removeAttribute("aria-hidden");
+     }
+   };
+ 
+   async function handleVerifySelfSubmit(event) {
+     event.preventDefault();
+     const { origin, search } = window.location;
+ 
+     const submitButton = verifySelf.dialog.querySelector("form button[type=submit]");
+     const submitButtonLabel = submitButton.textContent;
+     submitButton.setAttribute("disabled", "disabled");
+     submitButton.textContent = "Odesílám";
+ 
+     try {
+       const formData = new FormData(event.target);
+       const urlParams = new URLSearchParams(window.location.search);
+       const email = formData.get("email");
+       const settings = {
+         url: `${origin}${urlParams.has("game") ? `?game=${urlParams.get("game")}` : ""}`,
+         handleCodeInApp: true,
+       };
+ 
+       await sendSignInLinkToEmail(auth, email, settings);
+       authCompleteEmailStoredLocally.write(email);
+ 
+       submitButton.textContent = "Odesláno";
+       alert(`Odesláno, pokračujte prosím do vaší ${email} schránky.\n\Tuto stránku můžete zavřít.`);
+       setTimeout(() => {
+         submitButton.textContent = submitButtonLabel;
+         submitButton.removeAttribute("disabled");
+       }, 5000);
+     } catch (fok) {
+       console.error(fok)
+       alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
+       submitButton.removeAttribute("disabled");
+       submitButton.textContent = submitButtonLabel;
+     }
+   }
+ 
+   async function handleCreateGameSubmit(event) {
+     event.preventDefault();
+ 
+     const submitButton = createGame.dialog.querySelector("button[type=submit]");
+     const submitButtonLabel = submitButton.textContent;
+     submitButton.setAttribute("disabled", "disabled");
+     submitButton.textContent = "Vytvářím hru";
+ 
+     try {
+       const formData = new FormData(event.target);
+       const payload = formDataToPayload(formData);
+       const { data: { id: gameId } = {} } = await httpsCallable(fns, "createGame")(payload);
+ 
+       if (!gameId) {
+         alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
+       } else {
+         history.pushState({}, "New Game", `/?game=${gameId}`);
+         handleGamePlay(gameId); // 👌 New Game ENTRYPOINT
+         createGame.close();
+       }
+     } catch ({ message, code }) {
+       if (code === "functions/permission-denied") {
+         if (confirm("Zvláštní, ale na toto nemáte právo. Zkuste načíst stránku znovu.")) {
+           window.location.reload();
+         }
+       } else {
+         alert(`Nastala chyba při vytváření hry.\n${message}`);
+       }
+     } finally {
+       submitButton.removeAttribute("disabled");
+       submitButton.textContent = submitButtonLabel;
+     }
+   }
+ 
+   function handleSoundEffectsChange(event) {
+     event.preventDefault();
+     const { name, checked: enabled, type } = event.target;
+     if (type !== "checkbox") throw new Error("Unexpected target type");
+     switch (name) {
+       case "music":
+         Sounds.enable("rain.mp3", enabled, { autoplay: true, loop: true, gain: .4 });
+         break;
+       case "sounds":
+         Sounds.enableAll(Object.values(MOVE_EFFECTS), enabled);
+         if (enabled) Sounds.play(MOVE_EFFECTS.default);
+         break;
+       default:
+         throw new Error("Unexpected sound effect name");
+     }
+   }
+ 
+   function handleGamePlay(gameId) {
+     console.info("Game play", gameId);
+     if (window.gtag) {
+       gtag('event', 'conversion', { 'send_to': 'AW-970323658/8y9YCJz96IsYEMrt184D' });
+     }
+ 
+     const [
+       headerElement,
+       contentElement
+     ] = [".js-header", ".js-content"].map(s => document.querySelector(s));
+ 
+     clearStaticPage: {
+       headerElement.firstElementChild.remove();
+       contentElement.firstElementChild.remove();
+       window.scrollTo(0, 0);
+     }
+ 
+     let state = {
+       game: undefined,
+       user: null,
+       selectedCard: undefined,
+       selectedColor: undefined,
+     };
+ 
+ 
+     joinGame.dialog.querySelector("form").addEventListener(
+       "submit",
+       async (event) => {
+         const game = await handleJoinGameSubmit(event);
+         if (game) {
+           emit({ game });
+           Sounds.enableAll(Object.values(MOVE_EFFECTS), true);
+           Sounds.play(MOVE_EFFECTS.default);
+         }
+       }
+     );
+ 
+     watchUser((u) => {
+       emit({ user: u?.toJSON() });
+     });
+ 
+     const handlers = {
+       handleLeaveGame() {
+         window.location.href = "/";
+       },
+       handleShareGame(event) {
+         event.preventDefault();
+         const shateLink = window.location.href;
+         const shareText = `Hra je založená, stačí se připojit..`;
+ 
+         if (navigator.share) {
+           navigator.share({
+             text: shareText,
+             url: shateLink
+           });
+         } else {
+           navigator.clipboard
+             .writeText(`${shateLink} ${shareText}`)
+             .then(() => alert("Odkaz na hru byl zkopírován do schránky."))
+         }
+       },
+       async handleMove(event) {
+         const urlParams = new URLSearchParams(window.location.search);
+         const gameId = urlParams.get("game");
+ 
+         const buttonElement = event.target;
+         const { name: moveType } = buttonElement;
+ 
+         try {
+           emit({ busy: moveType });
+ 
+           await Sounds.playTimes(
+             MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default,
+             buttonElement.dataset.n || 1
+           ).catch(O_o => console.error(O_o));
+ 
+           const { data: { game } } = await httpsCallable(fns, "gameMove")({
+             moveType,
+             gameId,
+             card: state.selectedCard,
+             color: state.selectedColor,
+           });
+ 
+           emit({
+             game,
+             // cleanup ui controls
+             selectedCard: null,
+             selectedColor: null,
+           });
+ 
+         } catch (error) {
+           console.error(error);
+           // ‼️ even server error will tell it is wrong move.
+           alert("Špatný tah.");
+         } finally {
+           emit({ busy: null });
+         }
+       },
+       handlePlayerCardSelect(event) {
+         const cardId = event.target.value;
+         const player = getPlayer(state.game, state.user.uid);
+         const { value, color, id } = player.cards.find(card => card.id === cardId);
+         const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
+ 
+         if (value === CHANGE_CARD_VALUE) {
+           emit({
+             selectedCard: { value, color, id },
+             selectedColor: color
+           });
+         } else {
+           emit({ selectedCard: { value, color, id } });
+         }
+         makeMoveButtonElement.focus();
+       },
+       handleCardColorSelect(event) {
+         const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
+         const color = event.target.value;
+         emit({ selectedColor: color });
+         makeMoveButtonElement.focus();
+       },
+       // ...
+     };
+ 
+     function emit(payload = {}) {
+       state = deepMerge(state, payload);
+ 
+       render(
+         templates.header(state, handlers),
+         headerElement
+       );
+       render(
+         templates.content(state, handlers),
+         contentElement,
+       );
+       window.debug = state;
+     }
+ 
+ 
+     const queryToPublicCopy = () => `play/public/game/${gameId}`;
+     const queryToPlayerCopy = () => `play/${state.user?.uid}/game/${gameId}`;
+ 
+     // Firstly using public copy, then, once user joins the game we start using private copy
+     let usedCopyQuery = queryToPublicCopy();
+     const unsubcribePublicCopy = onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
+ 
+     function handleSnapshot(d) {
+       const game = d.data();
+ 
+       // Uplne inak todleto, predbiha se to, neni to spolehlivy a tak.
+       // if (
+       //   game.lastMove &&
+       //   game.lastMove.type !== state.game?.lastMove?.type &&
+       //   game.lastMove?.player.id !== state.user?.uid
+       // ) {
+       if (
+         state.game &&
+         game.lastMove && // je to update stavu hry
+         game.lastMove.player.id !== state.user?.uid && // nejsem to já
+         (
+           // a neni to stejný tah jako předchozí
+           game.lastMove.player.id !== state.game.lastMove?.player.id ||
+           game.lastMove.type !== state.game.lastMove.type
+         )
+       ) {
+         setTimeout(() => {
+           alerto(templates.moveMessage(game, state.user));
+           playPlayerMoveEffects(game.lastMove, game.players, game.settings);
+         }, 0);
+       }
+ 
+       if (
+         state.user?.uid &&
+         usedCopyQuery === queryToPublicCopy() &&
+         getPlayer(game, state.user?.uid)
+       ) {
+         usedCopyQuery = queryToPlayerCopy();
+         console.info("Switching to private copy", usedCopyQuery);
+         unsubcribePublicCopy();
+         onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
+       } else {
+         try {
+           emit({ game });
+         } catch (e) {
+           debugger;
+         }
+       }
+     }
+ 
+ 
+     function playPlayerMoveEffects(lastMove, players = [], settings = {}) {
+       const sound = MOVE_EFFECTS[lastMove.type] || MOVE_EFFECTS.default;
+       const position = toPositionInCircle({
+         index: players.findIndex(player => player.id === lastMove.player.id),
+         length: players.length,
+       });
+ 
+       if (lastMove.type === SHUFFLE_MOVE) {
+         Sounds.playTimes(sound, settings.dealCards, {
+           position,
+         });
+       } else if (lastMove.type === DRAW_MOVE) {
+         Sounds.playTimes(sound, lastMove.drawn, {
+           position,
+         });
+       } else {
+         Sounds.play(sound, { position });
+       }
+     }
+ 
+   }
+ 
+   async function handleJoinGameSubmit(event) {
+     console.warn("TODO: allow only one same player name in the game, remove playerId from public game events then")
+     event.preventDefault();
+     const urlParams = new URLSearchParams(window.location.search);
+     const gameId = urlParams.get("game");
+ 
+     for (let trigger of joinGame.openingTriggers) {
+       trigger.setAttribute("disabled", "disabled");
+     }
+ 
+     const submitButton = joinGame.dialog.querySelector("button[type=submit]");
+     const submitButtonLabel = submitButton.textContent;
+     submitButton.setAttribute("disabled", "disabled");
+     submitButton.textContent = "Přisedám";
+ 
+     if (!gameId) {
+       console.error("Game ID not found");
+       if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
+         window.location.href = "/";
+       }
+       return;
+     }
+ 
+     const formData = new FormData(event.target);
+     const playerName = formData.get("player-name");
+ 
+     try {
+       const { data: { game } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
+       submitButton.removeAttribute("disabled");
+       submitButton.textContent = submitButtonLabel;
+       joinGame.close();
+       return game;
+     } catch (error) {
+       if (error.code === "already-exists") {
+         alert(`${playerName} již hraje v této hře.`);
+       } else {
+         alert(`Nastala chyba při připojování k hře: ${error.message}`);
+       }
+     }
+   }
 
   </script>
 </body>

@@ -2,12 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function verified(request) {
+    function signed(request) {
       return request.auth != null && request.auth.uid != null;
     }
 
     match /play/{perspective}/game/{gameId} {
-      allow read: if perspective == 'public' || (verified(request) && perspective == request.auth.uid);
+      allow read: if perspective == 'public' || (signed(request) && perspective == request.auth.uid);
     }
 
     match /public/{document=**} {
