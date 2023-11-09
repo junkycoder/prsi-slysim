@@ -114,18 +114,14 @@
       <button class="js-dialog-sound-effects-open" type="button">Nastavit efekty</button>
       <section id="cta">
         <h2>Chci začít hrát</h2>
-        <p class="js-before-verifycation">Do hry se můžete zapojit jako <a href="#" class="js-dialog-verify-self-open">ověřený uživatel</a> soutěžící v celkového žebříčku, nebo jako <a href="#" class="js-anonyme-self">anonymní uživatel</a> bez účasti v žebříčku.</p>
-        <p class="js-dialog-create-game-open" aria-hidden="true">Založte si svou vlastní hru.</p>
-        <button class="js-dialog-verify-self-open">Jako ověřený</button>
-        <button class="js-anonyme-self">Anonymní</button>
-        <button aria-hidden="true" class="js-dialog-create-game-open">Nová hra</button>
+        <p class="js-dialog-create-game-open">Založte si svou vlastní hru.</p>
+        <button class="js-dialog-create-game-open">Nová hra</button>
       </section>
       <section id="faq">
         <h2>Jak to funguje?</h2>
         <p>Někdo založí novou hru.</p>
         <p>Poté nasdíli odkaz ostatním hráčům.</p>
         <p>Spoluhráči se pomocí odkazu zapojí do hry.</p>
-        <p>Podmínka: Hry se mohou účastnit pouze ověření uživatelé.</p>
       </section>
       <section id="who">
         <h2>Kdo to udělal?</h2>
@@ -162,21 +158,6 @@
         <p class="dimm" style="float: right">🦠,🌪, 🌊, 🌋, 🇺🇦, ...</p>
       </section>
     </main>
-  </div>
-  <div class="js-dialog-verify-self dialog" aria-hidden="true">
-    <section class="dialog__inner">
-      <header>
-        <h1 id="verify-self-dialog-title">Ověřit se přes email</h1>
-        <p>Uživatelé ověření emailem se zůčastní celkového žebříčku.</p>
-      </header>
-      <form method="post" name="verify-self">
-        <label for="email">Váš email:</label>
-        <input type="email" id="email" name="email" placeholder="pepa@zdepa.cz" required>
-        <p>Na uvedenou adresu vám bude zaslán odkaz pro přihlášení.</p>
-        <button type="submit">Odeslat</button>
-        <button type="button" class="js-dialog-verify-self-close">Zavřít</button>
-      </form>
-    </section>
   </div>
   <div class="js-dialog-create-game dialog" aria-hidden="true">
     <section class="dialog__inner">
@@ -280,26 +261,6 @@
       STAY as STAY_MOVE,
     } from "/library/prsi/moves.js";
 
-    const verifySelf = new Dialog(".js-dialog-verify-self", {
-      openingSelector: ".js-dialog-verify-self-open",
-      closingSelector: ".js-dialog-verify-self-close",
-      labelledby: "verify-self-dialog-title",
-    });
-
-    verifySelf.dialog.querySelector("form").addEventListener(
-      "submit",
-      handleVerifySelfSubmit
-    );
-
-    const anonymeSelf = document.querySelectorAll(".js-anonyme-self");
-    for (let trigger of anonymeSelf) {
-      document.addEventListener("click", (event) => {
-        if (event.target.matches(".js-anonyme-self")) {
-          handleAnonymeSelfClick(event);
-        }
-      });
-    }
-
     const createGame = new Dialog(".js-dialog-create-game", {
       openingSelector: ".js-dialog-create-game-open",
       closingSelector: ".js-dialog-create-game-close",
@@ -347,10 +308,6 @@
       playerNameStoredLocally.write(value);
     });
 
-    USER: {
-      watchUser(handleUserVerifyChange);
-      onAuthStateChanged(auth, handleUserVerifyChange);
-    }
 
     GAME: {
       const urlParams = new URLSearchParams(window.location.search);
@@ -359,127 +316,53 @@
       }
     }
 
+    async function handleCreateGameSubmit(event) {
+      event.preventDefault();
 
+      const auth = getAuth();
+      try {
+        if (!auth.currentUser) {
+          console.log("Signing in anonymously..");
+          await signInAnonymously(auth);
+        } else {
+          console.log("Already signed in as", auth.currentUser);
+        }
+      } catch (error) {
+        alert(`Nepodařilo se přihlásit anonymně: ${error.message}`);
+        console.error(error);
+      }
 
-   async function handleAnonymeSelfClick(event) {
-     event.preventDefault();
-     const auth = getAuth();
-     try {
-       await signInAnonymously(auth);
-     } catch (error) {
-       alert(`Nepodařilo se přihlásit anonymně: ${error.message}`);
-       console.error(error);
-     }
-   }
+      const submitButton = createGame.dialog.querySelector("button[type=submit]");
+      const submitButtonLabel = submitButton.textContent;
+      submitButton.setAttribute("disabled", "disabled");
+      submitButton.textContent = "Vytvářím hru";
 
-   function handleUserVerifyChange(user) {
-     const isUserSigned = Boolean(user || undefined);
-     const { href: link } = window.location;
- 
-     if (!isUserSigned && isVerifyLink(link)) {
-       let email = authCompleteEmailStoredLocally.read();
-       if (!email) {
-         alert(
-           "Vypadá to, že dokončujete ověření uživatele v jiném prohlížeči než ve kterém jste začali. "
-         );
-         email = window.prompt(
-           `Pokud chcete pokračovat v tomto prohlžeči, vyplně svou email adresu znovu:`
-         );
-       }
- 
-       useVerifyLink(link, email).then(({ user: u }) => {
-         const urlParams = new URLSearchParams(window.location.search);
-         history.pushState({}, "Verified", urlParams.has("game") ? `/?game=${urlParams.get("game")}` : "/");
-         handleUserVerifyChange(u);
-       });
-     }
- 
-     for (let trigger of verifySelf.openingTriggers) {
-       if (isUserSigned) trigger.setAttribute("aria-hidden", "true");
-       else trigger.removeAttribute("aria-hidden");
-     }
- 
-     for (let trigger of createGame.openingTriggers) {
-       if (isUserSigned) trigger.removeAttribute("aria-hidden");
-       else trigger.setAttribute("aria-hidden", "true");
-     }
+      try {
+        const formData = new FormData(event.target);
+        const payload = formDataToPayload(formData);
+        const { data: { id: gameId } = {} } = await httpsCallable(fns, "createGame")(payload);
 
-     document.querySelector(".js-before-verifycation")?.setAttribute("aria-hidden", isUserSigned);
-     for (let trigger of anonymeSelf) {
-       if (isUserSigned) trigger.setAttribute("aria-hidden", "true");
-       else trigger.removeAttribute("aria-hidden");
-     }
-   };
- 
-   async function handleVerifySelfSubmit(event) {
-     event.preventDefault();
-     const { origin, search } = window.location;
- 
-     const submitButton = verifySelf.dialog.querySelector("form button[type=submit]");
-     const submitButtonLabel = submitButton.textContent;
-     submitButton.setAttribute("disabled", "disabled");
-     submitButton.textContent = "Odesílám";
- 
-     try {
-       const formData = new FormData(event.target);
-       const urlParams = new URLSearchParams(window.location.search);
-       const email = formData.get("email");
-       const settings = {
-         url: `${origin}${urlParams.has("game") ? `?game=${urlParams.get("game")}` : ""}`,
-         handleCodeInApp: true,
-       };
- 
-       await sendSignInLinkToEmail(auth, email, settings);
-       authCompleteEmailStoredLocally.write(email);
- 
-       submitButton.textContent = "Odesláno";
-       alert(`Odesláno, pokračujte prosím do vaší ${email} schránky.\n\Tuto stránku můžete zavřít.`);
-       setTimeout(() => {
-         submitButton.textContent = submitButtonLabel;
-         submitButton.removeAttribute("disabled");
-       }, 5000);
-     } catch (fok) {
-       console.error(fok)
-       alert(`Chyba při odesílání odkazu: ${fok.message}. Zkuste to prosím znovu.`);
-       submitButton.removeAttribute("disabled");
-       submitButton.textContent = submitButtonLabel;
-     }
-   }
- 
-   async function handleCreateGameSubmit(event) {
-     event.preventDefault();
- 
-     const submitButton = createGame.dialog.querySelector("button[type=submit]");
-     const submitButtonLabel = submitButton.textContent;
-     submitButton.setAttribute("disabled", "disabled");
-     submitButton.textContent = "Vytvářím hru";
- 
-     try {
-       const formData = new FormData(event.target);
-       const payload = formDataToPayload(formData);
-       const { data: { id: gameId } = {} } = await httpsCallable(fns, "createGame")(payload);
- 
-       if (!gameId) {
-         alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
-       } else {
-         history.pushState({}, "New Game", `/?game=${gameId}`);
-         handleGamePlay(gameId); // 👌 New Game ENTRYPOINT
-         createGame.close();
-       }
-     } catch ({ message, code }) {
-       if (code === "functions/permission-denied") {
-         if (confirm("Zvláštní, ale na toto nemáte právo. Zkuste načíst stránku znovu.")) {
-           window.location.reload();
-         }
-       } else {
-         alert(`Nastala chyba při vytváření hry.\n${message}`);
-       }
-     } finally {
-       submitButton.removeAttribute("disabled");
-       submitButton.textContent = submitButtonLabel;
-     }
-   }
- 
+        if (!gameId) {
+          alert("Hru se nepodařilo vytvořit. Zkuste to prosím znovu.");
+        } else {
+          history.pushState({}, "New Game", `/?game=${gameId}`);
+          handleGamePlay(gameId); // 👌 New Game ENTRYPOINT
+          createGame.close();
+        }
+      } catch ({ message, code }) {
+        if (code === "functions/permission-denied") {
+          if (confirm("Zvláštní, ale na toto nemáte právo. Zkuste načíst stránku znovu.")) {
+            window.location.reload();
+          }
+        } else {
+           alert(`Nastala chyba při vytváření hry.\n${message}`);
+        }
+      } finally {
+        submitButton.removeAttribute("disabled");
+        submitButton.textContent = submitButtonLabel;
+      }
+    }
+
    function handleSoundEffectsChange(event) {
      event.preventDefault();
      const { name, checked: enabled, type } = event.target;
@@ -496,32 +379,32 @@
          throw new Error("Unexpected sound effect name");
      }
    }
- 
+
    function handleGamePlay(gameId) {
      console.info("Game play", gameId);
      if (window.gtag) {
        gtag('event', 'conversion', { 'send_to': 'AW-970323658/8y9YCJz96IsYEMrt184D' });
      }
- 
+
      const [
        headerElement,
        contentElement
      ] = [".js-header", ".js-content"].map(s => document.querySelector(s));
- 
+
      clearStaticPage: {
        headerElement.firstElementChild.remove();
        contentElement.firstElementChild.remove();
        window.scrollTo(0, 0);
      }
- 
+
      let state = {
        game: undefined,
        user: null,
        selectedCard: undefined,
        selectedColor: undefined,
      };
- 
- 
+
+
      joinGame.dialog.querySelector("form").addEventListener(
        "submit",
        async (event) => {
@@ -533,11 +416,11 @@
          }
        }
      );
- 
+
      watchUser((u) => {
        emit({ user: u?.toJSON() });
      });
- 
+
      const handlers = {
        handleLeaveGame() {
          window.location.href = "/";
@@ -546,7 +429,7 @@
          event.preventDefault();
          const shateLink = window.location.href;
          const shareText = `Hra je založená, stačí se připojit..`;
- 
+
          if (navigator.share) {
            navigator.share({
              text: shareText,
@@ -561,32 +444,32 @@
        async handleMove(event) {
          const urlParams = new URLSearchParams(window.location.search);
          const gameId = urlParams.get("game");
- 
+
          const buttonElement = event.target;
          const { name: moveType } = buttonElement;
- 
+
          try {
            emit({ busy: moveType });
- 
+
            await Sounds.playTimes(
              MOVE_EFFECTS[moveType] || MOVE_EFFECTS.default,
              buttonElement.dataset.n || 1
            ).catch(O_o => console.error(O_o));
- 
+
            const { data: { game } } = await httpsCallable(fns, "gameMove")({
              moveType,
              gameId,
              card: state.selectedCard,
              color: state.selectedColor,
            });
- 
+
            emit({
              game,
              // cleanup ui controls
              selectedCard: null,
              selectedColor: null,
            });
- 
+
          } catch (error) {
            console.error(error);
            // ‼️ even server error will tell it is wrong move.
@@ -600,7 +483,7 @@
          const player = getPlayer(state.game, state.user.uid);
          const { value, color, id } = player.cards.find(card => card.id === cardId);
          const makeMoveButtonElement = document.querySelector(`button[name="${PLAY_MOVE}"]`);
- 
+
          if (value === CHANGE_CARD_VALUE) {
            emit({
              selectedCard: { value, color, id },
@@ -619,10 +502,10 @@
        },
        // ...
      };
- 
+
      function emit(payload = {}) {
        state = deepMerge(state, payload);
- 
+
        render(
          templates.header(state, handlers),
          headerElement
@@ -633,18 +516,18 @@
        );
        window.debug = state;
      }
- 
- 
+
+
      const queryToPublicCopy = () => `play/public/game/${gameId}`;
      const queryToPlayerCopy = () => `play/${state.user?.uid}/game/${gameId}`;
- 
+
      // Firstly using public copy, then, once user joins the game we start using private copy
      let usedCopyQuery = queryToPublicCopy();
      const unsubcribePublicCopy = onSnapshot(doc(db, usedCopyQuery), handleSnapshot);
- 
+
      function handleSnapshot(d) {
        const game = d.data();
- 
+
        // Uplne inak todleto, predbiha se to, neni to spolehlivy a tak.
        // if (
        //   game.lastMove &&
@@ -666,7 +549,7 @@
            playPlayerMoveEffects(game.lastMove, game.players, game.settings);
          }, 0);
        }
- 
+
        if (
          state.user?.uid &&
          usedCopyQuery === queryToPublicCopy() &&
@@ -684,15 +567,15 @@
          }
        }
      }
- 
- 
+
+
      function playPlayerMoveEffects(lastMove, players = [], settings = {}) {
        const sound = MOVE_EFFECTS[lastMove.type] || MOVE_EFFECTS.default;
        const position = toPositionInCircle({
          index: players.findIndex(player => player.id === lastMove.player.id),
          length: players.length,
        });
- 
+
        if (lastMove.type === SHUFFLE_MOVE) {
          Sounds.playTimes(sound, settings.dealCards, {
            position,
@@ -705,24 +588,24 @@
          Sounds.play(sound, { position });
        }
      }
- 
+
    }
- 
+
    async function handleJoinGameSubmit(event) {
      console.warn("TODO: allow only one same player name in the game, remove playerId from public game events then")
      event.preventDefault();
      const urlParams = new URLSearchParams(window.location.search);
      const gameId = urlParams.get("game");
- 
+
      for (let trigger of joinGame.openingTriggers) {
        trigger.setAttribute("disabled", "disabled");
      }
- 
+
      const submitButton = joinGame.dialog.querySelector("button[type=submit]");
      const submitButtonLabel = submitButton.textContent;
      submitButton.setAttribute("disabled", "disabled");
      submitButton.textContent = "Přisedám";
- 
+
      if (!gameId) {
        console.error("Game ID not found");
        if (confirm("Ztratilo se ID hry. Budete přesměrováni na hlavní stránku.")) {
@@ -730,10 +613,10 @@
        }
        return;
      }
- 
+
      const formData = new FormData(event.target);
      const playerName = formData.get("player-name");
- 
+
      try {
        const { data: { game } = {} } = await httpsCallable(fns, "joinGame")({ playerName, gameId });
        submitButton.removeAttribute("disabled");
