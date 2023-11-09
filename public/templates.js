@@ -292,7 +292,6 @@ export function content(
               title=${ifelse(
                 game.status,
                 "Hra již probíhá",
-                unless(isUserSigned, "Nejprve se potřebujete přihlásit.")
               )}
               type=${ifelse(
                 game.status === GAME_STATUS.STARTED,
@@ -302,17 +301,6 @@ export function content(
             >
               Zapojit se do hry
             </button>
-          `
-        )}
-        ${ifelse(
-          showVerfySelf,
-          html`
-            ${unless(
-              game.status,
-              html`<p>Pro zapojení do hry musíš být přihlášený.</p>`
-            )}
-            <button class="js-dialog-verify-self-open">Přihlásit se e-mailem</button>
-            <button class="js-anonyme-self">Přihlásit se anonymně</button>
           `
         )}
         ${ifelse(
