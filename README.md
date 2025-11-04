@@ -1,5 +1,7 @@
 # Prší slyšim 
 
+**Warning:** This project is no longer maintained and has been discontinued.
+
 ## Development
 
 1. Install and **login** [Firebase CLI](https://firebase.google.com/docs/cli)
